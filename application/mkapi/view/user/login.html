@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<form action="{:url('xhapi/user/register')}">
+		手机号码:<input type="text" value="" name="phone"> 
+		验证码：<input type="text" value="" name="verify">
+		<div style="background-color:red;height:50px;width:50px;margin:0 auto" onclick="sendVerify()">发送验证码</div> 
+		<input type="submit">
+	</form>
+</body>
+<script type="text/javascript">
+function sendVerify(){
+	var xhr = new XMLHttpRequest();
+	var f = document.getElementsByTagName('form')[0];
+	var fd = new FormData(f);
+	xhr.onreadystatechange=function(){
+		if(xhr.readyState == 4){
+			console.log(xhr.responseText);
+		}
+	}
+	xhr.open('post',"{:url('register')}");
+	xhr.send(fd);
+}
+</script>
+</html>
