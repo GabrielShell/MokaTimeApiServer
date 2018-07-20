@@ -172,6 +172,7 @@ class User extends Common{
 		$data['card_no'] = $request->post('card_no');
 		$data['real_name'] = $request->post('real_name');
 		$data['bank_no'] = $request->post('bank_no');
+		$data['bankbranch_id'] = $request->post('bankbranch_id');
 
 		$cardFace =$request->file('cardFace'); //身份证正面
 		$cardBack =$request->file('cardBack');  //身份证反面
@@ -186,16 +187,41 @@ class User extends Common{
 		$result = json_decode($result,true);
 		$msg = '';
 		switch($result['status']){
-			case '01': $msg = '验证通过';break;
-			case '02': $msg = '验证不通过';break;
-			case '202': $msg = '无法验证';break;
-			case '203': $msg = '异常情况';break;
-			case '204': $msg = '姓名错误';break;
-			case '205': $msg = '身份证号错误';break;
-			case '206': $msg = '银行卡号错误';break;
+			case '01': 
+						$status = 101;
+					    $msg = '验证通过';break;
+			case '02': 
+						$status = 102;
+						$msg = '验证不通过';break;
+			case '202': 
+						$status = 202;
+						$msg = '无法验证';break;
+			case '203': 
+						$status = 203;
+						$msg = '异常情况';break;
+			case '204': 
+						$status = 204;
+						$msg = '姓名错误';break;
+			case '205': 
+						$status = 205;
+						$msg = '身份证号错误';break;
+			case '206': 
+						$status = 206;
+						$msg = '银行卡号错误';break;
 		}
 
 		if($result['status'] == '01'){
+			// 采集用户信息
+			$data['bank_name'] = $result['bank'];  //开户行名称
+			$data['card_name'] = $result['cardName'];  //银行卡名称
+			$data['card_type'] = $result['cardType'];  //银行卡类型
+			$data['sex'] = $result['sex'];  //性别
+			$data['province'] = $result['province'];  //省
+			$data['city'] = $result['city'];  //市
+			$data['prefecture'] = $result['prefecture'];  //区县
+			$data['birthday'] = $result['birthday'];  //生日
+			$data['addr_code'] = $result['addrCode']; //地区代码
+		
 			// 上传文件
 			$cardFaceInfo = $this->uploadImg($cardFace);
 			$cardBackInfo = $this->uploadImg($cardBack);
@@ -212,15 +238,16 @@ class User extends Common{
 				$data['is_certificate'] = "1";
 				$users = model('Users');
 				if($users->save($data,['series'=>$data['series']])){
-					my_json_encode($result['status'],$msg);
+					my_json_encode($status,$msg);
 				}else{
-					my_json_encode(9,'erro:数据储存失败');
+					my_json_encode(9,'数据储存失败');
 				}
 			}else{
 				my_json_encode(10,$bankFaceInfo['data']);
 			}
 		}
 	}
+
 
 
 	//上传实名认证照片
