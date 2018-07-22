@@ -138,7 +138,6 @@ class User extends Common{
 		//实例化用户模型
 		$User = model('Users');
 		$data['series'] = getUserId(6,$data['phone']);
-		$data['register_time'] = time();
 		$User->data($data);
 		if($User->save()){
 			return $data['series'];
