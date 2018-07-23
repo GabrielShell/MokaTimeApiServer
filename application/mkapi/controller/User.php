@@ -100,7 +100,7 @@ class User extends Common{
 				    my_json_encode(0,'success',$responseData);
 			}else{
 				$errorId = uniqid('sqlErr');
-				Log::sql("【"$errorId"】token储存失败");
+				Log::sql("【".$errorId."】token储存失败");
 				my_json_encode(9,'token储存失败:errorId='.$errorId);
             }
 		}
