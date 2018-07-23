@@ -8,6 +8,7 @@ use think\Controller;
 use think\Request;
 use think\Db;
 use think\Session;
+use think\Log;
 class User extends Common{
 	//用户登录
 	public function sendVerify(){
@@ -30,7 +31,7 @@ class User extends Common{
 			        my_json_encode(0, 'success');
 			    }else{
 			    	if($res['error'] == '-42'){
-			    		$msg = '验证码发送太平凡';
+			    		$msg = '验证码发送太频繁';
 			    	}else if($res['error'] == '-40'){
 			    		$msg = '手机号错误';
 			    	}
