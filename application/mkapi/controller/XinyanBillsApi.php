@@ -360,7 +360,7 @@ class XinyanBillsApi extends Common{
                         "member_id" =>$this->member_id,
                         "terminal_id" => $this->terminal_id,
                         "data_type" => $this->data_type,
-                        "data_content" => $data_content
+                        "data_content" => 'a'.$data_content
                 );
 
                 $PostArryJson = str_replace("\\/", "/",json_encode($PostArry));//转JSON
