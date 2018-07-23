@@ -29,7 +29,15 @@ class User extends Common{
 			    if( isset( $res['error'] ) &&  $res['error'] == 0 ){
 			        my_json_encode(0, 'success');
 			    }else{
-			        my_json_encode(0,'notice','failed,code:'.$res['error'].',msg:'.$res['msg']);
+			    	if($res['error'] == '-42'){
+			    		$msg = '验证码发送太平凡';
+			    	}else if($res['error'] == '-40'){
+			    		$msg = '手机号错误';
+			    	}
+
+			    	$errorId = uniqid('ERR');
+					Log::error("【".$errorId."】验证码发送错误：".$res['msg']);
+			        my_json_encode($res['error'],$msg);
 			    }
 			}else{
 			    my_json_encode(3,'error',$sms->last_error());
