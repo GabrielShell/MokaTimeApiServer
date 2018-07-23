@@ -125,6 +125,8 @@ class User extends Common{
               	$tokenMessage = model('tokenMessages');
         		$tokenMessage->save($data,['series' => $series]);
         		my_json_encode(6,'notice',array('access_token已过期，请刷新token','access_token'=>$data['access_token']));
+        	}else{
+        		my_json_encode(0,'success');
         	}
         }
 	}
