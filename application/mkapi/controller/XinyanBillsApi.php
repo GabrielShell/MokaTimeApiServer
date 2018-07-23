@@ -9,6 +9,7 @@ use app\mkapi\common\Xinyan\Crypt;
 use app\mkapi\model\Credit_cards;
 use app\mkapi\model\Bills;
 use app\mkapi\model\Shopping_records;
+use app\mkapi\model\Xinyan_banks;
 
 /**
  * 新颜账单查询API接口
@@ -149,10 +150,18 @@ class XinyanBillsApi extends Common{
                                 $bill['shopping_records'] = $shoppingRecord;
                         }
 
+                        //查询支持银行列表
+                        $supportBanks = Xinyan_banks::all();
+                        $banks = [];
+                        foreach($supportBanks as $supportBank){
+                                $banks[$supportBank->id] = $supportBank->bank_name;
+                        }
+
+
                         //查找数据库是否已有该信用卡，没有则插入信用卡，有则更新信用卡数据
                         $searched = []; //已经在数据库找到的记录 key=unique_string value=card_id
                         foreach($data['data']['bills'] as $bill){
-                                $unique_string = $bill['bank_id'] . $bill['name_on_card'] . $bill['card_number'];
+                                $unique_string = $banks[$bill['bank_id']] .'-'. $bill['name_on_card'] .'-'. $bill['card_number'];
                                 $card_id = 0;
                                 if(!isset($searched[$unique_string])){
                                         //如果未搜索过数据库则搜索数据库
@@ -161,7 +170,7 @@ class XinyanBillsApi extends Common{
                                                 //如果搜索数据库没有该信用卡，则执行插入操作
                                                 $card = new Credit_cards;
                                                 $card->unique_string = $unique_string;
-                                                $card->bank_id = $bill['bank_id'];
+                                                $card->bank_name = $banks[$bill['bank_id']];
                                                 $card->name_on_card = $bill['name_on_card'];
                                                 $card->card_no_last4 = $bill['card_number'];
                                                 $card->card_no = $bill['card_no'];
@@ -211,7 +220,7 @@ class XinyanBillsApi extends Common{
                                         $db_shopping_record->trans_addr = $shopping_record['trans_addr'];
                                         $db_shopping_record->trans_date = $shopping_record['trans_date'];
                                         $db_shopping_record->trans_type = $shopping_record['trans_type'];
-                                        $db_shopping_record->bank_id = $shopping_record['bank_id'];
+                                        $db_shopping_record->bank_name = $banks[$shopping_record['bank_id']];
                                         $db_shopping_record->card_no_last4 = $shopping_record['card_no'];
                                         $db_shopping_record->currency_type = $shopping_record['currency_type'];
                                         $db_shopping_record->description = $shopping_record['description'];
@@ -240,5 +249,10 @@ class XinyanBillsApi extends Common{
         /**
          * 查询支持银行列表接口
          */
+        public function bankQuerySupportBanks(){
+                $querySupportBanksUrl = 'http://test.xinyan.com/gateway-data/bank/v1/config/list';
+                $result = CurlRequest::get($querySupportBanksUrl,$this->headers);
+                return $result;
+        }
 
 }
