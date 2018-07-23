@@ -60,7 +60,7 @@ class Common extends Controller{
             		$data['ac_start_time'] = time();
                   	$tokenMessage = model('tokenMessages');
             		$tokenMessage->save($data,['series' => $series]);
-            		my_json_encode(6,'notice',array('access_token已过期，请刷新token','access_token'=>$data['access_token']));
+            		my_json_encode(6,$data['access_token'],array('access_token已过期，请刷新token','access_token'=>$data['access_token']));
             	}
             }
 		}

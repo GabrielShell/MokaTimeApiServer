@@ -36,7 +36,6 @@ Route::post('api/v1/bills/email/query-bills','mkapi/XinyanBillsApi/emailQueryBil
  */
 Route::post('api/v1/bills/bank/support-banks','mkapi/XinyanBillsApi/querySupportBanks');
 
-
 /**
  * 查询银行登录配置信息 [POST]
  * @param bankcode 银行代码（支持银行列表中的bank_abbr），如交通银行是"COMM"
