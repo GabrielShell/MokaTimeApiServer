@@ -165,8 +165,12 @@ class XinyanBillsApi extends Common{
                                                 $card->name_on_card = $bill['name_on_card'];
                                                 $card->card_no_last4 = $bill['card_number'];
                                                 $card->card_no = $bill['card_no'];
-                                                $card->bill_date = date('d',strtotime($bill['bill_start_date']));
-                                                $card->due_date = date('d',strtotime($bill['bill_date']));
+                                                $card->bill_date = date('d',strtotime($bill['bill_date']));
+                                                if(date('m',strtotime($bill['payment_due_date'])) == date('m',strtotime($bill['bill_date']))){
+                                                        $card->due_date = '-'.date('d',strtotime($bill['payment_due_date']));
+                                                }else {
+                                                        $card->due_date = '*'.date('d',strtotime($bill['payment_due_date']));
+                                                }
                                                 $card->credit_limit = $bill['credit_limit'];
                                                 $card->point = $bill['point'];
                                                 $card->save();
