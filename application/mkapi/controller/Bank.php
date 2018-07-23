@@ -19,13 +19,14 @@ class Bank extends Controller{
 	// 获取支行信息
 	public function getBankBranch(){
 		$request = Request::instance();
-		// $bank_id = $request->post('bank_id');//银行id
-		// $province = $request->post('province');
-		// $city = $request->post('city');
+		//收集表单数据
+		$bank_id = $request->post('bank_id');//银行id
+		$province = $request->post('province');
+		$city = $request->post('city');
 
-		$bank_id ="2";//银行id
-		$province = "福建省";
-		$city = "三明市";
+		// $bank_id ="2";//银行id
+		// $province = "福建省";
+		// $city = "三明市";
 
 		$bankBranchList = Db::name('lakala_bankbranch')->field('bank_id,bankranch_name,province,city')->where([
 			'bank_id'=>['=',$bank_id],

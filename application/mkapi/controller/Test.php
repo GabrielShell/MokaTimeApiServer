@@ -7,6 +7,7 @@ use think\Controller;
 use think\Request;
 use think\Db;
 use crypt\AesCbc;
+use think\Log;
 class Test extends Common{
 	//拉卡拉交易D0提款参数
     // 机构号： 425510
@@ -275,5 +276,12 @@ class Test extends Common{
         }else{
           	echo my_json_encode(0,'success');
         } 
+    }
+
+    public function logWrite(){
+        $info = " 测试测试";
+        //Log::init(['type' => 'File', 'path' => APP_PATH . 'mkapi/log/lakala/']);
+        //Log::info($info);
+        echo $info;
     }
 }
