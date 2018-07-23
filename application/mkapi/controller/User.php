@@ -71,18 +71,26 @@ class User extends Common{
 				$series = $result['series'];
 			}
 
-			//储存token
-			$token_data['series'] = $series;//用户唯一标识
+			//实例化tokenMessage模型
+			$tokenMessage = model('TokenMessages');
+			//储存token数据
 			$token_data['access_token'] = getKey(32);
 			$token_data['refresh_token'] = getKey(32);
 			$token_data['ac_start_time'] = time();
 			$token_data['re_start_time'] = time();
-			//实例化tokenMessage模型
-			$tokenMessage = model('TokenMessages');
-			$tokenMessage->data($token_data);
-			$insertResult = $tokenMessage->save();
-			//判断token是否储存成功
-			if($insertResult){
+
+			$toke_result = $tokenMessage->where('series',$series)->find();
+			if(!empty($toke_result)){
+				$saveResult = $tokenMessage->save($token_data,['series' => $series]);
+			}else{
+				$token_data['series'] = $series;//用户唯一标识
+				$tokenMessage->data($token_data);
+				$saveResult = $tokenMessage->save();
+				//判断token是否储存成功
+			}
+
+			//判断数据是否返回成功
+			if($saveResult){
 				$responseData = array(
 					'msg' => 'success',
 					'series' => $result['series'],
@@ -91,7 +99,9 @@ class User extends Common{
 					);
 				    my_json_encode(0,'success',$responseData);
 			}else{
-				my_json_encode(9,'系统异常');
+				$errorId = uniqid('sqlErr');
+				Log::sql("【"$errorId"】token储存失败");
+				my_json_encode(9,'token储存失败:errorId='.$errorId);
             }
 		}
 	}
