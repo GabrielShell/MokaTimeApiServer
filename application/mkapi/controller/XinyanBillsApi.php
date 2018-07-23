@@ -220,7 +220,7 @@ class XinyanBillsApi extends Common{
                                 }
                         }
                 }
-                $result = ['code'=>0,'msg'=>'账单导入成功!'];
+                $result = ['status'=>0,'msg'=>'账单导入成功!'];
                 return json_encode($result);
         }
 
