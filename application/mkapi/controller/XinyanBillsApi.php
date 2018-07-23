@@ -3,6 +3,7 @@ namespace app\mkapi\controller;
 use app\mkapi\controller\Common;
 use think\Controller;
 use think\Request;
+use think\Log;
 use app\mkapi\common\CurlRequest;
 use app\mkapi\common\Xinyan\Order;
 use app\mkapi\common\Xinyan\Crypt;
@@ -138,7 +139,7 @@ class XinyanBillsApi extends Common{
                 $result = CurlRequest::get($requestUrl,$this->headers);
 
                 $data = json_decode($result,true);
-                if($data["success"] == 'true'){
+                if(is_array($data) && $data["success"] == 'true'){
                         //每条账单查询对应的消费记录
                         foreach($data['data']['bills'] as &$bill){
                                 $shoppingRecord = [];
@@ -228,6 +229,10 @@ class XinyanBillsApi extends Common{
                                         $db_shopping_record->save();
                                 }
                         }
+                }else{
+                        $errorId = uniqid("ERR");
+                        Log::error('【'.$errorId.'】新颜API-查询邮箱账单接口错误(bills),API接口返回信息不能解析，API接口返回信息：'.$result);
+                        return json_encode(['status'=>1,'msg'=>'查询失败！操作ID:'.$errorId]);
                 }
                 $result = ['status'=>0,'msg'=>'账单导入成功!'];
                 return json_encode($result);
@@ -253,6 +258,11 @@ class XinyanBillsApi extends Common{
                 $querySupportBanksUrl = 'http://test.xinyan.com/gateway-data/bank/v1/config/list';
                 $result = CurlRequest::get($querySupportBanksUrl,$this->headers);
                 $data = json_decode($result,true);
+                if(!$data || $data['success'] !='true'){
+                        $errorId = uniqid("ERR");
+                        Log::error('【'.$errorId.'】新颜API-查询支持银行列表接口错误(support-banks),API接口返回信息不能解析，API接口返回信息：'.$result);
+                        return json_encode(['status'=>1,'msg'=>'查询失败！操作ID:'.$errorId]);
+                }
 
                 foreach($data['data'] as $bankList){
                         $cardType = $bankList['card_type'];
@@ -269,12 +279,106 @@ class XinyanBillsApi extends Common{
                                 }
                         }
                 }
-                return $result;
+
+                $supportBanks = Xinyan_banks::field('bank_name,bank_abbr')->where('credit_support' , 1)->select();
+                $return = ['status'=>0,'msg'=>'查询成功！','data'=>$supportBanks];
+                return json_encode($return);
         }
 
+        /**
+         * 查询银行登录配置信息
+         */
         public function queryBankConfigLogin(Request $request){
                 $bankcode = $request->post('bankcode');
                 $cardtype = $request->post('cardtype');
+                $configLoginUrl = 'http://test.xinyan.com/gateway-data/bank/v1/config/login/';
+                $requestUrl = $configLoginUrl.$bankcode.'/'.$cardtype;
+                $result = CurlRequest::get($requestUrl,$this->headers);
+                $arr_result = json_decode($result,true);
+
+                $return = [];
+                if($arr_result && $arr_result['success'] == 'true'){
+                        $return = ['status'=>0,'msg' => '查询成功！','data'=>$arr_result['data']['logins']];
+                }else{
+                        $errorId = uniqid("ERR");
+                        $return = ['status'=>1,'msg' => '查询失败！操作ID:'.$errorId];
+                        Log::error('【'.$errorId.'】新颜API-查询银行登录配置信息错误（config-login）,API接口返回信息不能解析，API接口返回信息：'.$result);
+                }
+                return json_encode($return);
+        }
+
+        /**
+         * 网银账单查询创建任务
+         */
+        public function cyberBankQueryTaskCreate(Request $request){
+                $bank = $request->post('bank');
+                $account=$request->post('account');
+                $password=$request->post('password');
+                $login_target='CREDITCARD';
+                $login_type=$request->post('login_type');
+                $id_card=$request->post('id_card');
+                $real_name=$request->post('real_name');
+                $origin=$request->post('origin');
+                $notify_url="";
+                $area_code="";
+                $location="";
+                $gps="";
+                $ip="";
+
+                $order = new Order();
+                $member_trans_id=$order->create_uuid();//商户订单号
+                $member_trans_date=$order->trade_date();//交易时间
+                $user_id=$order->create_uuid();
+
+                $arrayData=array(
+                        "member_id"=>$this->member_id,
+                        "terminal_id"=>$this->terminal_id,
+                        "member_trans_date"=>$member_trans_date,
+                        "member_trans_id"=>$member_trans_id,
+                        "notify_url"=>$notify_url,
+                        "user_id"=>$user_id,
+                        "bank"=>$bank,
+                        "account"=>$account,
+                        "password"=>$password,
+                        "login_target"=>$login_target,
+                        "login_type"=>$login_type,
+                        "origin"=>$origin,
+                        "id_card"=>$id_card,
+                        "real_name"=>$real_name,
+                        "area_code"=>$area_code,
+                        "location"=>$location,
+                        "gps"=>$gps,
+                        "ip"=>$ip
+                );
+
+                // *** 数据格式化***
+                $data_content="";
+                //==================转换数据类型=============================================
+                if($this->data_type == "json"){
+                        $data_content = str_replace("\\/", "/",json_encode($arrayData));//转JSON
+                }
+
+
+                $crypt = new Crypt();
+                $data_content = $crypt->encryptedByPrivateKey($this->pfxpath, $this->cerpath, $this->pfx_pwd,TRUE,$data_content);
+
+                $PostArry = array(
+                        "member_id" =>$this->member_id,
+                        "terminal_id" => $this->terminal_id,
+                        "data_type" => $this->data_type,
+                        "data_content" => $data_content
+                );
+
+                $PostArryJson = str_replace("\\/", "/",json_encode($PostArry));//转JSON
+                $requestUrl = 'http://test.xinyan.com/gateway-data/bank/v1/task/create';
+
+                $header = array(
+                        'Content-Type: application/json; charset=utf-8',
+                        'Content-Length: ' . strlen($PostArryJson)
+                );
+
+                $result = CurlRequest::request($requestUrl,'post',$PostArryJson,$header,20);
+                return $result[0];
         }
 
 }
