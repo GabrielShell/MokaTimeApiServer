@@ -34,4 +34,4 @@ Route::post('api/v1/bills/email/query-bills','mkapi/XinyanBillsApi/emailQueryBil
 /**
  * 查询支持银行列表 [POST]
  */
-Route::post('api/v1/bills/bank/support-banks','mkapi/XinyanBillsApi/bankQuerySupportBanks');
+Route::post('api/v1/bills/bank/support-banks','mkapi/XinyanBillsApi/querySupportBanks');

@@ -249,10 +249,32 @@ class XinyanBillsApi extends Common{
         /**
          * 查询支持银行列表接口
          */
-        public function bankQuerySupportBanks(){
+        public function querySupportBanks(){
                 $querySupportBanksUrl = 'http://test.xinyan.com/gateway-data/bank/v1/config/list';
                 $result = CurlRequest::get($querySupportBanksUrl,$this->headers);
+                $data = json_decode($result,true);
+
+                foreach($data['data'] as $bankList){
+                        $cardType = $bankList['card_type'];
+                        foreach($bankList['bank_list'] as $supportBank){
+                                $bankRecord = Xinyan_banks::get(['bank_name'=>$supportBank['name']]);
+                                if($bankRecord){
+                                        $bankRecord->bank_abbr = $supportBank['abbr'];
+                                        if($cardType == 'CREDITCARD'){
+                                                $bankRecord->credit_support = 1;
+                                        }else{
+                                                $bankRecord->debit_support = 1;
+                                        }
+                                        $bankRecord->save();
+                                }
+                        }
+                }
                 return $result;
+        }
+
+        public function queryBankConfigLogin(Request $request){
+                $bankcode = $request->post('bankcode');
+                $cardtype = $request->post('cardtype');
         }
 
 }
