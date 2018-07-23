@@ -17,7 +17,7 @@ class Order extends Controller{
         $uuid .= substr($str,8,4) . '-';
         $uuid .= substr($str,12,4) . '-';
         $uuid .= substr($str,16,4) . '-';
-        $uuid .= substr($str,20,12);
+        // $uuid .= substr($str,20,12);
         return $prefix . $uuid;
     }
     static function create_uuids($prefix = ""){    //可以指定前缀
@@ -26,7 +26,7 @@ class Order extends Controller{
         $uuid .= substr($str,8,4) . '-';
         $uuid .= substr($str,12,4) . '-';
         $uuid .= substr($str,16,4);
-//        $uuid .= substr($str,20,12);
+    //    $uuid .= substr($str,20,12);
         return $prefix . $uuid;
     }
 }

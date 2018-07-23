@@ -249,7 +249,7 @@ class XinyanBillsApi extends Common{
          * 查询支持银行列表接口
          */
         public function querySupportBanks(){
-                $querySupportBanksUrl = 'http://test.xinyan.com/gateway-data/bank/v1/config/list';
+                $querySupportBanksUrl = 'https://api.xinyan.com/gateway-data/bank/v1/config/list';
                 $result = CurlRequest::get($querySupportBanksUrl,$this->headers);
                 $data = json_decode($result,true);
                 if(!$data || $data['success'] !='true'){
@@ -285,7 +285,7 @@ class XinyanBillsApi extends Common{
         public function queryBankConfigLogin(Request $request){
                 $bankcode = $request->post('bankcode');
                 $cardtype = $request->post('cardtype');
-                $configLoginUrl = 'http://test.xinyan.com/gateway-data/bank/v1/config/login/';
+                $configLoginUrl = 'https://api.xinyan.com/gateway-data/bank/v1/config/login/';
                 $requestUrl = $configLoginUrl.$bankcode.'/'.$cardtype;
                 $result = CurlRequest::get($requestUrl,$this->headers);
                 $arr_result = json_decode($result,true);
@@ -325,7 +325,7 @@ class XinyanBillsApi extends Common{
                 $user_id=$order->create_uuid();
 
                 $arrayData=array(
-                        //"member_id"=>$this->member_id,
+                        "member_id"=>$this->member_id,
                         "terminal_id"=>$this->terminal_id,
                         "member_trans_date"=>$member_trans_date,
                         "member_trans_id"=>$member_trans_id,
@@ -360,11 +360,11 @@ class XinyanBillsApi extends Common{
                         "member_id" =>$this->member_id,
                         "terminal_id" => $this->terminal_id,
                         "data_type" => $this->data_type,
-                        "data_content" => 'a'.$data_content
+                        "data_content" => $data_content
                 );
 
                 $PostArryJson = str_replace("\\/", "/",json_encode($PostArry));//转JSON
-                $requestUrl = 'http://test.xinyan.com/gateway-data/bank/v1/task/create';
+                $requestUrl = 'https://api.xinyan.com/gateway-data/bank/v1/task/create';
 
                 $header = array(
                         'Content-Type: application/json; charset=utf-8',
@@ -372,7 +372,15 @@ class XinyanBillsApi extends Common{
                 );
 
                 $result = CurlRequest::request($requestUrl,'post',$PostArryJson,$header,20);
-                return $result[0];
+                $arr_result = json_decode($result[0],true);
+                if(is_array($arr_result) && $arr_result['success'] == 'true'){
+                        $return = ['status' => 0,'msg'=>'创建任务成功！','data'=>['tradeNo'=>$arr_result['data']['tradeNo']]];
+                }else{
+                        $errorId = uniqid("ERR");
+                        $return = ['status'=>1,'msg' => '创建任务失败！操作ID:'.$errorId];
+                        Log::error('【'.$errorId.'】新颜API-创建任务失败（config-login）,API接口返回信息不能解析，API接口返回信息：'.$result[0]);
+                }
+                return json_encode($return);
         }
 
 }
