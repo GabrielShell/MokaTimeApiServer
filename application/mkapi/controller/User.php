@@ -27,9 +27,7 @@ class User extends Common{
         	$res = $sms->send( $data['phone'], '您的短信验证码是：'.$verify_code.'请尽快进行验证【厦门刷呗】');
         	if( $res ){
 			    if( isset( $res['error'] ) &&  $res['error'] == 0 ){
-			        my_json_encode(0, 'success',array(
-			        	'verify_code' => $verify_code
-			        	));
+			        my_json_encode(0, 'success');
 			    }else{
 			        my_json_encode(0,'notice','failed,code:'.$res['error'].',msg:'.$res['msg']);
 			    }
@@ -116,19 +114,17 @@ class User extends Common{
         }
 
         // 判断token是否存在
-        $tokenMessage = model('tokenMessages');
-        $result = $tokenMessage->where("series = $series and re_start_time < unix_timestamp - 2592000 ")->find()->toArray();
+       $result = Db::query("select * from mk_token_messages where series = '$series' and re_start_time > unix_timestamp()-2592000");
+    	//var_dump($result);
         if(empty($result)){//token过期
         	my_json_encode(7, 'token过期，请重新登录');
         }else{
-        	if($access_token !== $result['access_token'] || $result['ac_start_time'] < time() - 3600){
+        	if($access_token !== $result[0]['access_token'] || $result[0]['ac_start_time'] < time() - 3600){
         		$data['access_token'] = getkey(32);
         		$data['ac_start_time'] = time();
-        		$tokenMessage->data[$data];
-        		$tokenMessage->save();
+              	$tokenMessage = model('tokenMessages');
+        		$tokenMessage->save($data,['series' => $series]);
         		my_json_encode(6,'notice',array('access_token已过期，请刷新token','access_token'=>$data['access_token']));
-        	}else{
-        		my_json_encode(0,'success',array('msg'=>'success','series'=>$series));
         	}
         }
 	}
@@ -165,6 +161,7 @@ class User extends Common{
 		}
 	}
 
+
 	//用户实名认证
 	public function certificate(){
 		$request = Request::instance();
@@ -174,6 +171,7 @@ class User extends Common{
 		$data['bank_no'] = $request->post('bank_no');
 		$data['bankbranch_id'] = $request->post('bankbranch_id');
 
+		// 收集用户证件照
 		$cardFace =$request->file('cardFace'); //身份证正面
 		$cardBack =$request->file('cardBack');  //身份证反面
 		$bankFace =$request->file('bankFace');  //银行卡正面
@@ -182,10 +180,13 @@ class User extends Common{
 			my_json_encode(8,"参数不正确");
 			exit();
 		}
-		
+
+		// 发送身份验证信息，并得到返回结果
 		$result = $this->certificateRequest($data['bank_no'],$data['card_no'],$data['real_name']);
 		$result = json_decode($result,true);
 		$msg = '';
+
+		//判断返回状态码
 		switch($result['status']){
 			case '01': 
 						$status = 101;
@@ -210,6 +211,7 @@ class User extends Common{
 						$msg = '银行卡号错误';break;
 		}
 
+		// 身份验证通过
 		if($result['status'] == '01'){
 			// 采集用户信息
 			$data['bank_name'] = $result['bank'];  //开户行名称
@@ -249,12 +251,13 @@ class User extends Common{
 	}
 
 
-
 	//上传实名认证照片
 	public function uploadImg($file){
         $upload = new Upload();
+        // 验证文件是否合法
         $result = $upload->check($file);
         if($result == 'success'){
+        	//文件保存位置
             $path = APP_PATH.'/mkapi/public/upload/user/card/';
             $result = $upload->uploadOne($file,$path);
             return $result;

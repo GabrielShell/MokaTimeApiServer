@@ -23,7 +23,7 @@ class Common extends Controller{
 	// 系统集中验证token
 	private function __checkLogin(){
 		$no_list = array(
-			'User' => array('login','sendverify','register','logout'),
+			'User' => array('login','sendverify','register'),
 			'Test' => array('certificate','login','testupload'));
 		if(isset($no_list[__CONTROLLER__]) && in_array(__ACTION__, $no_list[__CONTROLLER__])){
 			return;

@@ -10,16 +10,16 @@
 // +----------------------------------------------------------------------
 
 return [
-    // 数据库类型
+     // 数据库类型
     'type'           => 'mysql',
     // 服务器地址
-    'hostname'       => 'rm-wz9o323y818wfwuvo.mysql.rds.aliyuncs.com',
+    'hostname'       => '127.0.0.1',
     // 数据库名
     'database'       => 'mokatime_apiserver',
     // 用户名
-    'username'       => 'moka_apiserver',
+    'username'       => 'root',
     // 密码
-    'password'       => 'df-343CVDFp0923!',
+    'password'       => 'root',
     // 端口
     'hostport'       => '',
     // 连接dsn
@@ -45,7 +45,7 @@ return [
     // 数据集返回类型 array 数组 collection Collection对象
     'resultset_type' => 'array',
     // 是否自动写入时间戳字段
-    'auto_timestamp' => false,
+    'auto_timestamp' => true,
     // 是否需要进行SQL性能分析
     'sql_explain'    => false,
 ];
