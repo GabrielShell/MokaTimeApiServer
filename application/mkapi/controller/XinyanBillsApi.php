@@ -46,7 +46,7 @@ class XinyanBillsApi extends Common{
          */
         public function getEmailOrderNo(){
                 $txnType = 'email';
-                $this->getOrderNo($txnType);
+                return $this->getOrderNo($txnType);
         }
 
         /**
@@ -54,7 +54,7 @@ class XinyanBillsApi extends Common{
          */
         public function getBankOrderNo(){
                 $txnType = 'bank';
-                $this->getOrderNo($txnType);
+                return $this->getOrderNo($txnType);
         }
 
         /**
@@ -110,20 +110,14 @@ class XinyanBillsApi extends Common{
                 );
 
                 $return = CurlRequest::Post($PostArry, $request_url); 
-                echo $return;
-                exit();
-                //发送请求到服务器，并输出返回结果。
-
-                if(empty($return)){
-                        throw new Exception("返回为空，确认是否网络原因！");
+                $arr_result = json_decode($return,true);
+                if(is_array($arr_result) && $arr_result['success'] == 'true'){
+                        return json_encode(['status'=>0,'msg'=>'预订单成功！','data'=>$arr_result['data']]);
+                }else{
+                        $errorId = uniqid("ERR");
+                        Log::error('【'.$errorId.'】新颜API-预订单接口错误(bills),API接口返回信息不能解析，API接口返回信息：'.$return);
+                        return json_encode(['status'=>1,'msg'=>'查询失败！操作ID:'.$errorId]);
                 }
-                //** 处理返回的报文 */
-                $a = json_decode($return,true) ;
-                $responseData['success'] = $a['success'];
-                $responseData['orderId'] = $a['data'];
-
-
-                my_json_encode(10000, $responseData);
         }
 
         /**
@@ -331,7 +325,7 @@ class XinyanBillsApi extends Common{
                 $user_id=$order->create_uuid();
 
                 $arrayData=array(
-                        "member_id"=>$this->member_id,
+                        //"member_id"=>$this->member_id,
                         "terminal_id"=>$this->terminal_id,
                         "member_trans_date"=>$member_trans_date,
                         "member_trans_id"=>$member_trans_id,
@@ -366,7 +360,7 @@ class XinyanBillsApi extends Common{
                         "member_id" =>$this->member_id,
                         "terminal_id" => $this->terminal_id,
                         "data_type" => $this->data_type,
-                        "data_content" => $data_content
+                        "data_content" => 'a'.$data_content
                 );
 
                 $PostArryJson = str_replace("\\/", "/",json_encode($PostArry));//转JSON

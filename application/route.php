@@ -1,3 +1,4 @@
+
 <?php
 use think\Route;
 
