@@ -30,7 +30,7 @@ class Bank extends Controller{
 		// $province = "福建省";
 		// $city = "三明市";
 
-		$bankBranchList = Db::name('lakala_bankbranch')->field('bankbranch_no,bankbranch_name')->where([
+		$bankBranchList = Db::name('lakala_bankbranch')->field('id bankbranch_id,bankbranch_name')->where([
 			'bank_id'=>['=',$bank_id],
 			'province' =>['like',$province.'%'],
 			'city' => ['like',$city.'%']
