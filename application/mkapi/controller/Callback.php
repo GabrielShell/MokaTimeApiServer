@@ -42,31 +42,34 @@ class Callback extends Controller{
             $decrypted = $AES->decryptString($coreData['params']);
             $decrypted = json_decode($decryData,true);
             //Log::error('开通商户解密： '.json_encode($data,JSON_UNESCAPED_UNICODE));
-            write_to_log('【开通商户回调信息解密：】'.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
             //验签
             $checkSign = $AES->checkSign($decrypted, $coreData['sign'], $this->_LklDecryptKeyPath);
             //验证通过
             if($checkSign){
+                write_to_log('【拉卡拉注册/回调信息解密：】'.json_encode($decrypted,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
+
                 $decrypted = json_decode($decrypted, true);
                 if(!empty($coreData['ver'])){
-                    $data['is_merchant'] = 1;
-                }
+                    //更新用户表信息
+                    $userData['is_merchant'] = 1;
+                    $userData['open_merchant_status'] = 1;
+                    $userData['series'] = $decrypted['partnerUserId'];
+                    //更新用户表
+                    $userResult = Db::name('users')->where('series',$series)->update($userData);
+                    //更新失败
+                    if(!$userResult){
+                        Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/lakala/sql/']);
+                        Log::sql('【拉卡拉注册/更新用户信息出错】'.$userData);
 
-            }
-            if ($checkSign){
-                $decrypted = json_decode($decrypted, true);
-
-                if (!empty($coreData['ver'])){
-                    //写入
-                    $data['is_'] = 1;
-                    $data['bind_time'] = time();
-                    $data['merchantId'] = $decrypted['merId'];
-                    $result = M("Posmanagement")->where("tel='%s' AND pos_id=1", array($decrypted['partnerUserId']))->save($data);
-                    if (!$result) {
-                        write_to_log('拉卡拉注册/绑定通知-无此用户' . json_encode($data, JSON_UNESCAPED_UNICODE), '/WxApi/Log/Lakala/');
+                        write_to_log('【拉卡拉注册/绑定通知-无此用户】'.json_encode($userData,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/sql/');
                         exit();
-                    }
-                    //只有注册/绑定时才需要返回以下数据给拉卡拉
+                    }  
+                    //1、配置响应拉卡拉的参数
+                    //2、更新用户表
+                    //3、更新商户信息表
+                    //4、开通D0商户
+
+                    //1、
                     $param['isSuccess'] = 'Y';
                     $param['partnerTime'] = date("YmdHis");
                     $json = json_encode($param, JSON_UNESCAPED_UNICODE);
@@ -75,22 +78,69 @@ class Callback extends Controller{
                     $map['params'] = $AES->encryptString($json);
                     $map['sign'] = $AES->sign($json, $this->_LklEncryptKeyPath);
                     $map2Json = json_encode($map, JSON_UNESCAPED_UNICODE);
-                    write_to_log('拉卡拉注册/绑定通知输出给拉卡拉的内容' . $map2Json, '/WxApi/Log/Lakala/');
-                    write_to_log('拉卡拉注册/绑定通知输出给拉卡拉的内容' . json_encode($decrypted, JSON_UNESCAPED_UNICODE), '/WxApi/Log/Lakala/');
-                    echo $map2Json;
-                    sleep(5);
-                    //开通D0
-                    $result = $this->openD0($decrypted['merId']);
-                    if ($result['status'] == 1){
-                        $manage['openStatus'] = 1;
-                        M("Posmanagement")->where("tel='%s' AND pos_id=1", array($decrypted['partnerUserId']))->save($manage);
-                        write_to_log('拉卡拉-开通D0成功' . $result['msg'], '/WxApi/Log/Lakala/');
+
+                    write_to_log('【拉卡拉注册/绑定通知输出给拉卡拉的内容】' . $map2Json, '/mkapi/log/lakala/callback/');
+                    //echo $map2Json;
+                    //sleep(10);
+                    $merchantData['merchant_id'] = $decrypted['merId'];
+                    $merchantData['bind_time'] = time();
+                    $merchantData['series'] = $userData['series'];
+                    $merchantData['bind_time'] = $userData['series'];
+
+                    $merrchanntResult = Db::name('merchants')->insert($merchantData);
+                    if(!$merrchanntResult){
+                        Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/lakala/sql/']);
+                        Log::sql('【拉卡拉注册/更新用户信息出错】'.$merchantData);
                     }else{
-                        write_to_log('拉卡拉-开通D0失败' . $result['msg'], '/WxApi/Log/Lakala/');
+                        write_to_log('【拉卡拉注册/商户开通成功】' . json_encode($merchantData), '/mkapi/log/lakala/callback/');
+                        //开通D0
                     }
+
                 }
+
+            }else{
+                write_to_log('【拉卡拉注册/绑定通知-验签失败】' . json_encode($decrypted), '/mkapi/log/lakala/callback/');
             }
-            write_to_log('拉卡拉注册/绑定通知-验签失败' . json_encode($decrypted), '/WxApi/Log/Lakala/');
+
+
+            // if ($checkSign){
+            //     $decrypted = json_decode($decrypted, true);
+
+            //     if (!empty($coreData['ver'])){
+            //         //写入
+            //         $data['is_'] = 1;
+            //         $data['bind_time'] = time();
+            //         $data['merchantId'] = $decrypted['merId'];
+            //         $result = M("Posmanagement")->where("tel='%s' AND pos_id=1", array($decrypted['partnerUserId']))->save($data);
+            //         if (!$result) {
+            //             write_to_log('拉卡拉注册/绑定通知-无此用户' . json_encode($data, JSON_UNESCAPED_UNICODE), '/WxApi/Log/Lakala/');
+            //             exit();
+            //         }
+            //         //只有注册/绑定时才需要返回以下数据给拉卡拉
+            //         $param['isSuccess'] = 'Y';
+            //         $param['partnerTime'] = date("YmdHis");
+            //         $json = json_encode($param, JSON_UNESCAPED_UNICODE);
+            //         $map['ver'] = $coreData['ver'];
+            //         $map['reqId'] = $coreData['reqId'];
+            //         $map['params'] = $AES->encryptString($json);
+            //         $map['sign'] = $AES->sign($json, $this->_LklEncryptKeyPath);
+            //         $map2Json = json_encode($map, JSON_UNESCAPED_UNICODE);
+            //         write_to_log('拉卡拉注册/绑定通知输出给拉卡拉的内容' . $map2Json, '/WxApi/Log/Lakala/');
+            //         write_to_log('拉卡拉注册/绑定通知输出给拉卡拉的内容' . json_encode($decrypted, JSON_UNESCAPED_UNICODE), '/WxApi/Log/Lakala/');
+            //         echo $map2Json;
+            //         sleep(5);
+            //         //开通D0
+            //         $result = $this->openD0($decrypted['merId']);
+            //         if ($result['status'] == 1){
+            //             $manage['openStatus'] = 1;
+            //             M("Posmanagement")->where("tel='%s' AND pos_id=1", array($decrypted['partnerUserId']))->save($manage);
+            //             write_to_log('拉卡拉-开通D0成功' . $result['msg'], '/WxApi/Log/Lakala/');
+            //         }else{
+            //             write_to_log('拉卡拉-开通D0失败' . $result['msg'], '/WxApi/Log/Lakala/');
+            //         }
+            //     }
+            // }
+            // write_to_log('拉卡拉注册/绑定通知-验签失败' . json_encode($decrypted), '/WxApi/Log/Lakala/');
         }    
     }
 
