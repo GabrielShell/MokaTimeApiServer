@@ -11,7 +11,7 @@ class Makecollections extends Common{
 	public function index(){
 		$request = Request::instance();
 		//收集表单数据
-		$channel_id = $request->post("channel_id");
+		$channel_id = $request->post("channel_id"); //渠道号 现在默认都是1
 		if($channel_id == null){
 			my_json_encode(8,'参数不能为空');
 		}

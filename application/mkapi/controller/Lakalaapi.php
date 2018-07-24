@@ -130,7 +130,7 @@ class Lakalaapi extends Common{
 
 
             //发送参数
-            my_json_encode(0,'success',array(
+            my_json_encode(10000,'success',array(
                 'param'=>$param
                 ));
 

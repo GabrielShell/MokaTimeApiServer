@@ -80,3 +80,9 @@ Route::post('api/v1/bills/bank/bills','mkapi/XinyanBillsApi/cyberBankQueryBills'
  * @param tradeNo 新颜订单号
  */
 Route::post('api/v1/bills/bank/cards','mkapi/XinyanBillsApi/cyberBankQueryCards');
+
+/**
+ * 网银查询银行卡所有信息[POST]
+ * @param tradeNo 新颜订单号
+ */
+Route::post('api/v1/open/merchant/','mkapi/Lakalaapi/PaymentTrade');
