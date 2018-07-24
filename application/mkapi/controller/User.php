@@ -8,6 +8,7 @@ use think\Controller;
 use think\Request;
 use think\Db;
 use think\Session;
+use think\Log;
 class User extends Common{
 	//用户登录
 	public function sendVerify(){
@@ -29,7 +30,15 @@ class User extends Common{
 			    if( isset( $res['error'] ) &&  $res['error'] == 0 ){
 			        my_json_encode(0, 'success');
 			    }else{
-			        my_json_encode(0,'notice','failed,code:'.$res['error'].',msg:'.$res['msg']);
+			    	if($res['error'] == '-42'){
+			    		$msg = '验证码发送太频繁';
+			    	}else if($res['error'] == '-40'){
+			    		$msg = '手机号错误';
+			    	}
+
+			    	$errorId = uniqid('ERR');
+					Log::error("【".$errorId."】验证码发送错误：".$res['msg']);
+			        my_json_encode($res['error'],$msg);
 			    }
 			}else{
 			    my_json_encode(3,'error',$sms->last_error());
@@ -71,18 +80,26 @@ class User extends Common{
 				$series = $result['series'];
 			}
 
-			//储存token
-			$token_data['series'] = $series;//用户唯一标识
+			//实例化tokenMessage模型
+			$tokenMessage = model('TokenMessages');
+			//储存token数据
 			$token_data['access_token'] = getKey(32);
 			$token_data['refresh_token'] = getKey(32);
 			$token_data['ac_start_time'] = time();
 			$token_data['re_start_time'] = time();
-			//实例化tokenMessage模型
-			$tokenMessage = model('TokenMessages');
-			$tokenMessage->data($token_data);
-			$insertResult = $tokenMessage->save();
-			//判断token是否储存成功
-			if($insertResult){
+
+			$toke_result = $tokenMessage->where('series',$series)->find();
+			if(!empty($toke_result)){
+				$saveResult = $tokenMessage->save($token_data,['series' => $series]);
+			}else{
+				$token_data['series'] = $series;//用户唯一标识
+				$tokenMessage->data($token_data);
+				$saveResult = $tokenMessage->save();
+				//判断token是否储存成功
+			}
+
+			//判断数据是否返回成功
+			if($saveResult){
 				$responseData = array(
 					'msg' => 'success',
 					'series' => $result['series'],
@@ -91,7 +108,9 @@ class User extends Common{
 					);
 				    my_json_encode(0,'success',$responseData);
 			}else{
-				my_json_encode(9,'系统异常');
+				$errorId = uniqid('sqlErr');
+				Log::sql("【".$errorId."】token储存失败");
+				my_json_encode(9,'token储存失败:errorId='.$errorId);
             }
 		}
 	}
@@ -125,6 +144,8 @@ class User extends Common{
               	$tokenMessage = model('tokenMessages');
         		$tokenMessage->save($data,['series' => $series]);
         		my_json_encode(6,'notice',array('access_token已过期，请刷新token','access_token'=>$data['access_token']));
+        	}else{
+        		my_json_encode(0,'success');
         	}
         }
 	}

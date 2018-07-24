@@ -8,8 +8,10 @@ class Bank extends Controller{
 
 	//获取银行信息
 	public function getBank(){
-		$bankList = Db::name('lakala_bank')->field('id bank_id,bank_name')->select();
+		$bankList = Db::name('lakala_bank')->field('id bank_id,bank_name')->order('id asc')->select();
 		if(empty($bankList)){
+			$errorId = uniqid('sqlErr');
+			Log::sql("【".$errorId."】银行信息获取失败");
 			my_json_encode(10002,'数据获取失败');
 		}else{
 			my_json_encode(10000,'success',$bankList);
@@ -28,12 +30,14 @@ class Bank extends Controller{
 		// $province = "福建省";
 		// $city = "三明市";
 
-		$bankBranchList = Db::name('lakala_bankbranch')->field('bank_id,bankranch_name,province,city')->where([
+		$bankBranchList = Db::name('lakala_bankbranch')->field('id bankbranch_id,bankbranch_name')->where([
 			'bank_id'=>['=',$bank_id],
 			'province' =>['like',$province.'%'],
 			'city' => ['like',$city.'%']
-			])->select();
+			])->order('bankbranch_no asc')->select();
 		if(empty($bankBranchList)){
+			$errorId = uniqid('sqlErr');
+			Log::sql("【".$errorId."】支行信息获取失败");
 			my_json_encode(10002,'数据获取失败');
 		}else{
 			// echo "<pre>";
