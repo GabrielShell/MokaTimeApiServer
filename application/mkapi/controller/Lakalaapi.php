@@ -48,7 +48,7 @@ class Lakalaapi extends Common{
         }else{
             
             //获取支行信息
-            $bankbranchInfo = Db::name('bankbranch')->field('bankbranch_name,bankbranch_no')->where("id = {$userInfo['bankbranch_id']}")->find();
+            $bankbranchInfo = Db::name('lakala_bankbranch')->field('bankbranch_name,bankbranch_no')->where("id = {$userInfo['bankbranch_id']}")->find();
             if(!$bankbranchInfo){
                 $errorId = uniqid("sqlErr");
                 Log::init(['type'=>'file','path' => APP_PATH . 'mkapi/log/lakala/sql/']);
