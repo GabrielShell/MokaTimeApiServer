@@ -54,3 +54,28 @@ Route::post('api/v1/bills/bank/config-login','mkapi/XinyanBillsApi/queryBankConf
  * @param origin 交互方式;  2有验证码 ；3 无验证码 如不确定该银行登录是否有验证方式请填写2
  */
 Route::post('api/v1/bills/bank/task-create','mkapi/XinyanBillsApi/cyberBankQueryTaskCreate');
+
+/**
+ * 网银账单状态查询接口 [POST]
+ * @param tradeNo 新颜订单号
+ */
+Route::post('api/v1/bills/bank/task-status','mkapi/XinyanBillsApi/cyberBankQueryTaskStatus');
+
+/**
+ * 网银账单查询验证码输入接口[POST]
+ * @param tradeNo 新颜订单号
+ * @param input 验证码
+ */
+Route::post('api/v1/bills/bank/task-input','mkapi/XinyanBillsApi/cyberBankQueryTaskInput');
+
+/**
+ * 网银查询银行卡卡号和账单信息[POST]
+ * @param tradeNo 新颜订单号
+ */
+Route::post('api/v1/bills/bank/bills','mkapi/XinyanBillsApi/cyberBankQueryBills');
+
+/**
+ * 网银查询银行卡所有信息[POST]
+ * @param tradeNo 新颜订单号
+ */
+Route::post('api/v1/bills/bank/cards','mkapi/XinyanBillsApi/cyberBankQueryCards');

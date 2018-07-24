@@ -199,11 +199,8 @@ class XinyanBillsApi extends Common{
                                 $bill_record->bill_date = $bill['bill_date'];
                                 $bill_record->payment_due_date = $bill['payment_due_date'];
                                 $bill_record->credit_limit = $bill['credit_limit'];
-                                $bill_record->usd_credit_limit = $bill['usd_credit_limit'];
                                 $bill_record->new_balance = $bill['new_balance'];
-                                $bill_record->usd_new_balance = $bill['usd_new_balance'];
                                 $bill_record->min_payment = $bill['min_payment'];
-                                $bill_record->usd_min_payment = $bill['usd_min_payment'];
                                 $bill_record->point = $bill['point'];
                                 $bill_record->save();
                                 
@@ -378,7 +375,122 @@ class XinyanBillsApi extends Common{
                 }else{
                         $errorId = uniqid("ERR");
                         $return = ['status'=>1,'msg' => '创建任务失败！操作ID:'.$errorId];
-                        Log::error('【'.$errorId.'】新颜API-创建任务失败（config-login）,API接口返回信息不能解析，API接口返回信息：'.$result[0]);
+                        Log::error('【'.$errorId.'】新颜API-创建任务失败（task-create）,API接口返回信息不能解析，API接口返回信息：'.$result[0]);
+                }
+                return json_encode($return);
+        }
+
+        /**
+         * 网银账单状态查询接口
+         */
+        public function cyberBankQueryTaskStatus(Request $request){
+                $tradeNo = $request->post('tradeNo');
+                $requestUrl = 'https://api.xinyan.com/gateway-data/bank/v1/task/status'.'/'.$tradeNo;
+                $result = CurlRequest::get($requestUrl,$this->headers);
+                $arr_result = json_decode($result,true);
+                if(is_array($arr_result) && $arr_result['success'] == 'true'){
+                        $return = ['status'=>0,'msg'=>'状态查询成功！','data'=>$arr_result['data']];
+                }else{
+                        $errorId = uniqid("ERR");
+                        $return = ['status'=>1,'msg' => '查询状态失败！操作ID:'.$errorId];
+                        Log::error('【'.$errorId.'】新颜API-查询状态失败（task-status）,API接口返回信息不能解析，API接口返回信息：'.$result[0]);
+                }
+                return json_encode($return);
+
+        }
+
+
+        /**
+         * 网银账单查询验证码输入接口
+         */
+        public function cyberBankQueryTaskInput(Request $request){
+                $tradeNo = $request->post('tradeNo');
+                $input = $request->post('input');
+                $requestUrl = 'https://api.xinyan.com/gateway-data/bank/v1/task/input'.'/'.$tradeNo;
+                $PostArray = ['input'=>$input];
+                $PostArryJson = str_replace("\\/", "/",json_encode($PostArray));//转JSON
+                //对于json 设置请求头
+                $header = array(
+                        'Content-Type: application/json; charset=utf-8',
+                        'Content-Length: ' . strlen($PostArryJson),
+                        "memberId:".$this->member_id,
+                        "terminalId:".$this->terminal_id
+                );
+                $result = CurlRequest::request($requestUrl,'post',$PostArryJson,$header,20);
+                $arr_result = json_decode($result[0],true);
+                if(is_array($arr_result) && $arr_result['success'] == 'true'){
+                        $return = ['status' => 0,'msg'=>'验证码已输入！','data'=>['tradeNo'=>$arr_result['data']['tradeNo']]];
+                }else{
+                        $errorId = uniqid("ERR");
+                        $return = ['status'=>1,'msg' => '验证码输入失败！操作ID:'.$errorId];
+                        Log::error('【'.$errorId.'】新颜API-验证码输入失败（task-input）,API接口返回信息不能解析，API接口返回信息：'.$result[0]);
+                }
+                return json_encode($return);
+        }
+
+
+        /**
+         * 网银账单查询银行卡卡号和账单信息
+         */
+        public function cyberBankQueryBills(Request $request){
+                $tradeNo = $request->post('tradeNo');
+                $requestUrl = 'https://api.xinyan.com/data/bank/v2/bills/id/';
+                $requestUrl .= $tradeNo;
+                $result = CurlRequest::get($requestUrl,$this->headers);
+                $arr_result = json_decode($result,true);
+                if(is_array($arr_result) && $arr_result['success'] == 'true'){
+                        $return = ['status'=>0,'msg'=>'查询成功！','data'=>$arr_result['data']];
+                }else{
+                        $errorId = uniqid("ERR");
+                        $return = ['status'=>1,'msg' => '查询状态失败！操作ID:'.$errorId];
+                        Log::error('【'.$errorId.'】新颜API-查询失败（bank-bills）,API接口返回信息不能解析，API接口返回信息：'.$result[0]);
+                }
+                return json_encode($return);
+        }
+
+        /**
+         * 网银查询任务采集的银行卡所有信息
+         */
+        public function cyberBankQueryCards(Request $request){
+                $tradeNo = $request->post('tradeNo');
+                $requestUrl = 'https://api.xinyan.com/data/bank/v2/cards/all/'.$tradeNo;
+                $result = CurlRequest::get($requestUrl,$this->headers);
+                $arr_result = json_decode($result,true);
+
+                if(is_array($arr_result) && $arr_result['success'] == 'true'){
+                        //将查询的数据写入数据库
+                        foreach($arr_result['data'] as $card){
+                                //如果账单具有信用额度，则为信用卡，只处理信用卡
+                                if(isset($card['bills'][0]) && $card['credit_limit'] > 0){
+                                        $bank_name = $card['bank_name'];
+                                        $name_on_card = $card['name_on_card'];
+                                        $card_no = $card['full_card_num'];
+                                        $card_no_last4 = substr($card['full_card_num'],-4);
+                                        $credit_limit = $card['credit_limit'];
+                                        $balance = $card['balance'];
+                                        //获取账单日还款日
+                                        $bill_date = $card['bills'][0]['bill_date'];
+                                        $due_date = $card['bills'][0]['payment_due_date'];
+                                        $unique_string = $bank_name.'-'.$name_on_card.'-'.$card_no_last4;
+
+                                        //验证卡片是否已经存在于数据库
+                                        $cardDbInstance = Credit_cards::get(['unique_string'=>$unique_string]);
+                                        if($cardDbInstance){
+                                                //如果该卡片已存在，则更新该信用卡记录
+
+                                        }else{
+                                                //不存在，则创建信用卡记录
+
+                                        }
+
+
+                                }
+                        }
+                        $return = ['status'=>0,'msg'=>'查询成功！'];
+                }else{
+                        $errorId = uniqid("ERR");
+                        $return = ['status'=>1,'msg' => '查询状态失败！操作ID:'.$errorId];
+                        Log::error('【'.$errorId.'】新颜API-查询失败（bank-cards）,API接口返回信息不能解析，API接口返回信息：'.$result[0]);
                 }
                 return json_encode($return);
         }
