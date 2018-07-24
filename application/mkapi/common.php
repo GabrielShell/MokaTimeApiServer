@@ -24,7 +24,7 @@ function httpHost($curlPost,$url){
 function getNo($type=1, $num=8){
      $str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
      switch ($type){
-         case 1: $no = 'TM';break;
+         case 1: $no = 'MK';break;
          case 2: $no = 'FR';break;
          case 3: $no = 'BK';break;
          case 4: $no = 'FR';break;
@@ -84,7 +84,7 @@ function getUserId($num=6,$phone){
     $d = date('d');
     $save_path .= $d . '/';
     if (!file_exists($save_path)) {
-        mkdir($save_path);
+       mkdir($save_path);
     }
     $date = date('YmdH');
     $file_name = $date;
