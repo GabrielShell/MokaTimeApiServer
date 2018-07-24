@@ -36,18 +36,22 @@ class Callback extends Controller{
             //write_to_log('【开通商户回调信息：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
             Log::init(['type'=>'file','path'=>'mkapi/log/lakala/callback/']);
             Log::error('【开通商户回调信息：】 '.$data);
-            write_to_log('【开通商户回调信息：】 '.$data,'mkapi/log/lakala/callback/');
+            //write_to_log('【开通商户回调信息：】 '.$data,'mkapi/log/lakala/callback/');
            // write_to_log1($data,'mkapi/log/lakala/callback/');
 
             // Log::init(['type' => 'file', 'path' => APP_PATH . 'mkapi/log/lakala/callback/']);
             // Log::error(date("y-m-d H:i:s").'【开通商户回调信息】'.json_encode($data,JSON_UNESCAPED_UNICODE));
             $coreData = base64_decode($data['param']);
             $coreData = json_decode($coreData,true);
+            write_to_log('1','mkapi/log/lakala/callback/');
             $AES = new AesCbc($this->_LklAesKey);
+            write_to_log('2','mkapi/log/lakala/callback/');
             $decrypted = $AES->decryptString($coreData['params']);
             //Log::error('开通商户解密： '.json_encode($data,JSON_UNESCAPED_UNICODE));
             //验签
+            write_to_log('3','mkapi/log/lakala/callback/');
             $checkSign = $AES->checkSign($decrypted, $coreData['sign'], $this->_LklDecryptKeyPath);
+            write_to_log('4','mkapi/log/lakala/callback/');
             //验证通过
             if($checkSign){
                 write_to_log('【拉卡拉注册/回调信息解密：】'.json_encode($decrypted,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
