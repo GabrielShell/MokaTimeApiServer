@@ -17,8 +17,7 @@ class Makecollections extends Common{
 		}
 
 		$result = Db::name("channel")->field("id channel_id , channel_code , pay_rate")->where("id = $channel_id")->find();
-		echo "<pre>";
-		var_dump($result);
+		
 		if($result){
 			my_json_encode(10000,'success',$result);
 		}else{
