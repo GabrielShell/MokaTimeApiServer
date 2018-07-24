@@ -392,8 +392,8 @@ class XinyanBillsApi extends Common{
                         $return = ['status'=>0,'msg'=>'状态查询成功！','data'=>$arr_result['data']];
                 }else{
                         $errorId = uniqid("ERR");
-                        $return = ['status'=>1,'msg' => '查询状态失败！操作ID:'.$errorId];
-                        Log::error('【'.$errorId.'】新颜API-查询状态失败（task-status）,API接口返回信息不能解析，API接口返回信息：'.$result[0]);
+                        $return = ['status'=>1,'msg' => '【'.$errorId.'】新颜API-查询状态失败（task-status）,API接口返回信息不能解析，API接口返回信息：'.$result];
+                        Log::error('【'.$errorId.'】新颜API-查询状态失败（task-status）,API接口返回信息不能解析，API接口返回信息：'.$result);
                 }
                 return json_encode($return);
 
