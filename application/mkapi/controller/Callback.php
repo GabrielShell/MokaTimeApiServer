@@ -34,13 +34,14 @@ class Callback extends Controller{
         }
         if(!empty($data)){
             write_to_log('【开通商户回调信息：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
+            write_to_log1('【开通商户回调信息：】 '.$data,'mkapi/log/lakala/callback/');
+            exit();
             // Log::init(['type' => 'file', 'path' => APP_PATH . 'mkapi/log/lakala/callback/']);
             // Log::error(date("y-m-d H:i:s").'【开通商户回调信息】'.json_encode($data,JSON_UNESCAPED_UNICODE));
             $coreData = base64_decode($data['param']);
             $coreData = json_decode($coreData,true);
             $AES = new AesCbc($this->_LklAesKey);
             $decrypted = $AES->decryptString($coreData['params']);
-            $decrypted = json_decode($decryData,true);
             //Log::error('开通商户解密： '.json_encode($data,JSON_UNESCAPED_UNICODE));
             //验签
             $checkSign = $AES->checkSign($decrypted, $coreData['sign'], $this->_LklDecryptKeyPath);
