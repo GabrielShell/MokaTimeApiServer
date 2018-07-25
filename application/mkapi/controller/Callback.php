@@ -198,9 +198,10 @@ class Callback extends Controller{
         }
         write_to_log('【拉卡拉D0开通成功】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
         write_to_log('【拉卡拉D0开通成功】' . $merchantId, '/mkapi/log/lakala/callback/openD0/');
-        $result = Db::name("merchants")->where("merchant_id", $merchantId)->find();
+        $result = Db::name("merchants")->where("merchant_no", $merchantId)->find();
         if (!empty($result)){
-            Db::name("users")->where('series',$result['series'])->update($dataSave);
+            
+            $result =Db::name("users")->where('series',$result['series'])->update($dataSave);
         }
 
     }
