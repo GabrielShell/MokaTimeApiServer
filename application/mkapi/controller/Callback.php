@@ -27,18 +27,21 @@ class Callback extends Controller{
     *开通商户回调
     */
 	public function register(){
-        $request = Request::instance();
-        $data = $$request->post('param');
-        // if(empty($data)){
-        //     $data = file_get_contents("php://input");
-        // }
+        // $request = Request::instance();
+        // $data = $$request->post('param');
+        $data = $_REQUEST;
+        // write_to_log('【开通商户回调信息：】 '.$data,'mkapi/log/lakala/callback/');
+        if(empty($data)){
+            $data = file_get_contents("php://input");
+        }
         if(!empty($data)){
+            parse_str($data,$resultData);
+            write_to_log('【开通商户回调信息：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
 
+            // Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/lakala/callback/']);
+            // Log::error('【开通商户回调信息：】 '.$data);
             write_to_log('【开通商户回调信息：】 '.$data,'mkapi/log/lakala/callback/');
-            //Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/lakala/callback/']);
-            //Log::error('【开通商户回调信息：】 '.$data);
-            //write_to_log('【开通商户回调信息：】 '.$data,'mkapi/log/lakala/callback/');
-           // write_to_log1($data,'mkapi/log/lakala/callback/');
+            write_to_log1($data,'mkapi/log/lakala/callback/');
 
             // Log::init(['type' => 'file', 'path' => APP_PATH . 'mkapi/log/lakala/callback/']);
             // Log::error(date("y-m-d H:i:s").'【开通商户回调信息】'.json_encode($data,JSON_UNESCAPED_UNICODE));
@@ -46,7 +49,7 @@ class Callback extends Controller{
             //$coreData = json_decode($coreData,true);
             $coreData = base64_decode($data);
             //$coreData = json_decode($coreData,true);
-            write_to_log($coreData,'mkapi/log/lakala/callback/');
+            write_to_log('【反编码】'.$coreData,'mkapi/log/lakala/callback/');
             $AES = new AesCbc($this->_LklAesKey);
             write_to_log('2','mkapi/log/lakala/callback/');
             $decrypted = $AES->decryptString($coreData['params']);
