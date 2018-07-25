@@ -157,7 +157,7 @@ class Callback extends Controller{
         $data['FunCod'] = '7011';
         $data['compOrgCode'] = $this->_LklCompOrgCode;
         $data['reqLogNo'] = date("YmdHis") . '00';
-        $data['retUrl'] = 'http://mk.xmjishiduo.com/mkapi.php?/mkapi/Callback/resultOpenD0';
+        $data['retUrl'] = 'http://wk.xmjishiduo.com/wxApi.php?m=Callback&a=resultOpenFromLkl';
         $queryString = $data['compOrgCode'] . $data['reqLogNo'] . $data['shopNo'] . $this->_LklHashKey;
         $data['MAC'] = sha1($queryString);
         $this->xml = new \XMLWriter();
