@@ -27,42 +27,24 @@ class Callback extends Controller{
     *开通商户回调
     */
 	public function register(){
-        // $request = Request::instance();
-        // $data = $$request->post('param');
+        //收集拉卡拉的请求数据
         $data = $_REQUEST;
-        // write_to_log('【开通商户回调信息：】 '.$data,'mkapi/log/lakala/callback/');
         if(empty($data)){
             $data = file_get_contents("php://input");
         }
         if(!empty($data)){
             write_to_log('【开通商户回调信息1：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
-            parse_str($data,$resultData);
-            write_to_log('【开通商户回调信息2：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
-            
-
-            // Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/lakala/callback/']);
-            // Log::error('【开通商户回调信息：】 '.$data);
-            write_to_log1($data,'mkapi/log/lakala/callback/');
-
-            // Log::init(['type' => 'file', 'path' => APP_PATH . 'mkapi/log/lakala/callback/']);
-            // Log::error(date("y-m-d H:i:s").'【开通商户回调信息】'.json_encode($data,JSON_UNESCAPED_UNICODE));
-            //$coreData = base64_decode($data['param']);
-            //$coreData = json_decode($coreData,true);
-            $coreData = base64_decode($data);
-            //$coreData = json_decode($coreData,true);
-            write_to_log('【反编码】'.$coreData,'mkapi/log/lakala/callback/');
+            // 将数据反编码
+            $coreData = base64_decode($data['param']);
+            $coreData = json_decode($coreData,true);
             $AES = new AesCbc($this->_LklAesKey);
-            write_to_log('2','mkapi/log/lakala/callback/');
+            // 解密
             $decrypted = $AES->decryptString($coreData['params']);
-            //Log::error('开通商户解密： '.json_encode($data,JSON_UNESCAPED_UNICODE));
             //验签
-            write_to_log('3','mkapi/log/lakala/callback/');
             $checkSign = $AES->checkSign($decrypted, $coreData['sign'], $this->_LklDecryptKeyPath);
-            write_to_log('4','mkapi/log/lakala/callback/');
             //验证通过
             if($checkSign){
                 write_to_log('【拉卡拉注册/回调信息解密：】'.json_encode($decrypted,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
-                exit();
                 $decrypted = json_decode($decrypted, true);
                 if(!empty($coreData['ver'])){
                     //更新用户表信息
@@ -80,11 +62,11 @@ class Callback extends Controller{
                         exit();
                     }  
                     //1、配置响应拉卡拉的参数
-                    //2、更新用户表
+                    //2、判断商户是否开通
                     //3、更新商户信息表
                     //4、开通D0商户
 
-                    //1、
+                    //配置响应拉卡拉的参数
                     $param['isSuccess'] = 'Y';
                     $param['partnerTime'] = date("YmdHis");
                     $json = json_encode($param, JSON_UNESCAPED_UNICODE);
@@ -94,17 +76,26 @@ class Callback extends Controller{
                     $map['sign'] = $AES->sign($json, $this->_LklEncryptKeyPath);
                     $map2Json = json_encode($map, JSON_UNESCAPED_UNICODE);
 
+
                     write_to_log('【拉卡拉注册/绑定通知输出给拉卡拉的内容】' . $map2Json, '/mkapi/log/lakala/callback/');
                     //echo $map2Json;
                     //sleep(10);
+
+                    //配置商户表字段信息
                     $merchantData['merchant_id'] = $decrypted['merId'];
                     $merchantData['bind_time'] = time();
                     $merchantData['series'] = $userData['series'];
                     $merchantData['bind_time'] = $userData['series'];
-
+                    //判断商户是否已经开通
+                    $merrchanntResult = Db::name('merchants')->where('merchant_id',$merchantData['merchant_id']);
+                    // 如果已经开通商户终止程序运行
+                    if($merrchanntResult){
+                        exit();
+                    }
+                    // 储存商户信息
                     $merrchanntResult = Db::name('merchants')->insert($merchantData);
                     if(!$merrchanntResult){
-                        Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/lakala/sql/']);
+                        Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/lakala/callback/']);
                         Log::sql('【拉卡拉注册/更新用户信息出错】'.$merchantData);
                     }else{
                         write_to_log('【拉卡拉注册/商户开通成功】' . json_encode($merchantData), '/mkapi/log/lakala/callback/');
