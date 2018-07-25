@@ -95,7 +95,7 @@ class Lakalaapi extends Common{
 
             //判断用户是否开通商户
             if($userInfo['is_merchant'] == 1){
-                $data['optCode'] = 'P00001';//业务代码
+                $encryptData['optCode'] = 'P00001';//业务代码
 
                 write_to_log('【拉卡拉交易的订单参数：】'.json_encode($encryptData,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/openMerchant/');
             }else{
