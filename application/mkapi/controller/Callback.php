@@ -35,12 +35,13 @@ class Callback extends Controller{
             $data = file_get_contents("php://input");
         }
         if(!empty($data)){
+            write_to_log('【开通商户回调信息1：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
             parse_str($data,$resultData);
-            write_to_log('【开通商户回调信息：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
+            write_to_log('【开通商户回调信息2：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
+            
 
             // Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/lakala/callback/']);
             // Log::error('【开通商户回调信息：】 '.$data);
-            write_to_log('【开通商户回调信息：】 '.$data,'mkapi/log/lakala/callback/');
             write_to_log1($data,'mkapi/log/lakala/callback/');
 
             // Log::init(['type' => 'file', 'path' => APP_PATH . 'mkapi/log/lakala/callback/']);
