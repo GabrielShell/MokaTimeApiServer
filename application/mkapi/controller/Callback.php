@@ -10,21 +10,15 @@ use crypt\AesCbc;
 use think\Log;
 class Callback extends Controller{
 	//拉卡拉交易D0提款参数
-    // 机构号： 425510
-    // private $_LklCompOrgCode = 'QFTMPOS';
-    // private $_LklHashKey = 'mUb46HfgUDfygDq8KrbZTNRObQwhBeFv';
    	private $_LklCompOrgCode = 'QFDT';
    	private $_LklHashKey = 'wxd9c866ad31c3c6wxd9c866ad31c3c6';
     //拉卡拉服务器端参数
     private $_LklAesKey = '340D2C2F15204082B14092DDE811AA22';
     private $_LklEncryptKeyPath = APP_PATH.'/mkapi/public/key/ct_rsa_private_key.pem';
     private $_LklDecryptKeyPath = APP_PATH.'/mkapi/public/key/lkl_public_key.pem';
-//    private $_LklAesKey = '12345678901234561234567890123456';
-//    private $_LklEncryptKeyPath = './WxApi/Public/key/lkl_private_key.pem';
-//    private $_LklDecryptKeyPath = './WxApi/Public/key/test_lkl_public_key.pem';
 
     /**
-    *开通商户回调
+    *拉卡拉开通商户回调
     */
 	public function register(){
         //收集拉卡拉的请求数据
@@ -33,7 +27,7 @@ class Callback extends Controller{
             $data = file_get_contents("php://input");
         }
         if(!empty($data)){
-            write_to_log('【开通商户回调信息：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
+            write_to_log('【开通商户回调信息：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/openMerchant/');
             // 将数据反编码
             $coreData = base64_decode($data);
             $coreData = json_decode($coreData,true);
@@ -44,7 +38,7 @@ class Callback extends Controller{
             $checkSign = $AES->checkSign($decrypted, $coreData['sign'], $this->_LklDecryptKeyPath);
             //验证通过
             if($checkSign){
-                write_to_log('【拉卡拉注册/回调信息解密：】'.json_encode($decrypted,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
+                write_to_log('【拉卡拉注册/回调信息解密：】'.json_encode($decrypted,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/openMerchant/');
                 $decrypted = json_decode($decrypted, true);
                 if(!empty($coreData['ver'])){
                     //更新用户表信息
@@ -55,10 +49,10 @@ class Callback extends Controller{
                     $userResult = Db::name('users')->where('series',$userData['series'])->update($userData);
                     //更新失败
                     if(!$userResult){
-                        Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/lakala/sql/']);
+                        Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/lakala/sql/openMerchant/']);
                         Log::sql('【拉卡拉注册/更新用户信息出错】'.$userData);
 
-                        write_to_log('【拉卡拉注册/绑定通知-无此用户】'.json_encode($userData,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/sql/');
+                        write_to_log('【拉卡拉注册/绑定通知-无此用户】'.json_encode($userData,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/sql/openMerchant/');
                         exit();
                     }  
                     //1、配置响应拉卡拉的参数
@@ -76,10 +70,10 @@ class Callback extends Controller{
                     $map['sign'] = $AES->sign($json, $this->_LklEncryptKeyPath);
                     $responseData = json_encode($map, JSON_UNESCAPED_UNICODE);
 
-
-                    write_to_log('【拉卡拉注册/绑定通知输出给拉卡拉的内容】' . $responseData, '/mkapi/log/lakala/callback/');
-                    //echo $responseData;
-                    //sleep(10);
+                    write_to_log('【拉卡拉注册/绑定通知输出给拉卡拉的内容】' . $responseData, '/mkapi/log/lakala/callback/openMerchant/');
+                    //响应拉卡拉请求
+                    echo $responseData;
+                    sleep(5);
 
                     //配置商户表字段信息
                     $merchantData['merchant_no'] = $decrypted['merId'];//商户号
@@ -93,52 +87,26 @@ class Callback extends Controller{
                     $merrchanntResult = Db::name('merchants')->where('merchant_no',$merchantData['merchant_no'])->find();
                     // 如果已经开通商户终止程序运行
                     if($merrchanntResult){
-                      write_to_log('【拉卡拉注册/此商户已经开通，不能重复开通】' . json_encode($merchantData), '/mkapi/log/lakala/callback/');
+                      write_to_log('【拉卡拉注册/此商户已经开通，不能重复开通】' . json_encode($merchantData), '/mkapi/log/lakala/callback/openMerchant/');
                         exit();
                     }
                     // 储存商户信息
                     $merrchanntResult = Db::name('merchants')->insert($merchantData);
                     if(!$merrchanntResult){
-                        Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/lakala/callback/']);
+                        Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/lakala/callback/openMerchant/']);
                         Log::sql('【拉卡拉注册/更新用户信息出错】'.$merchantData);
                     }else{
-                        write_to_log('【拉卡拉注册/商户开通成功】' . json_encode($merchantData), '/mkapi/log/lakala/callback/');
+                        write_to_log('【拉卡拉注册/商户开通成功】' . json_encode($merchantData), '/mkapi/log/lakala/callback/openMerchant/');
                         //开通D0
                     }
 
                 }
 
             }else{
-                write_to_log('【拉卡拉注册/绑定通知-验签失败】' . json_encode($decrypted), '/mkapi/log/lakala/callback/');
+                write_to_log('【拉卡拉注册/绑定通知-验签失败】' . json_encode($decrypted), '/mkapi/log/lakala/callback/openMerchant/');
             }
 
 
-            // if ($checkSign){
-            //     $decrypted = json_decode($decrypted, true);
-
-            //     if (!empty($coreData['ver'])){
-            //         //写入
-            //         $data['is_'] = 1;
-            //         $data['bind_time'] = time();
-            //         $data['merchantId'] = $decrypted['merId'];
-            //         $result = M("Posmanagement")->where("tel='%s' AND pos_id=1", array($decrypted['partnerUserId']))->save($data);
-            //         if (!$result) {
-            //             write_to_log('拉卡拉注册/绑定通知-无此用户' . json_encode($data, JSON_UNESCAPED_UNICODE), '/WxApi/Log/Lakala/');
-            //             exit();
-            //         }
-            //         //只有注册/绑定时才需要返回以下数据给拉卡拉
-            //         $param['isSuccess'] = 'Y';
-            //         $param['partnerTime'] = date("YmdHis");
-            //         $json = json_encode($param, JSON_UNESCAPED_UNICODE);
-            //         $map['ver'] = $coreData['ver'];
-            //         $map['reqId'] = $coreData['reqId'];
-            //         $map['params'] = $AES->encryptString($json);
-            //         $map['sign'] = $AES->sign($json, $this->_LklEncryptKeyPath);
-            //         $map2Json = json_encode($map, JSON_UNESCAPED_UNICODE);
-            //         write_to_log('拉卡拉注册/绑定通知输出给拉卡拉的内容' . $map2Json, '/WxApi/Log/Lakala/');
-            //         write_to_log('拉卡拉注册/绑定通知输出给拉卡拉的内容' . json_encode($decrypted, JSON_UNESCAPED_UNICODE), '/WxApi/Log/Lakala/');
-            //         echo $map2Json;
-            //         sleep(5);
             //         //开通D0
             //         $result = $this->openD0($decrypted['merId']);
             //         if ($result['status'] == 1){
@@ -150,7 +118,7 @@ class Callback extends Controller{
             //         }
             //     }
             // }
-            // write_to_log('拉卡拉注册/绑定通知-验签失败' . json_encode($decrypted), '/WxApi/Log/Lakala/');
+      
         }    
     }
 
@@ -160,7 +128,7 @@ class Callback extends Controller{
     public function openD0CallBack(){
         $request = Request::instance();
         $data = $request->param();
-        write_to_log('【开通D0回调信息：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
+        write_to_log('【开通D0回调信息：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/openD0/');
     }
 
 
@@ -171,5 +139,137 @@ class Callback extends Controller{
             'msg' => $msg,
             'data' => $data
         ), JSON_UNESCAPED_UNICODE);exit;
+    }
+
+    /**
+    *拉卡拉D0商户开通接口
+    * @param $merId string 商户号
+    * @return array
+    */
+    public function openD0($merId){
+        $curlUrl = 'https://api.lakala.com/thirdpartplatform/merchmanage/7011.dor';
+       //$curlUrl = 'https://124.74.143.162:15023/thirdpartplatform/merchmanage/7011.dor';
+        $data['FunCod'] = '7011';
+        $data['compOrgCode'] = $this->_LklCompOrgCode;
+        $data['reqLogNo'] = date("YmdHis") . '00';
+        $data['shopNo'] = $merId;
+        $data['retUrl'] = 'http://mk.xmjishiduo.com/mkapi.php?/mkapi/Callback/resultOpenD0';
+        $queryString = $data['compOrgCode'] . $data['reqLogNo'] . $data['shopNo'] . $this->_LklHashKey;
+        $data['MAC'] = sha1($queryString);
+        $this->xml = new \XMLWriter();
+        $param = $this->toXml($data);
+        $result = $this->request($curlUrl, true, 'post', $param);
+        $result = json_decode(json_encode(simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
+        write_to_log('【拉卡拉D0开通/拉卡拉响应数据】' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/param/openD0/');
+        write_to_log('【拉卡拉D0开通/请求参数】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/param/openD0/');
+        write_to_log('拉卡拉D0交易开通' . $param, '/mkapi/log/lakala/param/openD0/');
+        if ($result['responseCode'] == '000000'){
+            write_to_log('【拉卡拉D0开通/请求通知】成功：' . $result, '/mkapi/log/lakala/callback/openD0/');
+            $status = 0;
+            $msg = '成功';
+            $resData = $merId;
+        }else{
+            write_to_log('【拉卡拉D0开通/请求通知】失败：' . $result, '/mkapi/log/lakala/callback/openD0/');
+            $status = 10005;
+            $msg = '开通失败:'.$result['message'];
+            $resData = $merId;
+        }
+        return my_json_encode($status,$msg,$resData);
+    }
+
+    /**
+     * 拉卡拉D0开通通知地址
+     */
+    public function resultOpenD0(){
+        $data = $_REQUEST;
+        if (empty($data)) {
+            $data = file_get_contents("php://input");
+        }
+        write_to_log('【拉卡拉D0开通/拉卡拉回调通知】' . $data, '/mkapi/log/lakala/callback/openD0/');
+        $result = json_decode($data, true);
+        $merchantId = $result['busData']['extInfo']['shopNo'];
+        if ($result['busData']['status'] == 'SUCCESS'){
+            $dataSave['is_D0'] = 2;
+        }else{
+            $dataSave['err_note'] = $result['busData']['extInfo']['retMsg'];
+        }
+        write_to_log('【拉卡拉D0开通成功】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
+        write_to_log('【拉卡拉D0开通成功】' . $merchantId, '/mkapi/log/lakala/callback/openD0/');
+        $result = M("merchants")->where("merchant_id", $merchantId)->find();
+        if (!empty($result)){
+            M("users")->where('series',$result['series'])->save($dataSave);
+        }
+
+    }
+
+    /**
+    *发送请求
+    * @param $curl string 请求地址
+    * @param $curl bool 是否取消服务器认证
+    * @param $method string 请求方法
+    * @param $data string/array 请求数据
+    * @param $timeout int 发起请求前等待的时间
+    * @return array
+    */
+    function request($curl, $https = true, $method = 'get', $data = null, $timeout = 30){
+        $ch = curl_init();//初始化
+        curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);        // 让cURL自己判断使用哪个版本
+        curl_setopt($ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']);        // 在HTTP请求中包含一个"Index-Agent: "头的字符串。
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);                    // 在发起连接前等待的时间，如果设置为0，则无限等待
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);                            // 设置cURL允许执行的最长秒数
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);//只获取页面内容，但不输出
+        curl_setopt($ch, CURLOPT_ENCODING, FALSE);                            // HTTP请求头中"Accept-Encoding: "的值。支持的编码有"identity"，"deflate"和"gzip"。如果为空字符串""，请求头会发送所有支持的编码类型。
+        curl_setopt($ch, CURLOPT_HEADER, false);//设置不需要头信息
+
+        if ($https) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);//不做服务器认证
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);//不做客户端认证
+        }
+
+        if ($method == 'post') {
+            $httpHeaders = array(
+                'Content-Type: text/xml; charset=gbk',
+            );
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $httpHeaders);
+            //dump($data);
+            curl_setopt($ch, CURLOPT_POST, true);//设置请求是POST方式
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data);//设置POST请求的数据
+        }
+        curl_setopt($ch, CURLOPT_URL, $curl);//设置访问的URL
+        curl_setopt($ch, CURLINFO_HEADER_OUT, TRUE);
+
+//     //dump($data);exit;
+        $str = curl_exec($ch);//执行访问，返回结果
+        curl_close($ch);//关闭curl，释放资源
+        return $str;
+    }
+
+     /**
+     * 数组转xml
+     * @param $data
+     * @param bool $eIsArray
+     * @return string
+     */
+    private function toXml($data, $eIsArray = FALSE){
+        if (!$eIsArray) {
+            $this->xml->openMemory();
+            $this->xml->startDocument("1.0", "GBK");
+            $this->xml->startElement("xml");
+        }
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $this->xml->startElement($key);
+                $this->toXml($value, true);
+                $this->xml->endElement();
+                continue;
+            }
+            $this->xml->startElement($key);
+            $this->xml->writeCData($value);
+            $this->xml->endElement();
+        }
+        if (!$eIsArray) {
+            $this->xml->endElement();
+            return $this->xml->outputMemory(true);
+        }
     }
 }

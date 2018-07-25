@@ -28,6 +28,7 @@ function getNo($type=1, $num=8){
          case 2: $no = 'FR';break;
          case 3: $no = 'BK';break;
          case 4: $no = 'FR';break;
+         case 5: $no = 'TP';break;
          default: $no = '';
      }
      $no .= date('ymdHis');

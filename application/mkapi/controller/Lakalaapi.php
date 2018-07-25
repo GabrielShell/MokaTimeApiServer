@@ -39,7 +39,7 @@ class Lakalaapi extends Common{
         $userInfo = Db::name('users')->field('real_name,card_no,bank_no,is_merchant,bankbranch_id,phone,is_certificate')->where("series",$series)->find();
         if(!$userInfo){
             $errorId = uniqid("sqlErr");
-            Log::init(['type'=>'file','path' => APP_PATH . 'mkapi/log/lakala/sql/']);
+            Log::init(['type'=>'file','path' => APP_PATH . 'mkapi/log/lakala/sql/openMerchant/']);
             Log::sql("【".$errorId."】用户信息获取失败");
             my_json_encode(10002,'用户信息获取失败:errorId = '.$errorId);
         }else if($userInfo['is_certificate'] == 0){
@@ -51,7 +51,7 @@ class Lakalaapi extends Common{
             $bankbranchInfo = Db::name('lakala_bankbranch')->field('bankbranch_name,bankbranch_no')->where("id = {$userInfo['bankbranch_id']}")->find();
             if(!$bankbranchInfo){
                 $errorId = uniqid("sqlErr");
-                Log::init(['type'=>'file','path' => APP_PATH . 'mkapi/log/lakala/sql/']);
+                Log::init(['type'=>'file','path' => APP_PATH . 'mkapi/log/lakala/sql/openMerchant/']);
                 Log::sql("【".$errorId."】用户信息获取失败");
                 my_json_encode(10002,'用户信息获取失败:errorId = '.$errorId);
             }
@@ -70,11 +70,11 @@ class Lakalaapi extends Common{
         //$result = Db::name("lakala_order")->insert($data);
         if(!$result){
             $errorId = uniqid("sqlErr");
-            Log::init(['type'=>'file','path' => APP_PATH . 'mkapi/log/lakala/sql/']);
+            Log::init(['type'=>'file','path' => APP_PATH . 'mkapi/log/lakala/sql/openMerchant/']);
             Log::sql("【".$errorId."】订单信息插入失败");
             my_json_encode(10004,'订单信息创建失败:errorId = '.$errorId);
         }else{
-            write_to_log('【插入的订单数据：】'.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/');
+            write_to_log('【插入的订单数据：】'.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/openMerchant/');
 
             //lakala交易业务参数
             $encryptData['userId'] = $series;
@@ -97,7 +97,7 @@ class Lakalaapi extends Common{
             if($userInfo['is_merchant'] == 1){
                 $data['optCode'] = 'P00001';//业务代码
 
-                write_to_log('【拉卡拉交易的订单参数：】'.json_encode($encryptData,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/');
+                write_to_log('【拉卡拉交易的订单参数：】'.json_encode($encryptData,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/openMerchant/');
             }else{
                 // 扩展参数，开通商户需要的参数
                 $encryptData['optCode'] = 'B00002';
@@ -111,7 +111,7 @@ class Lakalaapi extends Common{
                 $encryptData['settleBankno'] = $bankbranchInfo['bankbranch_name'];
                 $encryptData['accountType'] = '0'; //账户类型 0代表对私
 
-                write_to_log('【拉卡拉开通商户参数：】'.json_encode($encryptData,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/');
+                write_to_log('【拉卡拉开通商户参数：】'.json_encode($encryptData,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/openMerchant/');
 
             }
 
@@ -124,9 +124,9 @@ class Lakalaapi extends Common{
             $map['sign'] = $AES->sign($jsonData, $this->_LklEncryptKeyPath);
             $param = base64_encode(json_encode($map, JSON_UNESCAPED_UNICODE));
 
-            write_to_log('【请求拉卡拉params参数：】'.json_encode($jsonData,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/');
-            write_to_log('【请求拉卡拉待加密参数：】'.json_encode($map,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/');
-            write_to_log('【请求拉卡拉param加密参数：】'.json_encode($param,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/');
+            write_to_log('【请求拉卡拉params参数：】'.json_encode($jsonData,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/openMerchant/');
+            write_to_log('【请求拉卡拉待加密参数：】'.json_encode($map,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/openMerchant/');
+            write_to_log('【请求拉卡拉param加密参数：】'.json_encode($param,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/openMerchant/');
 
 
             //发送参数
