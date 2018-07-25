@@ -17,8 +17,8 @@ class Callback extends Controller{
    	private $_LklHashKey = 'wxd9c866ad31c3c6wxd9c866ad31c3c6';
     //拉卡拉服务器端参数
     private $_LklAesKey = '340D2C2F15204082B14092DDE811AA22';
-    private $_LklEncryptKeyPath = './WxApi/Public/key/ct_rsa_private_key.pem';
-    private $_LklDecryptKeyPath = './WxApi/Public/key/lkl_public_key.pem';
+    private $_LklEncryptKeyPath = APP_PATH.'/mkapi/public/key/ct_rsa_private_key.pem';
+    private $_LklDecryptKeyPath = APP_PATH.'/mkapi/public/key/lkl_public_key.pem';
 //    private $_LklAesKey = '12345678901234561234567890123456';
 //    private $_LklEncryptKeyPath = './WxApi/Public/key/lkl_private_key.pem';
 //    private $_LklDecryptKeyPath = './WxApi/Public/key/test_lkl_public_key.pem';
@@ -35,7 +35,7 @@ class Callback extends Controller{
         if(!empty($data)){
             write_to_log('【开通商户回调信息1：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
             // 将数据反编码
-            $coreData = base64_decode($data['param']);
+            $coreData = base64_decode($data);
             $coreData = json_decode($coreData,true);
             $AES = new AesCbc($this->_LklAesKey);
             // 解密
