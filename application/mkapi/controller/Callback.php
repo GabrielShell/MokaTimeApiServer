@@ -35,7 +35,7 @@ class Callback extends Controller{
         if(!empty($data)){
             write_to_log('【开通商户回调信息1：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
             // 将数据反编码
-            $coreData = base64_decode($data['param']);
+            $coreData = base64_decode($data);
             $coreData = json_decode($coreData,true);
             $AES = new AesCbc($this->_LklAesKey);
             // 解密
