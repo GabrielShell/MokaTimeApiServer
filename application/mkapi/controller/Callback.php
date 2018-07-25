@@ -146,13 +146,16 @@ class Callback extends Controller{
     * @param $merId string 商户号
     * @return array
     */
-    public function openD0($merId){
+    public function openD0($merId = null){
         $curlUrl = 'https://api.lakala.com/thirdpartplatform/merchmanage/7011.dor';
        //$curlUrl = 'https://124.74.143.162:15023/thirdpartplatform/merchmanage/7011.dor';
+        $data['shopNo'] = $merId == null ? $_POST['merchant_id']:$merId;
+        if($data['shopNo'] == null){
+            return my_json_encode(8,'参数不正确');
+        }
         $data['FunCod'] = '7011';
         $data['compOrgCode'] = $this->_LklCompOrgCode;
         $data['reqLogNo'] = date("YmdHis") . '00';
-        $data['shopNo'] = $merId;
         $data['retUrl'] = 'http://mk.xmjishiduo.com/mkapi.php?/mkapi/Callback/resultOpenD0';
         $queryString = $data['compOrgCode'] . $data['reqLogNo'] . $data['shopNo'] . $this->_LklHashKey;
         $data['MAC'] = sha1($queryString);
