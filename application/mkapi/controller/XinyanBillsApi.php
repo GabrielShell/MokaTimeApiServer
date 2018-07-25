@@ -112,7 +112,7 @@ class XinyanBillsApi extends Common{
                 $return = CurlRequest::Post($PostArry, $request_url); 
                 $arr_result = json_decode($return,true);
                 if(is_array($arr_result) && $arr_result['success'] == 'true'){
-                        return json_encode(['status'=>0,'msg'=>'预订单成功！','data'=>$arr_result['data']]);
+                        return json_encode(['status'=>0,'msg'=>'预订单成功！','data'=>['tradeNo'=>$arr_result['data']]]);
                 }else{
                         $errorId = uniqid("ERR");
                         Log::error('【'.$errorId.'】新颜API-预订单接口错误(bills),API接口返回信息不能解析，API接口返回信息：'.$return);
@@ -423,7 +423,7 @@ class XinyanBillsApi extends Common{
                 $result = CurlRequest::request($requestUrl,'post',$PostArryJson,$header,20);
                 $arr_result = json_decode($result[0],true);
                 if(is_array($arr_result) && $arr_result['success'] == 'true'){
-                        $return = ['status' => 0,'msg'=>'验证码已输入！','data'=>['tradeNo'=>$arr_result['data']['tradeNo']]];
+                        $return = ['status' => 0,'msg'=>'验证码已输入！','data'=>$arr_result['data']];
                 }else{
                         $errorId = uniqid("ERR");
                         $return = ['status'=>1,'msg' => '验证码输入失败！操作ID:'.$errorId];
