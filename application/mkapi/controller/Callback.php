@@ -192,7 +192,7 @@ class Callback extends Controller{
         $result = json_decode($data, true);
         $merchantId = $result['busData']['extInfo']['shopNo'];
         if ($result['busData']['status'] == 'SUCCESS'){
-            $dataSave['is_D0'] = 1;
+            $dataSave['is_d0'] = 1;
         }else{
             $dataSave['err_note'] = $result['busData']['extInfo']['retMsg'];
         }
