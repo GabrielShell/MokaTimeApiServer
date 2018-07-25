@@ -10,8 +10,9 @@ use crypt\AesCbc;
 use think\Log;
 class Callback extends Controller{
 	//拉卡拉交易D0提款参数
-   	private $_LklCompOrgCode = 'QFDT';
-   	private $_LklHashKey = 'wxd9c866ad31c3c6wxd9c866ad31c3c6';
+   	private $_LklCompOrgCode = 'QFTMPOS';
+    private $_LklHashKey = 'mUb46HfgUDfygDq8KrbZTNRObQwhBeFv';
+   	//private $_LklHashKey = 'wxd9c866ad31c3c6wxd9c866ad31c3c6';
     //拉卡拉服务器端参数
     private $_LklAesKey = '340D2C2F15204082B14092DDE811AA22';
     private $_LklEncryptKeyPath = APP_PATH.'/mkapi/public/key/ct_rsa_private_key.pem';
