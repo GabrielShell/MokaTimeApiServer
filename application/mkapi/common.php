@@ -24,7 +24,7 @@ function httpHost($curlPost,$url){
 function getNo($type=1, $num=8){
      $str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
      switch ($type){
-         case 1: $no = 'TM';break;
+         case 1: $no = 'MK';break;
          case 2: $no = 'FR';break;
          case 3: $no = 'BK';break;
          case 4: $no = 'FR';break;
@@ -84,7 +84,7 @@ function getUserId($num=6,$phone){
     $d = date('d');
     $save_path .= $d . '/';
     if (!file_exists($save_path)) {
-        mkdir($save_path);
+       mkdir($save_path);
     }
     $date = date('YmdH');
     $file_name = $date;
@@ -95,6 +95,31 @@ function getUserId($num=6,$phone){
     file_put_contents($file_path, $msg, FILE_APPEND);
 }
 
+ /**
+   * 写日志文件
+   * @param string $msg 日志内容
+   * @param string $path 保存文件路径
+   */
+ function write_to_log1($msg, $path='/log/'){
+    $save_path = str_replace('\\', '/', APP_PATH. $path);
+    $ym = date('Y_m');
+    $save_path .= $ym . '/';
+    if (!file_exists($save_path)) {
+        mkdir($save_path);
+    }
+    $d = date('d');
+    $save_path .= $d . '/';
+    if (!file_exists($save_path)) {
+       mkdir($save_path);
+    }
+    $date = date('YmdH');
+    $file_name = $date;
+    $file_path = $save_path . $file_name;
+//     dump($file_path);
+    $msg = date('H:i:s') . '  ' . $msg . PHP_EOL;
+//     dump($msg);
+    file_put_contents($file_path, print_r($msg), FILE_APPEND);
+}
 
  /**
   * 生成秘钥

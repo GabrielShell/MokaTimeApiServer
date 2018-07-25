@@ -38,6 +38,7 @@ class Common extends Controller{
 			$series = $request->post('series');
 			$access_token = $request->post('access_token');
 			$refresh_token = $request->post('refresh_token');
+          
 			//验证access_token格式是否正确
           
             if(empty($access_token) || !preg_match('/[a-z0-9]{32}/', $access_token)){
