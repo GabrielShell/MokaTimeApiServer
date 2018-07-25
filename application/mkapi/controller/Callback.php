@@ -82,12 +82,15 @@ class Callback extends Controller{
                     //sleep(10);
 
                     //配置商户表字段信息
-                    $merchantData['merchant_id'] = $decrypted['merId'];
-                    $merchantData['bind_time'] = time();
-                    $merchantData['series'] = $userData['series'];
-                    $merchantData['bind_time'] = $userData['series'];
+                    $merchantData['merchant_no'] = $decrypted['merId'];//商户号
+                    $merchantData['bind_time'] = time();//绑定时间
+                    $merchantData['series'] = $userData['series'];//用户唯一标识
+                    $merchantData['store_name'] = $decrypted['merName'];//店铺名称
+                    $merchantData['merchant_name'] = $decrypted['realName'];//商户名称
+                    $merchantData['area_name'] = $decrypted['areaName'];
+                    $merchantData['address'] = $decrypted['address'];
                     //判断商户是否已经开通
-                    $merrchanntResult = Db::name('merchants')->where('merchant_id',$merchantData['merchant_id']);
+                    $merrchanntResult = Db::name('merchants')->where('merchant_no',$merchantData['merchant_no'])->find();
                     // 如果已经开通商户终止程序运行
                     if($merrchanntResult){
                         exit();

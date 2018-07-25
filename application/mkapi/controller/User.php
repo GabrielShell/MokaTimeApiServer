@@ -192,12 +192,17 @@ class User extends Common{
 		$data['bankbranch_id'] = $request->post('bankbranch_id');
 
 		// 收集用户证件照
-		$cardFace =$request->file('cardFace'); //身份证正面
-		$cardBack =$request->file('cardBack');  //身份证反面
-		$bankFace =$request->file('bankFace');  //银行卡正面
+		$cardFace = $request->file('cardFace') !== null ? $request->file('cardFace'):null; //身份证正面
+		$cardBack = $request->file('cardBack') !== null ? $request->file('cardBack'):null;  //身份证反面
+		$bankFace = $request->file('bankFace') !== null ? $request->file('bankFace'):null;  //银行卡正面
 
 		if(empty($data['series']) || empty($data['card_no']) || empty($data['real_name']) || empty($data['bank_no'])){
 			my_json_encode(8,"参数不正确");
+			exit();
+		}
+
+		if($cardFace == null || $cardBack == null || $bankFace == null){
+			my_json_encode(10,"请上传文件格式的图片");
 			exit();
 		}
 
