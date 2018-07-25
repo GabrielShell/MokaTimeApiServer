@@ -133,7 +133,7 @@ class XinyanBillsApi extends Common{
                 $result = CurlRequest::get($requestUrl,$this->headers);
 
                 $data = json_decode($result,true);
-                if(is_array($data) && $data["success"] == 'true'){
+                if(is_array($data) && $data["success"] == 'true' && isset($data['data']['bills'])){
                         //每条账单查询对应的消费记录
                         foreach($data['data']['bills'] as &$bill){
                                 $shoppingRecord = [];
@@ -190,34 +190,38 @@ class XinyanBillsApi extends Common{
                                         $card_id = $searched[$unique_string];
                                 }
 
-                                //将账单插入数据库
-                                $bill_record  = new Bills;
-                                $bill_record->series = $bill['bill_id'];
-                                $bill_record->credit_card_id = $card_id;
-                                $bill_record->origin_type = 'email';
-                                $bill_record->bill_start_date = $bill['bill_start_date'];
-                                $bill_record->bill_date = $bill['bill_date'];
-                                $bill_record->payment_due_date = $bill['payment_due_date'];
-                                $bill_record->credit_limit = $bill['credit_limit'];
-                                $bill_record->new_balance = $bill['new_balance'];
-                                $bill_record->min_payment = $bill['min_payment'];
-                                $bill_record->point = $bill['point'];
-                                $bill_record->save();
-                                
-                                foreach($bill['shopping_records'] as $shopping_record){
-                                        $db_shopping_record = new Shopping_records;
-                                        $db_shopping_record->credit_card_id = $card_id;
-                                        $db_shopping_record->bill_id = $bill_record->id;
-                                        $db_shopping_record->amount_money = $shopping_record['amount_money'];
-                                        $db_shopping_record->trans_addr = $shopping_record['trans_addr'];
-                                        $db_shopping_record->trans_date = $shopping_record['trans_date'];
-                                        $db_shopping_record->trans_type = $shopping_record['trans_type'];
-                                        $db_shopping_record->bank_name = $banks[$shopping_record['bank_id']];
-                                        $db_shopping_record->card_no_last4 = $shopping_record['card_no'];
-                                        $db_shopping_record->currency_type = $shopping_record['currency_type'];
-                                        $db_shopping_record->description = $shopping_record['description'];
-                                        $db_shopping_record->post_date = $shopping_record['post_date'];
-                                        $db_shopping_record->save();
+                                //如果该账单在数据库中不存在，则将账单插入数据库
+                                if(!Bills::get(['series'=>$bill['bill_id']])){
+                                        $bill_record  = new Bills;
+                                        $bill_record->series = $bill['bill_id'];
+                                        $bill_record->credit_card_id = $card_id;
+                                        $bill_record->origin_type = 'email';
+                                        $bill_record->bill_type = 'DONE';
+                                        $bill_record->bill_start_date = $bill['bill_start_date'];
+                                        $bill_record->bill_date = $bill['bill_date'];
+                                        $bill_record->payment_due_date = $bill['payment_due_date'];
+                                        $bill_record->credit_limit = $bill['credit_limit'];
+                                        $bill_record->new_balance = $bill['new_balance'];
+                                        $bill_record->min_payment = $bill['min_payment'];
+                                        $bill_record->point = $bill['point'];
+                                        $bill_record->save();
+                                        
+                                        foreach($bill['shopping_records'] as $shopping_record){
+                                                $db_shopping_record = new Shopping_records;
+                                                $db_shopping_record->credit_card_id = $card_id;
+                                                $db_shopping_record->bill_id = $bill_record->id;
+                                                $db_shopping_record->amount_money = $shopping_record['amount_money'];
+                                                $db_shopping_record->trans_addr = $shopping_record['trans_addr'];
+                                                $db_shopping_record->trans_date = $shopping_record['trans_date'];
+                                                $db_shopping_record->trans_type = $shopping_record['trans_type'];
+                                                $db_shopping_record->bank_name = $banks[$shopping_record['bank_id']];
+                                                $db_shopping_record->card_no_last4 = $shopping_record['card_no'];
+                                                $db_shopping_record->currency_type = $shopping_record['currency_type'];
+                                                $db_shopping_record->description = $shopping_record['description'];
+                                                $db_shopping_record->post_date = $shopping_record['post_date'];
+                                                $db_shopping_record->save();
+                                        }
+
                                 }
                         }
                 }else{
@@ -475,12 +479,77 @@ class XinyanBillsApi extends Common{
 
                                         //验证卡片是否已经存在于数据库
                                         $cardDbInstance = Credit_cards::get(['unique_string'=>$unique_string]);
+                                        $cardId = 0;
                                         if($cardDbInstance){
                                                 //如果该卡片已存在，则更新该信用卡记录
-
+                                                $cardId = $cardDbInstance->id;
+                                                $cardDbInstance->card_no = $card_no;
+                                                $cardDbInstance->bill_date = $bill_date;
+                                                $cardDbInstance->due_date = $due_date;
+                                                $cardDbInstance->credit_limit = $credit_limit;
+                                                $cardDbInstance->balance = $balance;
+                                                $cardDbInstance->save();
                                         }else{
                                                 //不存在，则创建信用卡记录
+                                                $cardDbInstance = new Credit_cards();
+                                                $cardDbInstance->unique_string = $unique_string;
+                                                $cardDbInstance->bank_name = $bank_name;
+                                                $cardDbInstance->name_on_card = $name_on_card;
+                                                $cardDbInstance->card_no_last4 = $card_no_last4;
+                                                $cardDbInstance->card_no = $card_no;
+                                                $cardDbInstance->bill_date = $bill_date;
+                                                $cardDbInstance->due_date = $due_date;
+                                                $cardDbInstance->credit_limit = $credit_limit;
+                                                $cardDbInstance->balance = $balance;
+                                                $cardDbInstance->save();
+                                                $cardId = $cardDbInstance->id;
+                                        }
 
+                                        foreach($card['bills'] as $bill){
+                                                //如果账单记录不存在，插入账单记录
+                                                if(!Bills::get(['series'=>$bill['bill_id']])){
+                                                        $billDbInstance = new Bills();
+                                                        $billDbInstance->series = $bill['bill_id'];
+                                                        $billDbInstance->credit_card_id = $cardId;
+                                                        $billDbInstance->origin_type = 'bank';
+                                                        $billDbInstance->bill_type = $bill['bill_type'];
+                                                        $billDbInstance->bill_start_date = 
+                                                        date(
+                                                                'Y-m-d',
+                                                                strtotime(
+                                                                        '-1 month',
+                                                                        strtotime(
+                                                                                '+ 1 day',
+                                                                                strtotime($bill['bill_date'])
+                                                                        )
+                                                                )
+                                                        ); //账单周期开始时间是账单日前一个月后一天
+                                                        $billDbInstance->bill_date = $bill['bill_date'];
+                                                        $billDbInstance->payment_due_date = $bill['payment_due_date'];
+                                                        $billDbInstance->credit_limit = $bill['credit_limit'];
+                                                        $billDbInstance->new_balance = $bill['new_balance'];
+                                                        $billDbInstance->min_payment = $bill['min_payment'];
+                                                        $billDbInstance->min_payment = $bill['min_payment'];
+                                                        $billDbInstance->save();
+                                                        $billId = $billDbInstance->id;
+
+                                                        //插入消费记录
+                                                        foreach($bill['shopping_sheets'] as $shoppingRecord){
+                                                                $shoppingRecordDbInstance = new Shopping_records();
+                                                                $shoppingRecordDbInstance->credit_card_id = $cardId;
+                                                                $shoppingRecordDbInstance->bill_id = $billId;
+                                                                $shoppingRecordDbInstance->amount_money = $shoppingRecord['amount_money'];
+                                                                $shoppingRecordDbInstance->trans_addr = $shoppingRecord['trans_addr'];
+                                                                $shoppingRecordDbInstance->trans_date = $shoppingRecord['trans_date'];
+                                                                $shoppingRecordDbInstance->trans_type = $shoppingRecord['category'];
+                                                                $shoppingRecordDbInstance->bank_name = $bank_name;
+                                                                $shoppingRecordDbInstance->card_no_last4 = $shoppingRecord['card_num'];
+                                                                $shoppingRecordDbInstance->currency_type = $shoppingRecord['currency_type'];
+                                                                $shoppingRecordDbInstance->description = $shoppingRecord['description'];
+                                                                $shoppingRecordDbInstance->post_date = $shoppingRecord['post_date'];
+                                                                $shoppingRecordDbInstance->save();
+                                                        }
+                                                }
                                         }
 
 
