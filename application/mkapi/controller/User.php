@@ -205,7 +205,7 @@ class User extends Common{
 			my_json_encode(10,"请上传文件格式的图片");
 			exit();
 		}
-      
+
 		// 发送身份验证信息，并得到返回结果
 		$result = $this->certificateRequest($data['bank_no'],$data['card_no'],$data['real_name']);
 		$result = json_decode($result,true);
