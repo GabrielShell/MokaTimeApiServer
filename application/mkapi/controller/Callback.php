@@ -192,15 +192,15 @@ class Callback extends Controller{
         $result = json_decode($data, true);
         $merchantId = $result['busData']['extInfo']['shopNo'];
         if ($result['busData']['status'] == 'SUCCESS'){
-            $dataSave['is_D0'] = 2;
+            $dataSave['is_D0'] = 1;
         }else{
             $dataSave['err_note'] = $result['busData']['extInfo']['retMsg'];
         }
         write_to_log('【拉卡拉D0开通成功】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
         write_to_log('【拉卡拉D0开通成功】' . $merchantId, '/mkapi/log/lakala/callback/openD0/');
-        $result = M("merchants")->where("merchant_id", $merchantId)->find();
+        $result = Db::name("merchants")->where("merchant_id", $merchantId)->find();
         if (!empty($result)){
-            M("users")->where('series',$result['series'])->save($dataSave);
+            Db::("users")->where('series',$result['series'])->update($dataSave);
         }
 
     }
