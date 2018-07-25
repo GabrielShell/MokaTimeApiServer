@@ -200,7 +200,7 @@ class Callback extends Controller{
         write_to_log('【拉卡拉D0开通成功】' . $merchantId, '/mkapi/log/lakala/callback/openD0/');
         $result = Db::name("merchants")->where("merchant_id", $merchantId)->find();
         if (!empty($result)){
-            Db::("users")->where('series',$result['series'])->update($dataSave);
+            Db::name("users")->where('series',$result['series'])->update($dataSave);
         }
 
     }
