@@ -163,16 +163,15 @@ class Callback extends Controller{
         $param = $this->toXml($data);
         $result = $this->request($curlUrl, true, 'post', $param);
         $result = json_decode(json_encode(simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
-        write_to_log('【拉卡拉D0开通/拉卡拉响应数据】' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/param/openD0/');
         write_to_log('【拉卡拉D0开通/请求参数】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/param/openD0/');
         write_to_log('拉卡拉D0交易开通' . $param, '/mkapi/log/lakala/param/openD0/');
         if ($result['responseCode'] == '000000'){
-            write_to_log('【拉卡拉D0开通/请求通知】成功：' . $result, '/mkapi/log/lakala/callback/openD0/');
+            write_to_log('【拉卡拉D0开通/请求通知】成功：' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
             $status = 0;
             $msg = '成功';
             $resData = $merId;
         }else{
-            write_to_log('【拉卡拉D0开通/请求通知】失败：' . $result, '/mkapi/log/lakala/callback/openD0/');
+            write_to_log('【拉卡拉D0开通/请求通知】失败：' .json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
             $status = 10005;
             $msg = '开通失败:'.$result['message'];
             $resData = $merId;
