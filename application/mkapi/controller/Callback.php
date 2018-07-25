@@ -33,7 +33,7 @@ class Callback extends Controller{
             $data = file_get_contents("php://input");
         }
         if(!empty($data)){
-            write_to_log('【开通商户回调信息1：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
+            write_to_log('【开通商户回调信息：】 '.json_encode($data,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/');
             // 将数据反编码
             $coreData = base64_decode($data);
             $coreData = json_decode($coreData,true);
@@ -52,7 +52,7 @@ class Callback extends Controller{
                     $userData['open_merchant_status'] = 1;
                     $userData['series'] = $decrypted['partnerUserId'];
                     //更新用户表
-                    $userResult = Db::name('users')->where('series',$series)->update($userData);
+                    $userResult = Db::name('users')->where('series',$userData['series'])->update($userData);
                     //更新失败
                     if(!$userResult){
                         Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/lakala/sql/']);
@@ -74,11 +74,11 @@ class Callback extends Controller{
                     $map['reqId'] = $coreData['reqId'];
                     $map['params'] = $AES->encryptString($json);
                     $map['sign'] = $AES->sign($json, $this->_LklEncryptKeyPath);
-                    $map2Json = json_encode($map, JSON_UNESCAPED_UNICODE);
+                    $responseData = json_encode($map, JSON_UNESCAPED_UNICODE);
 
 
-                    write_to_log('【拉卡拉注册/绑定通知输出给拉卡拉的内容】' . $map2Json, '/mkapi/log/lakala/callback/');
-                    //echo $map2Json;
+                    write_to_log('【拉卡拉注册/绑定通知输出给拉卡拉的内容】' . $responseData, '/mkapi/log/lakala/callback/');
+                    //echo $responseData;
                     //sleep(10);
 
                     //配置商户表字段信息
