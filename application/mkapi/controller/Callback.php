@@ -99,6 +99,7 @@ class Callback extends Controller{
                     }else{
                         write_to_log('【拉卡拉注册/商户开通成功】' . json_encode($merchantData), '/mkapi/log/lakala/callback/openMerchant/');
                         //开通D0
+                        $this->openD0($merchantData['merchant_no']);
                     }
 
                 }
@@ -147,10 +148,10 @@ class Callback extends Controller{
     * @param $merId string 商户号
     * @return array
     */
-    public function openD0($merId = null){
+    public function openD0($merchant_no = null){
         $curlUrl = 'https://api.lakala.com/thirdpartplatform/merchmanage/7011.dor';
        //$curlUrl = 'https://124.74.143.162:15023/thirdpartplatform/merchmanage/7011.dor';
-        $data['shopNo'] = $merId == null ? $_POST['merchant_id']:$merId;
+        $data['shopNo'] = $merchant_no == null ? $_POST['merchant_no']:$merchant_no;
         if($data['shopNo'] == null){
             return my_json_encode(8,'参数不正确');
         }
@@ -168,16 +169,16 @@ class Callback extends Controller{
         write_to_log('拉卡拉D0交易开通' . $param, '/mkapi/log/lakala/param/openD0/');
         if ($result['responseCode'] == '000000'){
             write_to_log('【拉卡拉D0开通/请求通知】成功：' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
-            $status = 0;
-            $msg = '成功';
-            $resData = $merId;
+            $status = 10000;
+            $msg = '开通成功';
+            $resData = $merchant_no;
         }else{
             write_to_log('【拉卡拉D0开通/请求通知】失败：' .json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
-            $status = 10005;
+            $status = 10002;
             $msg = '开通失败:'.$result['message'];
-            $resData = $merId;
+            $resData = $merchant_no;
         }
-        return my_json_encode($status,$msg,$resData);
+        echo my_json_encode($status,$msg,$resData);
     }
 
     /**

@@ -150,7 +150,11 @@ class User extends Common{
         }
 	}
 
-	// 用户注册
+	/**
+	*用户注册
+	*@param $data array 用户信息
+	*@return string 用户唯一标识
+	*/
 	public function register($data){
 		//实例化用户模型
 		$User = model('Users');
@@ -276,7 +280,11 @@ class User extends Common{
 	}
 
 
-	//上传实名认证照片
+	/**
+	*上传文件
+	*@param $file file post提交的文件类
+	*@return array 文件上传结果
+	*/
 	public function uploadImg($file){
         $upload = new Upload();
         // 验证文件是否合法
@@ -291,7 +299,13 @@ class User extends Common{
         }
 	}
 
-	//实名认证请求
+	/**
+	*实名认证接口请求
+	*@param $accountNo string 银行卡号
+	*@param $idCard string 身份证号
+	*@param $name string 姓名
+	*@return array  第三方返回请求结果
+	*/
 	public function certificateRequest($accountNo,$idCard,$name){
 		$host = "https://tbank.market.alicloudapi.com";
 	    $path = "/bankCheck";
@@ -318,4 +332,22 @@ class User extends Common{
 	    $out_put = curl_exec($curl);
 	    return $out_put;
 	}
+
+
+	/**
+	*获取用户信息
+	*@return array 放回信息列表
+	*/
+	public function getInfo(){
+		$series = $_REQUEST;
+		$result = Db::name('users')->field('real_name,card_no')->where('series',$series)->find();
+		if(!$result){
+			$errorId = uniqid('sqlErr');
+			Log::sql("【".$errorId."】查找用户信息失败");
+			return my_json_encode(10002,'信息获取失败');
+		}else{
+			return my_json_encode(10100,'success',$result);
+		}
+	}
+
 }
