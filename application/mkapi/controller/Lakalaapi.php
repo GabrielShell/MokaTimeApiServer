@@ -80,7 +80,7 @@ class Lakalaapi extends Common{
             //lakala交易业务参数
             $encryptData['userId'] = $series;
             $encryptData['phoneNumber'] = $userInfo['phone'];
-            $encryptData['timestamp'] = date("yyyyMMddHHmmss",time());//报文的时间戳
+            $encryptData['timestamp'] = date("yyyymmddHHmmss",time());//报文的时间戳
             //$encryptData['callbackUrl'] = $param['callbackUrl'];
             $encryptData['orderId'] = $data['order_no'];
             $encryptData['productName'] = 'test';//订单名称
