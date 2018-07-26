@@ -4,6 +4,7 @@ use think\Request;
 use think\Log;
 use app\mkapi\model\Credit_cards;
 use app\mkapi\model\Users;
+use app\mkapi\model\Bills;
 
 /**
  * 信用卡API
@@ -17,12 +18,30 @@ class Card extends Common{
         foreach($cards as $card){
             //计算账单日还款日
             $bill_date = date('Y-m-'.$card->bill_date);
+            $due_date_pure = substr($card->due_date,1,strlen($card->due_date) - 1);
             if(substr($card->due_date,0,1) == '-'){
                 //还款日与账单日同月
-                $due_date = date('Y-m-'.$card->due_date);
+                $due_date = date('Y-m-'.$due_date_pure);
             }else{
                 //还款日与账单日不同月
-                $due_date = date('Y-m-d',strtotime('+1 month',strtotime('Y-m-'.$card->due_date)));
+                $due_date = date('Y-m-d',strtotime('+1 month',strtotime('Y-m-'.$due_date_pure)));
+            }
+            $billsDbResult = Bills::all(['card_id'=>$card->id]);
+            $billsResult = [];
+            foreach($billsDbResult as $billDbResult){
+                $billsResult [] = [
+                    'origin_type' => $billDbResult->origin_type,
+                    'bill_type' => $billDbResult->bill_type,
+                    'repay_amount' => $billDbResult->repay_amount,
+                    'bill_start_date' => $billDbResult->bill_start_date,
+                    'bill_date' => $billDbResult->bill_date,
+                    'payment_due_date' => $billDbResult->payment_due_date,
+                    'new_balance' => $billDbResult->new_balance,
+                    'min_payment' => $billDbResult->min_payment,
+                    'point' => $billDbResult->point,
+                    'create_time' => $billDbResult->create_time
+                ];
+
             }
 
             $resultData[] = [
@@ -34,7 +53,8 @@ class Card extends Common{
                 'due_date' => $due_date,
                 'credit_limit' => $card->credit_limit,
                 'balance' => $card->balance,
-                'point' => $card->point
+                'point' => $card->point,
+                'bills' => $billsResult
             ];
         }
         $result = [
