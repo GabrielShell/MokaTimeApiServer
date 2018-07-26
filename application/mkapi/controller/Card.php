@@ -26,7 +26,7 @@ class Card extends Common{
                 //还款日与账单日不同月
                 $due_date = date('Y-m-d',strtotime('+1 month',strtotime('Y-m-'.$due_date_pure)));
             }
-            $billsDbResult = Bills::all(['card_id'=>$card->id]);
+            $billsDbResult = Bills::all(['credit_card_id'=>$card->id]);
             $billsResult = [];
             foreach($billsDbResult as $billDbResult){
                 $billsResult [] = [
