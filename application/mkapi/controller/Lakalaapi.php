@@ -80,14 +80,14 @@ class Lakalaapi extends Common{
             //lakala交易业务参数
             $encryptData['userId'] = $series;
             $encryptData['phoneNumber'] = $userInfo['phone'];
-            $encryptData['timestamp'] = date("yMdHms",time());//报文的时间戳
+            $encryptData['timestamp'] = date("yyyyMMddHHmmss",time());//报文的时间戳
             //$encryptData['callbackUrl'] = $param['callbackUrl'];
             $encryptData['orderId'] = $data['order_no'];
             $encryptData['productName'] = 'test';//订单名称
             $encryptData['productDesc'] = 'test';//订单描述
             $encryptData['remark'] = 'test';//备注
             $encryptData['amount'] = $data['order_money'];//交易金额
-            $encryptData['expriredtime'] = date("yMdHms",time()+24*3600*1000);//失效时间
+            $encryptData['expriredtime'] = date("yyyyMMddHHmmss",time()+24*3600*1000);//失效时间
             $encryptData['randnum'] = $randnum;//随机数
             $encryptData['transCardNo'] = null;//交易卡号
             $encryptData['realName'] = $userInfo['real_name'];//真实姓名
