@@ -219,7 +219,7 @@ class Callback extends Controller{
         }
         write_to_log('【拉卡拉查询交易能否支付/拉卡拉返回的数据】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
         //反编码
-        $coreData = base64_decode($data['param']);
+        $coreData = base64_decode($data);
         $coreData = json_decode($coreData, true);
         $AES = new AesCbc($this->_LklAesKey);
         $decrypted = $AES->decryptString($coreData['params']);
@@ -270,7 +270,7 @@ class Callback extends Controller{
             $data = file_get_contents("php://input");
         }
         write_to_log('【拉卡拉交易支付结果通知】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
-        $coreData = base64_decode($data['param']);
+        $coreData = base64_decode($data);
         $coreData = json_decode($coreData, true);
         $AES = new AesCbc($this->_LklAesKey);
         $decrypted = $AES->decryptString($coreData['params']);
@@ -362,6 +362,44 @@ class Callback extends Controller{
             exit();
         }
     }
+
+    /**
+     * 拉卡拉D0提现接口
+     * @param $orderInfo array
+     * @param $merId string
+     * @return array
+     * @author xxw
+     * @date 2017年6月28日15:31:34
+     */
+    public function withdrawByLkl($orderInfo, $merId){
+        $curlUrl = 'https://api.lakala.com/thirdpartplatform/merchmanage/7005.dor';
+//        $curlUrl = 'https://124.74.143.162:15023/thirdpartplatform/merchmanage/7005.dor';
+        $data['FunCod'] = '7005';
+        $data['compOrgCode'] = $this->_LklCompOrgCode;
+        $data['reqLogNo'] = $orderInfo['no'];
+        $data['shopNo'] = $merId;
+        $amount = number_format(($orderInfo['order_money'] * 0.994 -2), 3, ".", "");
+        $data['amount'] = substr($amount, 0, -1);
+        $data['retUrl'] = 'http://wk.xmjishiduo.com/wxApi.php?m=Callback&a=getResultLkl';
+        $queryString = $data['compOrgCode'] . $data['reqLogNo'] . $data['shopNo'] . $data['amount'] . $this->_LklHashKey;
+        $data['MAC'] = sha1($queryString);
+        $this->xml = new \XMLWriter();
+        $param = $this->toXml($data);
+        $result = $this->request($curlUrl, true, 'post', $param);
+        $result = json_decode(json_encode(simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
+        write_to_log('拉卡拉交易提现数组' . json_encode($data, JSON_UNESCAPED_UNICODE), '/WxApi/Log/Lakala/');
+        if ($result['responseCode'] == '000000'){
+            $status = 1;
+            $msg = $result['tranJnl'];
+            write_to_log('拉卡拉提现成功' . json_encode($result, JSON_UNESCAPED_UNICODE), '/WxApi/Log/Lakala/');
+        }else{
+            $status = 2;
+            $msg = $result['tranJnl'] . $result['message'];
+            write_to_log('拉卡拉提现失败' . json_encode($result, JSON_UNESCAPED_UNICODE), '/WxApi/Log/Lakala/');
+        }
+        return array('status'=>$status, 'msg'=>$msg);
+    }
+
 
     /**
      * 拉卡拉D0可提余额查询
