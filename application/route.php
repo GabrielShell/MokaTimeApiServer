@@ -86,3 +86,9 @@ Route::post('api/v1/bills/bank/cards','mkapi/XinyanBillsApi/cyberBankQueryCards'
  * @param tradeNo 新颜订单号
  */
 Route::post('api/v1/open/merchant/','mkapi/Lakalaapi/PaymentTrade');
+
+
+// +----------------------------------------------------------------------
+// | 信用卡接口
+// +----------------------------------------------------------------------
+Route::post('api/v1/card/userCardList','mkapi/Card/userCardList');
