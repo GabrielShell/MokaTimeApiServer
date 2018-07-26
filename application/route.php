@@ -92,3 +92,9 @@ Route::post('api/v1/bills/bank/cards','mkapi/XinyanBillsApi/cyberBankQueryCards'
  * @param expriredtime 报文截止时间戳
  */
 Route::post('api/v1/open/merchant/','mkapi/Lakalaapi/PaymentTrade');
+
+
+// +----------------------------------------------------------------------
+// | 信用卡接口
+// +----------------------------------------------------------------------
+Route::post('api/v1/card/userCardList','mkapi/Card/userCardList');

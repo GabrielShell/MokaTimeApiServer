@@ -7,6 +7,7 @@ use think\Log;
 use app\mkapi\common\CurlRequest;
 use app\mkapi\common\Xinyan\Order;
 use app\mkapi\common\Xinyan\Crypt;
+use app\mkapi\model\Users;
 use app\mkapi\model\Credit_cards;
 use app\mkapi\model\Bills;
 use app\mkapi\model\Shopping_records;
@@ -130,6 +131,8 @@ class XinyanBillsApi extends Common{
                 $orderNo = $request->post('orderNo');
                 $requestUrl = $billsUrl.$orderNo;
 
+                $user_series = $request->post('series');
+                $userId = Users::where(['series'=>$user_series])->value('id');
                 $result = CurlRequest::get($requestUrl,$this->headers);
 
                 $data = json_decode($result,true);
@@ -160,12 +163,13 @@ class XinyanBillsApi extends Common{
                                 $card_id = 0;
                                 if(!isset($searched[$unique_string])){
                                         //如果未搜索过数据库则搜索数据库
-                                        $card = Credit_cards::get(['unique_string' => $unique_string]);
+                                        $card = Credit_cards::get(['user_id'=>$userId,'unique_string' => $unique_string]);
                                         if(!$card){
                                                 //如果搜索数据库没有该信用卡，则执行插入操作
                                                 $card = new Credit_cards;
                                                 $card->unique_string = $unique_string;
                                                 $card->bank_name = $banks[$bill['bank_id']];
+                                                $card->user_id = $userId;
                                                 $card->name_on_card = $bill['name_on_card'];
                                                 $card->card_no_last4 = $bill['card_number'];
                                                 $card->card_no = $bill['card_no'];
@@ -182,6 +186,18 @@ class XinyanBillsApi extends Common{
                                                 $searched[$unique_string] = $card->id;
                                                 $card_id = $card->id;
                                         }else{
+                                                //如果搜索数据库有该数据卡，则更新该卡数据
+                                                $card->card_no = $bill['card_no'];
+                                                $card->bill_date = date('d',strtotime($bill['bill_date']));
+                                                if(date('m',strtotime($bill['payment_due_date'])) == date('m',strtotime($bill['bill_date']))){
+                                                        $card->due_date = '-'.date('d',strtotime($bill['payment_due_date']));
+                                                }else {
+                                                        $card->due_date = '*'.date('d',strtotime($bill['payment_due_date']));
+                                                }
+                                                $card->credit_limit = $bill['credit_limit'];
+                                                $card->point = $bill['point'];
+
+                                                //加入已查询列表中，避免重复查询数据库
                                                 $searched[$unique_string] = $card->id;
                                                 $card_id = $card->id;
                                         }
@@ -194,6 +210,7 @@ class XinyanBillsApi extends Common{
                                 if(!Bills::get(['series'=>$bill['bill_id']])){
                                         $bill_record  = new Bills;
                                         $bill_record->series = $bill['bill_id'];
+                                        $bill_record->user_id = $userId;
                                         $bill_record->credit_card_id = $card_id;
                                         $bill_record->origin_type = 'email';
                                         $bill_record->bill_type = 'DONE';
@@ -209,6 +226,7 @@ class XinyanBillsApi extends Common{
                                         foreach($bill['shopping_records'] as $shopping_record){
                                                 $db_shopping_record = new Shopping_records;
                                                 $db_shopping_record->credit_card_id = $card_id;
+                                                $db_shopping_record->user_id = $userId;
                                                 $db_shopping_record->bill_id = $bill_record->id;
                                                 $db_shopping_record->amount_money = $shopping_record['amount_money'];
                                                 $db_shopping_record->trans_addr = $shopping_record['trans_addr'];
@@ -457,6 +475,9 @@ class XinyanBillsApi extends Common{
          */
         public function cyberBankQueryCards(Request $request){
                 $tradeNo = $request->post('tradeNo');
+                $user_series = $request->post('series');
+                $userId = Users::where(['series'=>$user_series])->value('id');
+
                 $requestUrl = 'https://api.xinyan.com/data/bank/v2/cards/all/'.$tradeNo;
                 $result = CurlRequest::get($requestUrl,$this->headers);
                 $arr_result = json_decode($result,true);
@@ -478,14 +499,18 @@ class XinyanBillsApi extends Common{
                                         $unique_string = $bank_name.'-'.$name_on_card.'-'.$card_no_last4;
 
                                         //验证卡片是否已经存在于数据库
-                                        $cardDbInstance = Credit_cards::get(['unique_string'=>$unique_string]);
+                                        $cardDbInstance = Credit_cards::get(['user_id'=>$userId,'unique_string'=>$unique_string]);
                                         $cardId = 0;
                                         if($cardDbInstance){
                                                 //如果该卡片已存在，则更新该信用卡记录
                                                 $cardId = $cardDbInstance->id;
                                                 $cardDbInstance->card_no = $card_no;
-                                                $cardDbInstance->bill_date = $bill_date;
-                                                $cardDbInstance->due_date = $due_date;
+                                                $cardDbInstance->bill_date = date('d',strtotime($bill_date));
+                                                if(date('m',strtotime($bill_date)) == date('m',strtotime($due_date))){
+                                                        $cardDbInstance->due_date = '-'.date('d',strtotime($due_date));
+                                                }else {
+                                                        $cardDbInstance->due_date = '*'.date('d',strtotime($due_date));
+                                                }
                                                 $cardDbInstance->credit_limit = $credit_limit;
                                                 $cardDbInstance->balance = $balance;
                                                 $cardDbInstance->save();
@@ -493,12 +518,17 @@ class XinyanBillsApi extends Common{
                                                 //不存在，则创建信用卡记录
                                                 $cardDbInstance = new Credit_cards();
                                                 $cardDbInstance->unique_string = $unique_string;
+                                                $cardDbInstance->user_id = $userId;
                                                 $cardDbInstance->bank_name = $bank_name;
                                                 $cardDbInstance->name_on_card = $name_on_card;
                                                 $cardDbInstance->card_no_last4 = $card_no_last4;
                                                 $cardDbInstance->card_no = $card_no;
-                                                $cardDbInstance->bill_date = $bill_date;
-                                                $cardDbInstance->due_date = $due_date;
+                                                $cardDbInstance->bill_date = date('d',strtotime($bill_date));
+                                                if(date('m',strtotime($bill_date)) == date('m',strtotime($due_date))){
+                                                        $cardDbInstance->due_date = '-'.date('d',strtotime($due_date));
+                                                }else {
+                                                        $cardDbInstance->due_date = '*'.date('d',strtotime($due_date));
+                                                }
                                                 $cardDbInstance->credit_limit = $credit_limit;
                                                 $cardDbInstance->balance = $balance;
                                                 $cardDbInstance->save();
@@ -507,9 +537,10 @@ class XinyanBillsApi extends Common{
 
                                         foreach($card['bills'] as $bill){
                                                 //如果账单记录不存在，插入账单记录
-                                                if(!Bills::get(['series'=>$bill['bill_id']])){
+                                                if(!Bills::get(['user_id'=>$userId,'credit_card_id'=>$cardId,'series'=>$bill['bill_id']])){
                                                         $billDbInstance = new Bills();
                                                         $billDbInstance->series = $bill['bill_id'];
+                                                        $billDbInstance->user_id = $userId;
                                                         $billDbInstance->credit_card_id = $cardId;
                                                         $billDbInstance->origin_type = 'bank';
                                                         $billDbInstance->bill_type = $bill['bill_type'];
@@ -537,6 +568,7 @@ class XinyanBillsApi extends Common{
                                                         foreach($bill['shopping_sheets'] as $shoppingRecord){
                                                                 $shoppingRecordDbInstance = new Shopping_records();
                                                                 $shoppingRecordDbInstance->credit_card_id = $cardId;
+                                                                $shoppingRecordDbInstance->user_id = $userId;
                                                                 $shoppingRecordDbInstance->bill_id = $billId;
                                                                 $shoppingRecordDbInstance->amount_money = $shoppingRecord['amount_money'];
                                                                 $shoppingRecordDbInstance->trans_addr = $shoppingRecord['trans_addr'];
