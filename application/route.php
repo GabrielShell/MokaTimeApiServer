@@ -82,7 +82,13 @@ Route::post('api/v1/bills/bank/bills','mkapi/XinyanBillsApi/cyberBankQueryBills'
 Route::post('api/v1/bills/bank/cards','mkapi/XinyanBillsApi/cyberBankQueryCards');
 
 /**
- * 网银查询银行卡所有信息[POST]
- * @param tradeNo 新颜订单号
+ * 拉卡拉开通商户/支付交易接口[post]
+ * @param channel_id 渠道号
+ * @param channel_code 渠道码
+ * @param pay_rate 费率
+ * @param amount 订单金额
+ * @param callbackUrl SDK回调地址
+ * @param timestamp 报文时间戳
+ * @param expriredtime 报文截止时间戳
  */
 Route::post('api/v1/open/merchant/','mkapi/Lakalaapi/PaymentTrade');
