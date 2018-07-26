@@ -1,0 +1,4 @@
+23:58:30  【拉卡拉D0开通/拉卡拉响应数据】{"responseCode":"100020","message":"合作机构信息不存在","reqLogNo":"2018072523583000","shopNo":"822295454118563","MAC":"422673aadb8db451646a28c1539012cd7bf6138a"}
+23:58:30  【拉卡拉D0开通/请求参数】{"shopNo":"822295454118563","FunCod":"7011","compOrgCode":"QFDT","reqLogNo":"2018072523583000","retUrl":"http:\/\/mk.xmjishiduo.com\/mkapi.php?\/mkapi\/Callback\/resultOpenD0","MAC":"422673aadb8db451646a28c1539012cd7bf6138a"}
+23:58:30  拉卡拉D0交易开通<?xml version="1.0" encoding="GBK"?>
+<xml><shopNo><![CDATA[822295454118563]]></shopNo><FunCod><![CDATA[7011]]></FunCod><compOrgCode><![CDATA[QFDT]]></compOrgCode><reqLogNo><![CDATA[2018072523583000]]></reqLogNo><retUrl><![CDATA[http://mk.xmjishiduo.com/mkapi.php?/mkapi/Callback/resultOpenD0]]></retUrl><MAC><![CDATA[422673aadb8db451646a28c1539012cd7bf6138a]]></MAC></xml>
