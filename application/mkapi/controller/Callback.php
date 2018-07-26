@@ -223,14 +223,15 @@ class Callback extends Controller{
         $coreData = json_decode($coreData, true);
         $AES = new AesCbc($this->_LklAesKey);
         $decrypted = $AES->decryptString($coreData['params']);
-        write_to_log('【拉卡拉查询交易能否支付/反编码后的数据】' . json_encode($coreData, JSON_UNESCAPED_UNICODE), '/WxApi/Log/Lakala/');
-        write_to_log('【拉卡拉查询交易能否支付/解密后的数据】' . json_encode($decrypted, JSON_UNESCAPED_UNICODE), '/WxApi/Log/Lakala/');
+        var_dump($decrypted);
+        write_to_log('【拉卡拉查询交易能否支付/反编码后的数据】' . json_encode($coreData, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
+        write_to_log('【拉卡拉查询交易能否支付/解密后的数据】' . $decrypted, '/mkapi/log/lakala/callback/openMerchant/');
         //验签
         $checkSign = $AES->checkSign($decrypted, $coreData['sign'],$this->_LklDecryptKeyPath);
         if ($checkSign){
             $decrypted = json_decode($decrypted, true);
             // 获取用户交易订单信息
-            $orderInfo = Db::name("Order")->where("order_no", $decrypted['orderId'])->find();
+            $orderInfo = Db::name("lakala_order")->where("order_no", $decrypted['orderId'])->find();
             if(!empty($orderInfo)){
                 $param['canPay'] = 'y';
             }else{
@@ -387,15 +388,15 @@ class Callback extends Controller{
         $param = $this->toXml($data);
         $result = $this->request($curlUrl, true, 'post', $param);
         $result = json_decode(json_encode(simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
-        write_to_log('拉卡拉交易提现数组' . json_encode($data, JSON_UNESCAPED_UNICODE), '/WxApi/Log/Lakala/');
+        write_to_log('拉卡拉交易提现数组' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
         if ($result['responseCode'] == '000000'){
             $status = 1;
             $msg = $result['tranJnl'];
-            write_to_log('拉卡拉提现成功' . json_encode($result, JSON_UNESCAPED_UNICODE), '/WxApi/Log/Lakala/');
+            write_to_log('拉卡拉提现成功' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
         }else{
             $status = 2;
             $msg = $result['tranJnl'] . $result['message'];
-            write_to_log('拉卡拉提现失败' . json_encode($result, JSON_UNESCAPED_UNICODE), '/WxApi/Log/Lakala/');
+            write_to_log('拉卡拉提现失败' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
         }
         return array('status'=>$status, 'msg'=>$msg);
     }
