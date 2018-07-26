@@ -87,7 +87,7 @@ class Lakalaapi extends Common{
             $encryptData['productDesc'] = 'test';//订单描述
             $encryptData['remark'] = 'test';//备注
             $encryptData['amount'] = $data['order_money'];//交易金额
-            $encryptData['expriredtime'] = date("yyyyMMddHHmmss",time()+24*3600*1000);//失效时间
+            $encryptData['expriredtime'] = date("yyyymmddHHmmss",time()+24*3600*1000);//失效时间
             $encryptData['randnum'] = $randnum;//随机数
             $encryptData['transCardNo'] = null;//交易卡号
             $encryptData['realName'] = $userInfo['real_name'];//真实姓名
