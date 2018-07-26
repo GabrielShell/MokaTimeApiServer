@@ -34,7 +34,9 @@ class Lakalaapi extends Common{
         $pay_rate = $request->post('pay_rate');//费率
         $amount = $request->post('amount');//金额
         $randnum = $request->post('randnum');//随机数
-        $callbackUrl = $request->post('callbackUrl');
+        $callbackUrl = $request->post('callbackUrl');//回调地址
+        $timestamp = $request->post('timestamp'); //报文时间戳
+        $expriredtime = $request->post('expriredtime'); //报文截止时间戳
 
         // 获取用户信息
         $userInfo = Db::name('users')->field('real_name,card_no,bank_no,is_merchant,bankbranch_id,phone,is_certificate')->where("series",$series)->find();
@@ -80,14 +82,14 @@ class Lakalaapi extends Common{
             //lakala交易业务参数
             $encryptData['userId'] = $series;
             $encryptData['phoneNumber'] = $userInfo['phone'];
-            $encryptData['timestamp'] = date("yyyymmddHHmmss",time());//报文的时间戳
+            $encryptData['timestamp'] = $timestamp;//报文的时间戳
             //$encryptData['callbackUrl'] = $param['callbackUrl'];
             $encryptData['orderId'] = $data['order_no'];
             $encryptData['productName'] = 'test';//订单名称
             $encryptData['productDesc'] = 'test';//订单描述
             $encryptData['remark'] = 'test';//备注
             $encryptData['amount'] = $data['order_money'];//交易金额
-            $encryptData['expriredtime'] = date("yyyymmddHHmmss",time()+24*3600*1000);//失效时间
+            $encryptData['expriredtime'] = $expriredtime;//失效时间
             $encryptData['randnum'] = $randnum;//随机数
             $encryptData['transCardNo'] = null;//交易卡号
             $encryptData['realName'] = $userInfo['real_name'];//真实姓名
