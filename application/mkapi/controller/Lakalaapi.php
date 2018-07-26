@@ -34,6 +34,7 @@ class Lakalaapi extends Common{
         $pay_rate = $request->post('pay_rate');//费率
         $amount = $request->post('amount');//金额
         $randnum = $request->post('randnum');//随机数
+        $callbackUrl = $request->post('callbackUrl');
 
         // 获取用户信息
         $userInfo = Db::name('users')->field('real_name,card_no,bank_no,is_merchant,bankbranch_id,phone,is_certificate')->where("series",$series)->find();
@@ -92,6 +93,7 @@ class Lakalaapi extends Common{
             $encryptData['realName'] = $userInfo['real_name'];//真实姓名
             $encryptData['idCardNo'] = $userInfo['card_no'];//身份证号
             $encryptData['tranceCardType'] = 'C';
+            $encryptData['callbackUrl'] = $callbackUrl;//回调地址
 
             //判断用户是否开通商户
             if($userInfo['is_merchant'] == 1){
