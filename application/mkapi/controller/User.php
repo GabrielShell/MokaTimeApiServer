@@ -339,14 +339,15 @@ class User extends Common{
 	*@return array 放回信息列表
 	*/
 	public function getInfo(){
-		$series = $_REQUEST;
+		$request = Request::instance();
+		$series = $request->post('series');
 		$result = Db::name('users')->field('real_name,card_no')->where('series',$series)->find();
 		if(!$result){
 			$errorId = uniqid('sqlErr');
 			Log::sql("【".$errorId."】查找用户信息失败");
-			return my_json_encode(10002,'信息获取失败');
+			return my_json_encode(10002,'信息获取失败：'.$errorId);
 		}else{
-			return my_json_encode(10100,'success',$result);
+			return my_json_encode(10000,'success',$result);
 		}
 	}
 
