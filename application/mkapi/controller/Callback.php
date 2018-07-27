@@ -236,7 +236,7 @@ class Callback extends Controller{
      */
     public function orderResult(){
         $data = $_REQUEST;
-        if (empty($data)) {
+        if (empty($data)){
             $data = file_get_contents("php://input");
         }
         write_to_log('【拉卡拉交易支付结果通知】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
@@ -244,7 +244,7 @@ class Callback extends Controller{
         $coreData = json_decode($coreData, true);
         $AES = new AesCbc($this->_LklAesKey);
         $decrypted = $AES->decryptString($coreData['params']);
-        write_to_log('【拉卡拉交易支付结果通知/解密】' . $coreData, '/mkapi/log/lakala/callback/openMerchant/');
+        write_to_log('【拉卡拉交易支付结果通知/解密】' . $decrypted, '/mkapi/log/lakala/callback/openMerchant/');
         //验签
         $checkSign = $AES->checkSign($decrypted, $coreData['sign'],$this->_LklDecryptKeyPath);
         if ($checkSign){
