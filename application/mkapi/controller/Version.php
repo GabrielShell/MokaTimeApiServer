@@ -34,7 +34,8 @@ class Version extends Controller{
                 'os' => $osFullName,
                 'version' => $latestVersionDbInstance->version,
                 'url' => $latestVersionDbInstance->url,
-                'md5' => $latestVersionDbInstance->md5
+                'md5' => $latestVersionDbInstance->md5,
+                'content' => $latestVersionDbInstance->content
             ]
         ];
         return json_encode($result,JSON_UNESCAPED_UNICODE);
