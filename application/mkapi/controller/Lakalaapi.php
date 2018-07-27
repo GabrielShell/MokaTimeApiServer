@@ -18,14 +18,7 @@ class Lakalaapi extends Common{
     */
 	public function PaymentTrade(){
 		$request = Request::instance();
-        $requestData = $request->param();
-        // 判断参数是否正确   
-        foreach($requestData as $k => $v){
-            if(empty($v)){
-                $this->echo_json(8, '参数不能为空');
-            }
-        }
-
+        
         //收集表单信息
         $series = $request->post('series'); //用户唯一标识
         //$bankbranch_id = $request->post('bankbranch_id');//开户行id
@@ -66,10 +59,12 @@ class Lakalaapi extends Common{
         $data['pay_type'] = 1;
         $data['channel_id'] = $channel_id;
         $data['order_money'] = round($amount, 2);
-        $data['arrive_money'] = round($amount * (1 - $pay_rate / 100), 2);
+        $data['arrive_money'] = round($amount * (1 - $pay_rate / 100)-2, 2);
         $data['pay_rate'] = $pay_rate;
         $data['create_time'] = time();
         $data['trade_status'] = 0;
+        $data['other_fee'] = 2;
+
         //储存订单信息
         
         //拉卡拉交易
