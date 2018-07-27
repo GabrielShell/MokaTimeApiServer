@@ -30,6 +30,7 @@ class Card extends Common{
             $billsResult = [];
             foreach($billsDbResult as $billDbResult){
                 $billsResult [] = [
+                    'bill_id' => $billDbResult->id,
                     'origin_type' => $billDbResult->origin_type,
                     'bill_type' => $billDbResult->bill_type,
                     'repay_amount' => $billDbResult->repay_amount,
@@ -45,6 +46,7 @@ class Card extends Common{
             }
 
             $resultData[] = [
+                'card_id' => $card->id,
                 'bank_name' => $card->bank_name,
                 'name_on_card' => $card->name_on_card,
                 'card_on_last4' => $card->card_no_last4,
