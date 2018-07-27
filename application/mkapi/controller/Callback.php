@@ -107,19 +107,6 @@ class Callback extends Controller{
             }else{
                 write_to_log('【拉卡拉注册/绑定通知-验签失败】' . json_encode($decrypted), '/mkapi/log/lakala/callback/openMerchant/');
             }
-
-
-            //         //开通D0
-            //         $result = $this->openD0($decrypted['merId']);
-            //         if ($result['status'] == 1){
-            //             $manage['openStatus'] = 1;
-            //             M("Posmanagement")->where("tel='%s' AND pos_id=1", array($decrypted['partnerUserId']))->save($manage);
-            //             write_to_log('拉卡拉-开通D0成功' . $result['msg'], '/WxApi/Log/Lakala/');
-            //         }else{
-            //             write_to_log('拉卡拉-开通D0失败' . $result['msg'], '/WxApi/Log/Lakala/');
-            //         }
-            //     }
-            // }
       
         }    
     }
@@ -257,7 +244,7 @@ class Callback extends Controller{
         $coreData = json_decode($coreData, true);
         $AES = new AesCbc($this->_LklAesKey);
         $decrypted = $AES->decryptString($coreData['params']);
-        write_to_log('【拉卡拉交易支付结果通知/解密】' . $data, '/mkapi/log/lakala/callback/openMerchant/');
+        write_to_log('【拉卡拉交易支付结果通知/解密】' . $coreData, '/mkapi/log/lakala/callback/openMerchant/');
         //验签
         $checkSign = $AES->checkSign($decrypted, $coreData['sign'],$this->_LklDecryptKeyPath);
         if ($checkSign){
@@ -286,7 +273,8 @@ class Callback extends Controller{
                 Log::sql("【订单信息不存在】");
             }
 
-            if ($orderInfo['trade'] == 0){
+            //判断交易订单状态
+            if ($orderInfo['trade_status'] == 0){
                 if (($decrypted['retCode'] == '0000') && ($decrypted['isSuccess'] == 'Y')) {
                     $order['partnerBillNo'] = $decrypted['partnerBillNo'];
                     $order['trade_status'] = 2;
@@ -298,6 +286,7 @@ class Callback extends Controller{
                     $order['err_note'] = $decrypted['retCode'] . $decrypted['retMsg'];
                 }
 
+                //更新订单数据
                 $result = Db::name("lakala_order")->where("id", $orderInfo['id'])->update($order);
                 if ($result !== false){
                     if ($order['tra_status'] == 2){
@@ -342,7 +331,7 @@ class Callback extends Controller{
 
                     }
                 }else{
-                    write_to_log('【拉卡拉交易支付结果通知/订单保存失败】' . $decrypted, '/mkapi/log/lakala/callback/openMerchant/');
+                    write_to_log('【拉卡拉交易支付结果通知/订单保存失败】' . json_encode($decrypted,JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
                     Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/']);
                     Log::sql("【订单保存失败——失败】");
                 }
