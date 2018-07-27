@@ -97,4 +97,18 @@ Route::post('api/v1/open/merchant/','mkapi/Lakalaapi/PaymentTrade');
 // +----------------------------------------------------------------------
 // | 信用卡接口
 // +----------------------------------------------------------------------
+/**
+ * 查询用户信用卡列表[POST]
+ */
 Route::post('api/v1/card/userCardList','mkapi/Card/userCardList');
+
+
+
+// +----------------------------------------------------------------------
+// | 客户端版本管理接口
+// +----------------------------------------------------------------------
+/**
+ * 查询客户端最新版本号[POST]
+ * @param os 客户端操作系统,'a'=Android，'i'=iOS
+ */
+Route::post('api/v1/version/getLatestVersion','mkapi/Version/getLatestVersion');
