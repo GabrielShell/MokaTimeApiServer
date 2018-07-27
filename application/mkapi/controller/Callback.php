@@ -280,6 +280,10 @@ class Callback extends Controller{
                 write_to_log('【拉卡拉交易支付结果通知/响应拉卡拉参数/生成加密串】' . $map2Json, '/mkapi/log/lakala/callback/openMerchant/');
     
                 echo $map2Json;
+            }else{
+                write_to_log('【拉卡拉交易支付结果通知/订单信息不存在】' . $map2Json, '/mkapi/log/lakala/callback/openMerchant/');
+                Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/'])
+                Log::sql("【订单信息不存在】");
             }
 
             if ($orderInfo['trade'] == 0){
@@ -323,6 +327,7 @@ class Callback extends Controller{
                         $merchantResult = Db::name('merchants')->where('series',$orderInfo['series'])->update($merchant);
                         if(!$merchantResult){
                             write_to_log('【拉卡拉交易支付结果通知-储存终端号失败】' . json_encode($merchantResult,JSON_UNESCAPED_UNICODE) , '/mkapi/log/lakala/callback/openMerchant/');
+                            Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/'])
                             Log::sql("【储存终端号——失败】");
                         }else{
                              write_to_log('【拉卡拉交易支付结果通知-储存终端号成功】' . json_encode($merchantResult,JSON_UNESCAPED_UNICODE) , '/mkapi/log/lakala/callback/openMerchant/');
@@ -338,6 +343,8 @@ class Callback extends Controller{
                     }
                 }else{
                     write_to_log('【拉卡拉交易支付结果通知/订单保存失败】' . $decrypted, '/mkapi/log/lakala/callback/openMerchant/');
+                    Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/'])
+                    Log::sql("【订单保存失败——失败】");
                 }
             }
         }else{
@@ -506,8 +513,9 @@ class Callback extends Controller{
         write_to_log('【拉卡拉D0提款通知-】' . $json, '/mkapi/log/lakala/sql/withdraw/');
         $data = json_decode($json, true);
         $result = Db::name("withdraw")->where("tranjnl", $data['tranJnl'])->find();
-
         $orderInfo = Db::name("lakala_order")->where("id", $result['order_id'])->find();
+
+
         if ($orderInfo['tra_status'] == 0){
             write_to_log('拉卡拉D0提款结果通知-订单尚未支付-' . json_encode($orderInfo, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/sql/withdraw/');exit();
         }
