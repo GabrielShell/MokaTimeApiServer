@@ -24,7 +24,7 @@ function httpHost($curlPost,$url){
 function getNo($type=1, $num=8){
      $str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
      switch ($type){
-         case 1: $no = 'MK';break;
+         case 1: $no = 'mk';break;
          case 2: $no = 'FR';break;
          case 3: $no = 'BK';break;
          case 4: $no = 'FR';break;
