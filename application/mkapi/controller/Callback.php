@@ -9,10 +9,10 @@ use think\Db;
 use crypt\AesCbc;
 use think\Log;
 class Callback extends Controller{
-	//拉卡拉交易D0提款参数
-   	private $_LklCompOrgCode = 'QFTMPOS';
+    //拉卡拉交易D0提款参数
+    private $_LklCompOrgCode = 'QFTMPOS';
     private $_LklHashKey = 'mUb46HfgUDfygDq8KrbZTNRObQwhBeFv';
-   	//private $_LklHashKey = 'wxd9c866ad31c3c6wxd9c866ad31c3c6';
+    //private $_LklHashKey = 'wxd9c866ad31c3c6wxd9c866ad31c3c6';
     //拉卡拉服务器端参数
     private $_LklAesKey = '340D2C2F15204082B14092DDE811AA22';
     private $_LklEncryptKeyPath = APP_PATH.'/mkapi/public/key/ct_rsa_private_key.pem';
@@ -21,7 +21,7 @@ class Callback extends Controller{
     /**
     *拉卡拉开通商户回调
     */
-	public function register(){
+    public function register(){
         //收集拉卡拉的请求数据
         $data = $_REQUEST;
         if(empty($data)){
@@ -205,7 +205,7 @@ class Callback extends Controller{
         $coreData = json_decode($coreData, true);
         $AES = new AesCbc($this->_LklAesKey);
         $decrypted = $AES->decryptString($coreData['params']);
-        var_dump($decrypted);
+        
         write_to_log('【拉卡拉查询交易能否支付/反编码后的数据】' . json_encode($coreData, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
         write_to_log('【拉卡拉查询交易能否支付/解密后的数据】' . $decrypted, '/mkapi/log/lakala/callback/openMerchant/');
         //验签
