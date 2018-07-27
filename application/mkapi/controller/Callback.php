@@ -282,7 +282,7 @@ class Callback extends Controller{
                 echo $map2Json;
             }else{
                 write_to_log('【拉卡拉交易支付结果通知/订单信息不存在】' . $map2Json, '/mkapi/log/lakala/callback/openMerchant/');
-                Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/'])
+                Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/']);
                 Log::sql("【订单信息不存在】");
             }
 
@@ -327,7 +327,7 @@ class Callback extends Controller{
                         $merchantResult = Db::name('merchants')->where('series',$orderInfo['series'])->update($merchant);
                         if(!$merchantResult){
                             write_to_log('【拉卡拉交易支付结果通知-储存终端号失败】' . json_encode($merchantResult,JSON_UNESCAPED_UNICODE) , '/mkapi/log/lakala/callback/openMerchant/');
-                            Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/'])
+                            Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/']);
                             Log::sql("【储存终端号——失败】");
                         }else{
                              write_to_log('【拉卡拉交易支付结果通知-储存终端号成功】' . json_encode($merchantResult,JSON_UNESCAPED_UNICODE) , '/mkapi/log/lakala/callback/openMerchant/');
@@ -343,7 +343,7 @@ class Callback extends Controller{
                     }
                 }else{
                     write_to_log('【拉卡拉交易支付结果通知/订单保存失败】' . $decrypted, '/mkapi/log/lakala/callback/openMerchant/');
-                    Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/'])
+                    Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/']);
                     Log::sql("【订单保存失败——失败】");
                 }
             }
@@ -373,8 +373,9 @@ class Callback extends Controller{
             $withdraw['withdraw_no'] = getNumNo(16);
             $withdraw['series'] = $request->post('series');
             //获取商户号
-            $merchant = Db::name("merchants")->field('merchant_no')->where("series",$orderInfo['series'] )->find();
+            $merchant = Db::name("merchants")->field('merchant_no')->where("series",$withdraw['series'])->find();
             $withdraw['merchant_no'] = $merchant['merchant_no'];
+            $withdraw['create_time'] = time();
 
         }else{
             //储存提款记录信息
@@ -383,14 +384,15 @@ class Callback extends Controller{
             $withdraw['series'] = $orderInfo['series'];
             $withdraw['merchant_no'] = $orderInfo['merchant_no'];
             $withdraw['create_time'] = time();
+            $withdraw['withdraw_money'] = $orderInfo['order_money'];
         }
 
         //请求参数
         $data['FunCod'] = '7005';
         $data['compOrgCode'] = $this->_LklCompOrgCode;
-        $data['reqLogNo'] = $withdraw['withdraw_no'];f
-        $data['shopNo'] = $merchant_no;
-        $amount = number_format(($orderInfo['order_money'] * 0.994 -2), 3, ".", "");
+        $data['reqLogNo'] = $withdraw['withdraw_no'];
+        $data['shopNo'] = $withdraw['merchant_no'];
+        $amount = number_format(($withdraw['withdraw_money'] * 0.994 -2), 3, ".", "");
         $data['amount'] = substr($amount, 0, -1);
         $data['retUrl'] = 'http://wk.xmjishiduo.com/wxApi.php?m=Callback&a=getResultLkl';
         $queryString = $data['compOrgCode'] . $data['reqLogNo'] . $data['shopNo'] . $data['amount'] . $this->_LklHashKey;
@@ -407,11 +409,10 @@ class Callback extends Controller{
             $msg = "提现请求成功";
             $responseData['trannl'] = $result['tranJnl'];
             //储存提款信息
-            $withdraw['withdraw_money'] = $orderInfo['order_money'];
             $withdraw['tranjnl'] = $result['tranJnl'];
 
-            write_to_log('【D0提款新增提款记录成功-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $orderInfo['order_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
-            write_to_log('【D0提款请求成功-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $orderInfo['order_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
+            write_to_log('【D0提款新增提款记录成功-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $$withdraw['withdraw_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
+            write_to_log('【D0提款请求成功-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $withdraw['withdraw_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
         }else{
             $status = 10002;
             $msg = "提现提现请求失败：". $result['message'];
@@ -419,8 +420,8 @@ class Callback extends Controller{
             $withdraw['err_note'] = $result['tranJnl'];
 
             $responseData['tranJnl'] = $result['tranJnl'];
-            write_to_log('【D0提款新增提款记录成功-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $orderInfo['order_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
-            write_to_log('【D0提款请求失败-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $orderInfo['order_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
+            write_to_log('【D0提款新增提款记录成功-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $withdraw['withdraw_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
+            write_to_log('【D0提款请求失败-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $withdraw['withdraw_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
         }
 
         $resultWithdraw = Db::name("withdraw")->insert($withdraw);
@@ -452,7 +453,7 @@ class Callback extends Controller{
         $withdraw['withdraw_no'] = getNumNo(16);
         $withdraw['series'] = $request->post('series');
         //获取商户号
-        $merchant = Db::name("merchants")->field('merchant_no')->where("series",$orderInfo['series'] )->find();
+        $merchant = Db::name("merchants")->field('merchant_no')->where("series",$withdraw['series'])->find();
         $withdraw['merchant_no'] = $merchant['merchant_no'];
 
         //配置请求参数
@@ -475,10 +476,10 @@ class Callback extends Controller{
             $msg = "提现成功";
             $responseData['trannl'] = $result['tranJnl'];
             //储存提款信息
-            $withdraw['withdraw_money'] = $orderInfo['order_money'];
+
             $withdraw['tranjnl'] = $result['tranJnl'];
-            write_to_log('【D0提款新增提款记录成功-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $orderInfo['order_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
-            write_to_log('【D0提款请求成功-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $orderInfo['order_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
+            write_to_log('【D0提款新增提款记录成功-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $withdraw['withdraw_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
+            write_to_log('【D0提款请求成功-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $withdraw['withdraw_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
         }else{
             $status = 10002;
             $msg = "提现失败：". $result['message'];
@@ -486,8 +487,8 @@ class Callback extends Controller{
 
             //储存失败信息
             $withdraw['err_note'] = $result['tranJnl'];
-            write_to_log('【D0提款新增提款记录成功-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $orderInfo['order_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
-            write_to_log('【D0提款请求失败-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $orderInfo['order_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
+            write_to_log('【D0提款新增提款记录成功-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $withdraw['withdraw_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
+            write_to_log('【D0提款请求失败-】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE) . $withdraw['withdraw_money'] . $merchant['merchant_no'], '/mkapi/log/lakala/callback/withdraw/');
         }
 
         $resultWithdraw = Db::name("withdraw")->insert($withdraw);
@@ -643,5 +644,9 @@ class Callback extends Controller{
             $this->xml->endElement();
             return $this->xml->outputMemory(true);
         }
+    }
+
+    public function test(){
+        echo 'hello';
     }
 }
