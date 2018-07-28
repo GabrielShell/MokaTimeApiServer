@@ -289,7 +289,7 @@ class Callback extends Controller{
                 //更新订单数据
                 $result = Db::name("lakala_order")->where("id", $orderInfo['id'])->update($order);
                 if ($result !== false){
-                    if ($order['tra_status'] == 2){
+                    if ($order['trade_status'] == 2){
                         write_to_log('【拉卡拉交易支付结果通知-订单保存成功】' . json_encode($order,JSON_UNESCAPED_UNICODE) , '/mkapi/log/lakala/callback/openMerchant/');
                         // //只有在设备库中的设备交易能获得分润
 
@@ -587,7 +587,7 @@ class Callback extends Controller{
             write_to_log('拉卡拉D0提款记录-保存失败-' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
         }
 
-        if ($orderInfo['tra_status'] == 0){
+        if ($orderInfo['trade_status'] == 0){
             write_to_log('拉卡拉D0提款结果通知-订单尚未支付-' . json_encode($orderInfo, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');exit();
         }
 
