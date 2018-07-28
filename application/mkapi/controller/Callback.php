@@ -520,7 +520,7 @@ class Callback extends Controller{
             $save['err_note'] = '';
             $saveWithdraw['is_success'] = 'y';
        }else{
-            $status = 10000;
+            $status = 10002;
             $msg = "提现失败";
 
             $save['err_note'] = $result['message'];
@@ -548,7 +548,7 @@ class Callback extends Controller{
             
         }
 
-        echo  my_json_encode($status, $msg,$result );
+        echo  my_json_encode($status, $msg,$result);
 
     }
 
