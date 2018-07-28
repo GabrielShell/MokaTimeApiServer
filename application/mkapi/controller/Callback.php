@@ -321,13 +321,11 @@ class Callback extends Controller{
                         }else{
                              write_to_log('【拉卡拉交易支付结果通知-储存终端号成功】' . json_encode($merchantResult,JSON_UNESCAPED_UNICODE) , '/mkapi/log/lakala/callback/openMerchant/');
                         }
-                        // set_time_limit(95);
-                        // sleep(85);
 
-                        //$this->withdrawByLkl($orderInfo);
-
-
-
+                        // D0提款
+                        set_time_limit(95);
+                        sleep(85);
+                        $this->withdrawByLkl($orderInfo);
 
                     }
                 }else{
@@ -500,35 +498,48 @@ class Callback extends Controller{
         if (empty($data)){
             $json = file_get_contents("php://input");
         }
-        write_to_log('【拉卡拉D0提款通知-】' . $json, '/mkapi/log/lakala/sql/withdraw/');
+        write_to_log('【拉卡拉D0提款通知-】' . $json, '/mkapi/log/lakala/callback/withdraw/');
         $data = json_decode($json, true);
         $result = Db::name("withdraw")->where("tranjnl", $data['tranJnl'])->find();
         $orderInfo = Db::name("lakala_order")->where("id", $result['order_id'])->find();
 
-
-        if ($orderInfo['tra_status'] == 0){
-            write_to_log('拉卡拉D0提款结果通知-订单尚未支付-' . json_encode($orderInfo, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/sql/withdraw/');exit();
-        }
-
-        if ($orderInfo['is_withdraw'] == 'y'){
-            write_to_log('拉卡拉D0提款结果通知-订单已完成-' . json_encode($orderInfo, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/sql/withdraw/');exit();
-        }
         if ($data['responseCode'] == '000000'){
             $save['is_withdraw'] = 'y';
             $save['err_note'] = '';
+            $saveWithdraw['is_success'] = 1;
+
         }else{
             $save['err_note'] = $data['message'];
+            $saveWithdraw['err_note'] = $data['message'];
+        }
+
+        $resultOfWithdraw = Db::name("Withdraw")->where("tranjnl", $data['tranJnl'])->update($saveWithdraw);
+        if ($resultOfOrder !== false){
+            write_to_log('拉卡拉D0提款记录-更新成功-' . json_encode($saveWithdraw, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
+            write_to_log('拉卡拉D0提款记录-更新成功-' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
+    
+        }else{
+            write_to_log('拉卡拉D0提款记录-保存失败-' . json_encode($saveWithdraw, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
+            write_to_log('拉卡拉D0提款记录-保存失败-' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
+        }
+
+        if ($orderInfo['tra_status'] == 0){
+            write_to_log('拉卡拉D0提款结果通知-订单尚未支付-' . json_encode($orderInfo, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');exit();
+        }
+
+        if ($orderInfo['is_withdraw'] == 'y'){
+            write_to_log('拉卡拉D0提款结果通知-订单已完成-' . json_encode($orderInfo, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');exit();
         }
 
         $resultOfOrder = Db::name("lakala_order")->where("order_no", $orderInfo['order_no'])->update($save);
     
         if ($resultOfOrder !== false){
-            write_to_log('拉卡拉D0提款结果通知-保存成功-' . json_encode($save, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/sql/withdraw/');
-            write_to_log('拉卡拉D0提款结果通知-保存成功-' . json_encode($orderInfo, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/sql/withdraw/');
-            write_to_log('拉卡拉D0提款结果通知-保存成功-' . $json, '/mkapi/log/lakala/sql/withdraw/');
+            write_to_log('拉卡拉D0提款结果通知-保存成功-' . json_encode($save, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
+            write_to_log('拉卡拉D0提款结果通知-保存成功-' . json_encode($orderInfo, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
+    
         }else{
-            write_to_log('拉卡拉D0提款结果通知-保存失败-' . json_encode($save, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/sql/withdraw/');
-            write_to_log('拉卡拉D0提款结果通知-保存失败-' . json_encode($orderInfo, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/sql/withdraw/');
+            write_to_log('拉卡拉D0提款结果通知-保存失败-' . json_encode($save, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
+            write_to_log('拉卡拉D0提款结果通知-保存失败-' . json_encode($orderInfo, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
         }
         dump($data);
         dump($result);
