@@ -290,7 +290,7 @@ class Callback extends Controller{
                 $result = Db::name("lakala_order")->where("id", $orderInfo['id'])->update($order);
                 if ($result !== false){
                     if ($order['tra_status'] == 2){
-                        write_to_log('【拉卡拉交易支付结果通知-订单保存成功】' . json_encode($result,JSON_UNESCAPED_UNICODE) , '/mkapi/log/lakala/callback/openMerchant/');
+                        write_to_log('【拉卡拉交易支付结果通知-订单保存成功】' . json_encode($order,JSON_UNESCAPED_UNICODE) , '/mkapi/log/lakala/callback/openMerchant/');
                         // //只有在设备库中的设备交易能获得分润
 
 
@@ -552,8 +552,8 @@ class Callback extends Controller{
         $queryString = $data['compOrgCode'] . $data['shopNo'] . $this->_LklHashKey;
         //dump($queryString);
         $data['MAC'] = sha1($queryString);
-        dump($data);
-        $this->xml = new XMLWriter();
+    
+        $this->xml = new \XMLWriter();
         $param = $this->toXml($data);
         /*header('Content-type:text/xml;charset=utf-8');
         echo $param;*/
