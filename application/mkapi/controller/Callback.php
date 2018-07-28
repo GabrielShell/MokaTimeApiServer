@@ -404,7 +404,7 @@ class Callback extends Controller{
             $status = 10002;
             $msg = "提现提现请求失败：". $result['message'];
             //储存失败信息
-            $withdraw['err_note'] = $result['tranJnl'];
+            $withdraw['err_note'] = $result['message'];
 
             $responseData['tranJnl'] = $result['tranJnl'];
           
@@ -419,7 +419,10 @@ class Callback extends Controller{
         }else{
             write_to_log('【拉卡拉提款记录新增成功】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
         }
-        return my_json_encode($status, $msg,$responseData);
+
+        my_json_encode($status, $msg,$responseData);
+
+        $this->getResultOfWithdraw($result['tranJnl'],$withdraw['merchant_no'],$orderInfo['order_no']);
     }
 
 
@@ -489,6 +492,67 @@ class Callback extends Controller{
         return my_json_encode($status, $msg,$responseData);
     }
 
+    /**
+     * D0提款结果查询
+     */
+    public function getResultOfWithdraw($tranJnl,$merchant_no,$order_no){
+        $curlUrl = 'https://api.lakala.com/thirdpartplatform/merchmanage/7004.dor';
+        //$curlUrl = 'https://124.74.143.162:15023/thirdpartplatform/merchmanage/7004.dor';
+        $data['FunCod'] = '7004';
+        $data['compOrgCode'] = $this->_LklCompOrgCode;
+        $data['reqLogNo'] = date("YmdHis") . '11';
+        $data['tranJnl'] = $tranJnl;
+        $data['shopNo'] = $merchant_no;
+        $queryString = $data['compOrgCode'] . $data['reqLogNo'] . $data['tranJnl'] .  $data['shopNo'] . $this->_LklHashKey;
+        //dump($queryString);
+        $data['MAC'] = sha1($queryString);
+        dump($data);
+        $this->xml = new \XMLWriter();
+        $param = $this->toXml($data);
+        $result = $this->request($curlUrl, true, 'post', $param);
+        $result = json_decode(json_encode(simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
+        write_to_log('拉卡拉D0提款结果查询' . json_encode($result,JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
+       if($result['responseCode'] == '000000'){
+            $status = 10000;
+            $msg = "提现成功";
+
+            $save['is_withdraw'] = 'y';
+            $save['err_note'] = '';
+            $saveWithdraw['is_success'] = 'y';
+       }else{
+            $status = 10000;
+            $msg = "提现失败";
+
+            $save['err_note'] = $result['message'];
+            $saveWithdraw['err_note'] = $result['message'];
+       }
+
+       //更新提款记录
+       $resultOfWithdraw = Db::name("Withdraw")->where("tranjnl", $data['tranJnl'])->update($saveWithdraw);
+       if ($resultOfWithdraw !== false){
+            write_to_log('拉卡拉D0提款记录-更新成功-' . json_encode($saveWithdraw, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
+           
+        }else{
+            write_to_log('拉卡拉D0提款记录-保存失败-' . json_encode($saveWithdraw, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
+           
+        }
+
+        //更新订单数据
+        $resultOfOrder = Db::name("lakala_order")->where("order_no", $order_no)->update($save);
+        if ($resultOfOrder !== false){
+            write_to_log('拉卡拉D0提款结果通知-保存成功-' . json_encode($save, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
+            
+    
+        }else{
+            write_to_log('拉卡拉D0提款结果通知-保存失败-' . json_encode($save, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
+            
+        }
+
+        echo  my_json_encode($status, $msg,$result );
+
+    }
+
+
 
      /**
      * 拉卡拉D0提款回调
@@ -514,7 +578,7 @@ class Callback extends Controller{
         }
 
         $resultOfWithdraw = Db::name("Withdraw")->where("tranjnl", $data['tranJnl'])->update($saveWithdraw);
-        if ($resultOfOrder !== false){
+        if ($resultOfWithdraw !== false){
             write_to_log('拉卡拉D0提款记录-更新成功-' . json_encode($saveWithdraw, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
             write_to_log('拉卡拉D0提款记录-更新成功-' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
     
