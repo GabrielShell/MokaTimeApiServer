@@ -202,13 +202,19 @@ class User extends Common{
 
 		if(empty($data['series']) || empty($data['card_no']) || empty($data['real_name']) || empty($data['bank_no'])){
 			my_json_encode(8,"参数不正确");
-			Log::error("参数不正确 " .$result['status'].json_encode($result,JSON_UNESCAPED_UNICODE));
+		
+			write_to_log('参数不正确' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/');
+       
 			exit();
 		}
 		
        if($cardFace == null || $cardBack == null || $bankFace == null){
 			my_json_encode(10,"请上传文件格式的图片");
-			Log::error("请上传文件格式的图片 " .$result['status'].json_encode($result,JSON_UNESCAPED_UNICODE));
+			
+			write_to_log('请上传文件格式的图片' . json_encode($cardFace, JSON_UNESCAPED_UNICODE), '/mkapi/log/');
+			write_to_log('请上传文件格式的图片' . json_encode($cardBack, JSON_UNESCAPED_UNICODE), '/mkapi/log/');
+			write_to_log('请上传文件格式的图片' . json_encode($bankFace, JSON_UNESCAPED_UNICODE), '/mkapi/log/');
+       
 			exit();
 		}
 
@@ -242,7 +248,8 @@ class User extends Common{
 						$msg = '银行卡号错误';break;
 		}
 
-		Log::error("【实名认证结果】 " .$result['status'].json_encode($result,JSON_UNESCAPED_UNICODE));
+		
+		write_to_log('【实名认证结果】' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/');
 
 		// 身份验证通过
 		if($result['status'] == '01'){
@@ -274,10 +281,15 @@ class User extends Common{
 				$users = model('Users');
 				if($users->save($data,['series'=>$data['series']])){
 					my_json_encode($status,$msg);
+					Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/']);
 					Log::error("【实名认证成功】 " .$result['status'].json_encode($result,JSON_UNESCAPED_UNICODE));
+					write_to_log('【实名认证结果】' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/');
+
 				}else{
 					my_json_encode(9,'数据储存失败');
-					Log::error("数据储存失败 " .$result['status'].json_encode($result,JSON_UNESCAPED_UNICODE));
+					Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/']);
+					Log::error("数据储存失败 " .json_encode($data,JSON_UNESCAPED_UNICODE));
+					write_to_log('【实名认证结果】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/');
 				}
 			}else{
 				my_json_encode(10,$bankFaceInfo['data']);
