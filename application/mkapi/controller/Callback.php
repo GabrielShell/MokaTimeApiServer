@@ -135,7 +135,7 @@ class Callback extends Controller{
         $result = $this->request($curlUrl, true, 'post', $param);
         $result = json_decode(json_encode(simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
         write_to_log('【拉卡拉D0开通/请求参数】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
-        write_to_log('拉卡拉D0交易开通' . $result, '/mkapi/log/lakala/callback/openD0/');
+        write_to_log('拉卡拉D0交易开通' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
         if ($result['responseCode'] == '000000'){
             write_to_log('【拉卡拉D0开通/请求通知】成功：' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
             $status = 10000;
