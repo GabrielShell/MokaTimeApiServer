@@ -294,6 +294,8 @@ class User extends Common{
 			}else{
 				my_json_encode(10,$bankFaceInfo['data']);
 			}
+		}else{
+			my_json_encode($status,$msg);
 		}
 	}
 
