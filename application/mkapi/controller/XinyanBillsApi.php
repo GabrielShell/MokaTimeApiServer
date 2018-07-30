@@ -207,7 +207,7 @@ class XinyanBillsApi extends Common{
                                 }
 
                                 //如果该账单在数据库中不存在，则将账单插入数据库
-                                if(!Bills::get(['series'=>$bill['bill_id']])){
+                                if(!Bills::get(['user_id'=>$userId,'series'=>$bill['bill_id']])){
                                         $bill_record  = new Bills;
                                         $bill_record->series = $bill['bill_id'];
                                         $bill_record->user_id = $userId;
