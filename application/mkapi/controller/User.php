@@ -265,9 +265,9 @@ class User extends Common{
 			$data['addr_code'] = $result['addrCode']; //地区代码
 		
 			// 上传文件
-			$cardFaceInfo = $this->uploadImg($cardFace);
-			$cardBackInfo = $this->uploadImg($cardBack);
-			$bankFaceInfo = $this->uploadImg($bankFace);
+			$cardFaceInfo = $this->uploadImg($cardFace,$data['series']);
+			$cardBackInfo = $this->uploadImg($cardBack,$data['series']);
+			$bankFaceInfo = $this->uploadImg($bankFace,$data['series']);
 	
 			//判断文件是否都上传成功
 			if($cardFaceInfo['msg'] == 'success' && $cardBackInfo['msg'] == 'success' && $bankFaceInfo['msg'] == 'success'){
@@ -305,14 +305,14 @@ class User extends Common{
 	*@param $file file post提交的文件类
 	*@return array 文件上传结果
 	*/
-	public function uploadImg($file){
+	public function uploadImg($file,$series){
         $upload = new Upload();
         // 验证文件是否合法
         $result = $upload->check($file);
         if($result == 'success'){
         	//文件保存位置
             $path = APP_PATH.'/mkapi/public/upload/user/card/';
-            $result = $upload->uploadOne($file,$path);
+            $result = $upload->uploadOne($file,$path,$series);
             return $result;
         }else{
             return array('msg'=>'error','data'=>$result);

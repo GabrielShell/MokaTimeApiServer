@@ -44,7 +44,6 @@ class Callback extends Controller{
                 if(!empty($coreData['ver'])){
                     //更新用户表信息
                     $userData['is_merchant'] = 1;
-                    $userData['open_merchant_status'] = 1;
                     $userData['open_merchant_time'] = time();
                     $userData['series'] = $decrypted['partnerUserId'];
                     //更新用户表
@@ -424,7 +423,7 @@ class Callback extends Controller{
             $msg = "提现提现请求失败：". $result['message'];
             //储存失败信息
             $withdraw['err_note'] = $result['message'];
-            
+
             $responseData['tranJnl'] = $result['tranJnl'];
           
             write_to_log('【D0提款请求失败-】' . json_encode($result, JSON_UNESCAPED_UNICODE) , '/mkapi/log/lakala/callback/withdraw/');
