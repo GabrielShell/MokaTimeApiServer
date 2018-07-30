@@ -45,6 +45,7 @@ class Callback extends Controller{
                     //更新用户表信息
                     $userData['is_merchant'] = 1;
                     $userData['open_merchant_status'] = 1;
+                    $userData['open_merchant_time'] = time();
                     $userData['series'] = $decrypted['partnerUserId'];
                     //更新用户表
                     $userResult = Db::name('users')->where('series',$userData['series'])->update($userData);
@@ -78,7 +79,7 @@ class Callback extends Controller{
 
                     //配置商户表字段信息
                     $merchantData['merchant_no'] = $decrypted['merId'];//商户号
-                    $merchantData['bind_time'] = time();//绑定时间
+                    $merchantData['create_time'] = time();//绑定时间
                     $merchantData['series'] = $userData['series'];//用户唯一标识
                     $merchantData['store_name'] = $decrypted['merName'];//店铺名称
                     $merchantData['merchant_name'] = $decrypted['realName'];//商户名称
@@ -146,6 +147,10 @@ class Callback extends Controller{
             $status = 10002;
             $msg = '开通失败:'.$result['message'];
             $resData = $merchant_no;
+            $dataSave['err_note_d0'] = $result['message'];
+            //储存D0开通失败原因
+            $userData = Db::name('merchants')->where('merchant_no',$data['shopNo'])->find();
+            Db::name("users")->where('series',$userData['series'])->update($dataSave);
         }
         echo my_json_encode($status,$msg,$resData);
     }
@@ -163,8 +168,9 @@ class Callback extends Controller{
         $merchantId = $result['busData']['extInfo']['shopNo'];
         if ($result['busData']['status'] == 'SUCCESS'){
             $dataSave['is_d0'] = 1;
+            $dataSave['open_d0_time'] = time();
         }else{
-            $dataSave['err_note'] = $result['busData']['extInfo']['retMsg'];
+            $dataSave['err_note_d0'] = $result['busData']['extInfo']['retMsg'];
         }
         write_to_log('【拉卡拉D0开通成功】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
         write_to_log('【拉卡拉D0开通成功】' . $merchantId, '/mkapi/log/lakala/callback/openD0/');
@@ -283,6 +289,7 @@ class Callback extends Controller{
                     $order['paycard_type'] = $decrypted['payCardType'];
                 } else {
                     $order['trade_status'] = 1;
+                    $order['update_time'] = time();
                     $order['err_note'] = $decrypted['retCode'] . $decrypted['retMsg'];
                 }
 
@@ -325,7 +332,18 @@ class Callback extends Controller{
                         // D0提款
                         set_time_limit(95);
                         sleep(85);
-                        $this->withdrawByLkl($orderInfo);
+                        $withdrawResult = $this->withdrawByLkl($orderInfo);
+                        $withdrawResult = json_decode($withdrawResult,true);
+                        if($withdrawResult['status'] == '10000'){
+                            $orderSave['is_withdraw'] = 'y';
+                            $orderSave['withdraw_time'] = time();
+                            $orderResult = Db::name("lakala_order")->where("id", $orderInfo['id'])->update($orderSave);
+                            if(!$orderResult){
+                                write_to_log('【拉卡拉D0提款记录-更新失败-】' . json_encode($orderSave, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
+                            }else{
+                                 write_to_log('【拉卡拉D0提款记录-更新成功-】' . json_encode($orderSave, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
+                            }
+                        }
 
                     }
                 }else{
@@ -398,6 +416,7 @@ class Callback extends Controller{
             $responseData['trannl'] = $result['tranJnl'];
             //储存提款信息
             $withdraw['tranjnl'] = $result['tranJnl'];
+            $withdraw['is_success'] = 'y';
 
             write_to_log('【D0提款请求成功-】' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
         }else{
@@ -405,7 +424,7 @@ class Callback extends Controller{
             $msg = "提现提现请求失败：". $result['message'];
             //储存失败信息
             $withdraw['err_note'] = $result['message'];
-
+            
             $responseData['tranJnl'] = $result['tranJnl'];
           
             write_to_log('【D0提款请求失败-】' . json_encode($result, JSON_UNESCAPED_UNICODE) , '/mkapi/log/lakala/callback/withdraw/');
@@ -420,9 +439,8 @@ class Callback extends Controller{
             write_to_log('【拉卡拉提款记录新增成功】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
         }
 
-        my_json_encode($status, $msg,$responseData);
+        return my_json_encode($status, $msg,$responseData);
 
-        $this->getResultOfWithdraw($result['tranJnl'],$withdraw['merchant_no'],$orderInfo['order_no']);
     }
 
 
