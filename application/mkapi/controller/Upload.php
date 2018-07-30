@@ -105,11 +105,11 @@ class Upload extends Controller{
 	*/
 	public function uploadOne($file,$path = null,$dirName = null,$prefix = null){
 		//文件保存目录
-		is_null($dirName) ? $dirName = date('y-m-d');
+		is_null($dirName) ? $dir = date('y-m-d') :$dir = $dirName;
 		if($path == null){
-			$realPath = $this->upload_path.$dirName;
+			$realPath = $this->upload_path.$dir;
 		}else{
-			$realPath = $path.$dirName;
+			$realPath = $path.$dir;
 		}
 		//判断目录是否创建
 		if(!is_dir($realPath)){
@@ -123,7 +123,7 @@ class Upload extends Controller{
 			$result = array('msg'=>'error','data'=>$info->getError());
 			return $result;
 		}else{
-			$result = array('msg'=>'success','data'=>$dirName.'/'.$info->getSaveName());
+			$result = array('msg'=>'success','data'=>$dir.'/'.$info->getSaveName());
 			return $result;
 		}
 

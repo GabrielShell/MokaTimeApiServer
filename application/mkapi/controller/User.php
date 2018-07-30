@@ -283,13 +283,13 @@ class User extends Common{
 					my_json_encode($status,$msg);
 					Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/']);
 					Log::error("【实名认证成功】 " .$result['status'].json_encode($result,JSON_UNESCAPED_UNICODE));
-					write_to_log('【实名认证结果】' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/');
+					write_to_log('【实名认证成功】' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/');
 
 				}else{
-					my_json_encode(9,'数据储存失败');
+					my_json_encode(9,'【数据储存失败】');
 					Log::init(['type'=>'file','path'=>APP_PATH.'mkapi/log/']);
-					Log::error("数据储存失败 " .json_encode($data,JSON_UNESCAPED_UNICODE));
-					write_to_log('【实名认证结果】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/');
+					Log::error("【数据储存失败】" .json_encode($data,JSON_UNESCAPED_UNICODE));
+					write_to_log('【数据储存失败】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/');
 				}
 			}else{
 				my_json_encode(10,$bankFaceInfo['data']);
