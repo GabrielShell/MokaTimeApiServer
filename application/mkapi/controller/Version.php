@@ -33,6 +33,7 @@ class Version extends Controller{
             'data' => [
                 'os' => $osFullName,
                 'version' => $latestVersionDbInstance->version,
+                'force' => $latestVersionDbInstance->force,
                 'url' => $latestVersionDbInstance->url,
                 'md5' => $latestVersionDbInstance->md5,
                 'content' => $latestVersionDbInstance->content
