@@ -32,7 +32,7 @@ class Lakalaapi extends Common{
         $expriredtime = $request->post('expriredtime'); //报文截止时间戳
 
         // 获取用户信息
-        $userInfo = Db::name('users')->field('real_name,card_no,bank_no,is_merchant,bankbranch_id,phone,is_certificate')->where("series",$series)->find();
+        $userInfo = Db::name('users')->field('real_name,card_no,bank_no,is_merchant,is_d0,bankbranch_id,phone,is_certificate')->where("series",$series)->find();
         if(!$userInfo){
             $errorId = uniqid("sqlErr");
             Log::init(['type'=>'file','path' => APP_PATH . 'mkapi/log/lakala/sql/openMerchant/']);
@@ -59,11 +59,16 @@ class Lakalaapi extends Common{
         $data['pay_type'] = 1;
         $data['channel_id'] = $channel_id;
         $data['order_money'] = round($amount, 2);
-        $data['arrive_money'] = round($amount * (1 - $pay_rate / 100)-2, 2);
         $data['pay_rate'] = $pay_rate;
         $data['create_time'] = time();
         $data['trade_status'] = 0;
-        $data['other_fee'] = 2;
+        if($userInfo['is_d0'] == 1){
+            $data['other_fee'] = 2;
+            $data['arrive_money'] = round($amount * (1 - $pay_rate / 100)-2, 2);
+        }else{
+            $data['other_fee'] = 0;
+            $data['arrive_money'] = round($amount * (1 - $pay_rate / 100), 2);
+        }
 
         //储存订单信息
         
