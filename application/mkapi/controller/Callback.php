@@ -120,7 +120,7 @@ class Callback extends Controller{
     public function openD0($merchant_no = null){
         $curlUrl = 'https://api.lakala.com/thirdpartplatform/merchmanage/7011.dor';
        //$curlUrl = 'https://124.74.143.162:15023/thirdpartplatform/merchmanage/7011.dor';
-        $data['shopNo'] = $merchant_no == null ? $_POST['merchant_no']:$merchant_no;
+
         if($merchant_no == null){
             //开通D0传的参数
             $series = $_POST['series'];
