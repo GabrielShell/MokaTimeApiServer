@@ -41,7 +41,6 @@ class Card extends Common{
                     'min_payment' => $billDbResult->min_payment,
                     'point' => $billDbResult->point,
                     'repaid' => $billDbResult->repaid,
-                    'import_time' => $billDbResult->import_time,
                     'create_time' => $billDbResult->create_time
                 ];
 
@@ -58,6 +57,7 @@ class Card extends Common{
                 'credit_limit' => $card->credit_limit,
                 'balance' => $card->balance,
                 'point' => $card->point,
+                'import_time' => $card->import_time,
                 'bills' => $billsResult
             ];
         }
