@@ -41,7 +41,7 @@ class Card extends Common{
                     'min_payment' => $billDbResult->min_payment,
                     'point' => $billDbResult->point,
                     'repaid' => $billDbResult->repaid,
-                    'import_time' => date('Y-m-d',$billDbResult->import_time),
+                    'import_time' => $billDbResult->import_time,
                     'create_time' => $billDbResult->create_time
                 ];
 
