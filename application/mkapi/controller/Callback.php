@@ -260,7 +260,7 @@ class Callback extends Controller{
         $map['params'] = $AES->encryptString($json);
         $map['sign'] = $AES->sign($json, $this->_LklEncryptKeyPath);
         $map2Json = json_encode($map, JSON_UNESCAPED_UNICODE);
-        write_to_log('拉卡拉查询交易能否支付/响应拉卡拉未加密参数' . json_encode($param, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
+        write_to_log('【拉卡拉查询交易能否支付/响应拉卡拉未加密参数】' . json_encode($param, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
         write_to_log('【拉卡拉查询交易能否支/响应拉卡拉的加密参数】' . $map2Json, '/mkapi/log/lakala/callback/openMerchant/');
         echo $map2Json;
     }
@@ -362,16 +362,20 @@ class Callback extends Controller{
 
                         // D0提款
                         set_time_limit(95);
-                        sleep(85);
+                        sleep(25);
                         $withdrawResult = $this->withdrawByLkl($orderInfo);
+                        write_to_log('【D0提款结果】' . $merchantResult, '/mkapi/log/lakala/callback/openMerchant/');
                         $withdrawResult = json_decode($withdrawResult,true);
+            
                         if($withdrawResult['status'] == '10000'){
+                        write_to_log('【D0提款结果2】' . $merchantResult, '/mkapi/log/lakala/callback/openMerchant/');
                             $orderSave['is_withdraw'] = 'y';
                             $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1 - $orderInfo['pay_rate'] / 100)-2, 2);
                             $orderSave['other_fee'] = 2;
                             $orderSave['withdraw_time'] = time();
                         }else{
-                            $orderSave['arrive_money'] = round($orderInfo['order_money']*(1-$orderInfo['pay_rate'])/100 , 2);
+                            write_to_log('【D0提款结果3】' . $merchantResult, '/mkapi/log/lakala/callback/openMerchant/');
+                            $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1-$orderInfo['pay_rate'])/100 , 2);
                         }
 
                         $orderResult = Db::name("lakala_order")->where("id", $orderInfo['id'])->update($orderSave);
@@ -380,7 +384,6 @@ class Callback extends Controller{
                         }else{
                             write_to_log('【拉卡拉D0提款记录-更新成功-】' . json_encode($orderSave, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
                         }
-
                     }
                 }else{
                     write_to_log('【拉卡拉交易支付结果通知/订单保存失败】' . json_encode($decrypted,JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
