@@ -66,8 +66,28 @@ class Card extends Common{
             'msg' => '',
             'data' => $resultData
         ];
-        return json_encode($result,JSON_UNESCAPED_UNICODE);
+        return $result;
 
         
+    }
+
+    /**
+     * 标记已还接口
+     */
+    public function markRepaid(Request $request){
+        $billId = $request->post('bill_id');
+        if(empty($billId))
+            return ['status'=>2,'msg'=>'bill_id不能为空'];
+        $userSeries = $request->post('series');
+        if(empty($userSeries))
+            return ['status'=>2,'msg'=>'series不能为空'];
+        $userId = Users::where(['series'=>$userSeries])->value('id');
+
+        $bill = Bills::get(['user_id'=>$userId,'id'=>$billId]);
+        if(!$bill)
+            return ['status'=>1,'msg'=>'该用户没有指定ID的账单'];
+        $bill->repaid = 1;
+        $bill->save();
+        return ['status'=>0,'msg'=>'成功标记已还'];
     }
 }

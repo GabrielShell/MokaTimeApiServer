@@ -102,6 +102,13 @@ Route::post('api/v1/open/merchant/','mkapi/Lakalaapi/PaymentTrade');
  */
 Route::post('api/v1/card/userCardList','mkapi/Card/userCardList');
 
+/**
+ * 标记已还接口[POST]
+ * @param series 用户series
+ * @param card_id 卡片ID
+ */
+Route::post('api/v1/card/markRepaid','mkapi/Card/markRepaid');
+
 
 
 // +----------------------------------------------------------------------

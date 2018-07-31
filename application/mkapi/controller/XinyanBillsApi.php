@@ -113,7 +113,7 @@ class XinyanBillsApi extends Common{
                 $return = CurlRequest::Post($PostArry, $request_url); 
                 $arr_result = json_decode($return,true);
                 if(is_array($arr_result) && $arr_result['success'] == 'true'){
-                        return json_encode(['status'=>0,'msg'=>'预订单成功！','data'=>['tradeNo'=>$arr_result['data']]]);
+                        return ['status'=>0,'msg'=>'预订单成功！','data'=>['tradeNo'=>$arr_result['data']]];
                 }else{
                         $errorId = uniqid("ERR");
 			if(is_array($arr_result))
@@ -122,7 +122,7 @@ class XinyanBillsApi extends Common{
 				$errMsg = '网络错误';
                         $result = ['status'=>1,'msg' => '查询失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
                         Log::error('【'.$errorId.'】新颜API-预订单接口错误(bills),API接口返回信息不能解析，API接口返回信息：'.$return);
-                        return json_encode($result,JSON_UNESCAPED_UNICODE);
+                        return $result;
                 }
         }
 
@@ -262,10 +262,10 @@ class XinyanBillsApi extends Common{
 				$errMsg = '网络错误';
                         $return = ['status'=>1,'msg' => '查询失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
                         Log::error('【'.$errorId.'】新颜API-查询邮箱账单接口错误(bills),API接口返回信息不能解析，API接口返回信息：'.$result);
-                        return json_encode($return,JSON_UNESCAPED_UNICODE);
+                        return $return;
                 }
                 $result = ['status'=>0,'msg'=>'账单导入成功!'];
-                return json_encode($result,JSON_UNESCAPED_UNICODE);
+                return $result;
         }
 
         /**
@@ -291,7 +291,7 @@ class XinyanBillsApi extends Common{
                 if(!$data || $data['success'] !='true'){
                         $errorId = uniqid("ERR");
                         Log::error('【'.$errorId.'】新颜API-查询支持银行列表接口错误(support-banks),API接口返回信息不能解析，API接口返回信息：'.$result);
-                        return json_encode(['status'=>1,'msg'=>'查询失败！操作ID:'.$errorId]);
+                        return ['status'=>1,'msg'=>'查询失败！操作ID:'.$errorId];
                 }
 
                 foreach($data['data'] as $bankList){
@@ -312,7 +312,7 @@ class XinyanBillsApi extends Common{
 
                 $supportBanks = Xinyan_banks::field('bank_name,bank_abbr')->where('credit_support' , 1)->select();
                 $return = ['status'=>0,'msg'=>'查询成功！','data'=>$supportBanks];
-                return json_encode($return,JSON_UNESCAPED_UNICODE);
+                return $return;
         }
 
         /**
@@ -338,7 +338,7 @@ class XinyanBillsApi extends Common{
                         $return = ['status'=>1,'msg' => '查询失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
                         Log::error('【'.$errorId.'】新颜API-查询银行登录配置信息错误（config-login）,API接口返回信息不能解析，API接口返回信息：'.$result);
                 }
-                return json_encode($return,JSON_UNESCAPED_UNICODE);
+                return $return;
         }
 
         /**
@@ -440,7 +440,7 @@ class XinyanBillsApi extends Common{
                         $return = ['status'=>1,'msg' => '创建任务失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
                         Log::error('【'.$errorId.'】新颜API-创建任务失败（task-create）,API接口返回信息不能解析，API接口返回信息：'.$result[0]);
                 }
-                return json_encode($return,JSON_UNESCAPED_UNICODE);
+                return $return;
         }
 
         /**
@@ -464,7 +464,7 @@ class XinyanBillsApi extends Common{
                         $return = ['status'=>1,'msg' => '查询失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
                         Log::error('【'.$errorId.'】新颜API-查询状态失败（task-status）,API接口返回信息不能解析，API接口返回信息：'.$result);
                 }
-                return json_encode($return,JSON_UNESCAPED_UNICODE);
+                return $return;
 
         }
 
@@ -502,7 +502,7 @@ class XinyanBillsApi extends Common{
                         $return = ['status'=>1,'msg' => '输入验证码失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
                         Log::error('【'.$errorId.'】新颜API-验证码输入失败（task-input）,API接口返回信息不能解析，API接口返回信息：'.$result[0]);
                 }
-                return json_encode($return,JSON_UNESCAPED_UNICODE);
+                return $return;
         }
 
 
@@ -529,7 +529,7 @@ class XinyanBillsApi extends Common{
                         $return = ['status'=>1,'msg' => '查询失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
                         Log::error('【'.$errorId.'】新颜API-查询失败（bank-bills）,API接口返回信息不能解析，API接口返回信息：'.$result);
                 }
-                return json_encode($return,JSON_UNESCAPED_UNICODE);
+                return $return;
         }
 
         /**
@@ -676,7 +676,7 @@ class XinyanBillsApi extends Common{
                         $return = ['status'=>1,'msg' => '查询失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
                         Log::error('【'.$errorId.'】新颜API-查询失败（bank-cards）,API接口返回信息不能解析，API接口返回信息：'.$result);
                 }
-                return json_encode($return,JSON_UNESCAPED_UNICODE);
+                return $return;
         }
 
 }
