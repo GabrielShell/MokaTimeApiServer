@@ -116,8 +116,13 @@ class XinyanBillsApi extends Common{
                         return json_encode(['status'=>0,'msg'=>'预订单成功！','data'=>['tradeNo'=>$arr_result['data']]]);
                 }else{
                         $errorId = uniqid("ERR");
+			if(is_array($arr_result))
+				$errMsg = $arr_result['errorMsg'];
+			else
+				$errMsg = '网络错误';
+                        $result = ['status'=>1,'msg' => '查询失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
                         Log::error('【'.$errorId.'】新颜API-预订单接口错误(bills),API接口返回信息不能解析，API接口返回信息：'.$return);
-                        return json_encode(['status'=>1,'msg'=>'查询失败！操作ID:'.$errorId],JSON_UNESCAPED_UNICODE);
+                        return json_encode($result,JSON_UNESCAPED_UNICODE);
                 }
         }
 
@@ -136,6 +141,8 @@ class XinyanBillsApi extends Common{
                 $result = CurlRequest::get($requestUrl,$this->headers);
 
                 $data = json_decode($result,true);
+		$cardCount = 0;
+		$newCardCount = 0;
                 if(is_array($data) && $data["success"] == 'true' && isset($data['data']['bills'])){
                         //每条账单查询对应的消费记录
                         foreach($data['data']['bills'] as &$bill){
@@ -162,10 +169,12 @@ class XinyanBillsApi extends Common{
                                 $unique_string = $banks[$bill['bank_id']] .'-'. $bill['name_on_card'] .'-'. $bill['card_number'];
                                 $card_id = 0;
                                 if(!isset($searched[$unique_string])){
+					$cardCount++;
                                         //如果未搜索过数据库则搜索数据库
                                         $card = Credit_cards::get(['user_id'=>$userId,'unique_string' => $unique_string]);
                                         if(!$card){
                                                 //如果搜索数据库没有该信用卡，则执行插入操作
+						$newCardCount++;
                                                 $card = new Credit_cards;
                                                 $card->unique_string = $unique_string;
                                                 $card->bank_name = $banks[$bill['bank_id']];
@@ -206,14 +215,16 @@ class XinyanBillsApi extends Common{
                                         $card_id = $searched[$unique_string];
                                 }
 
+				$billMonth = (int)date('Ym',strtotime($bill['bill_date']));
                                 //如果该账单在数据库中不存在，则将账单插入数据库
-                                if(!Bills::get(['user_id'=>$userId,'series'=>$bill['bill_id']])){
+                                if(!Bills::get(['user_id'=>$userId,'bill_month'=>$billMonth])){
                                         $bill_record  = new Bills;
                                         $bill_record->series = $bill['bill_id'];
                                         $bill_record->user_id = $userId;
                                         $bill_record->credit_card_id = $card_id;
                                         $bill_record->origin_type = 'email';
                                         $bill_record->bill_type = 'DONE';
+                                        $bill_record->bill_month = $billMonth;
                                         $bill_record->bill_start_date = $bill['bill_start_date'];
                                         $bill_record->bill_date = $bill['bill_date'];
                                         $bill_record->payment_due_date = $bill['payment_due_date'];
@@ -221,6 +232,7 @@ class XinyanBillsApi extends Common{
                                         $bill_record->new_balance = $bill['new_balance'];
                                         $bill_record->min_payment = $bill['min_payment'];
                                         $bill_record->point = $bill['point'];
+					$bill_record->import_time = time();
                                         $bill_record->save();
                                         
                                         foreach($bill['shopping_records'] as $shopping_record){
@@ -244,8 +256,13 @@ class XinyanBillsApi extends Common{
                         }
                 }else{
                         $errorId = uniqid("ERR");
+			if(is_array($data))
+				$errMsg = $data['errorMsg'];
+			else
+				$errMsg = '网络错误';
+                        $return = ['status'=>1,'msg' => '查询失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
                         Log::error('【'.$errorId.'】新颜API-查询邮箱账单接口错误(bills),API接口返回信息不能解析，API接口返回信息：'.$result);
-                        return json_encode(['status'=>1,'msg'=>'查询失败！操作ID:'.$errorId]);
+                        return json_encode($return,JSON_UNESCAPED_UNICODE);
                 }
                 $result = ['status'=>0,'msg'=>'账单导入成功!'];
                 return json_encode($result,JSON_UNESCAPED_UNICODE);
@@ -314,7 +331,11 @@ class XinyanBillsApi extends Common{
                         $return = ['status'=>0,'msg' => '查询成功！','data'=>$arr_result['data']['logins']];
                 }else{
                         $errorId = uniqid("ERR");
-                        $return = ['status'=>1,'msg' => '查询失败！操作ID:'.$errorId];
+			if(is_array($arr_result))
+				$errMsg = $arr_result['errorMsg'];
+			else
+				$errMsg = '网络错误';
+                        $return = ['status'=>1,'msg' => '查询失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
                         Log::error('【'.$errorId.'】新颜API-查询银行登录配置信息错误（config-login）,API接口返回信息不能解析，API接口返回信息：'.$result);
                 }
                 return json_encode($return,JSON_UNESCAPED_UNICODE);
@@ -325,13 +346,29 @@ class XinyanBillsApi extends Common{
          */
         public function cyberBankQueryTaskCreate(Request $request){
                 $bank = $request->post('bank');
+		if(empty($bank))
+			return ['status'=>2,'msg'=>'缺少参数bank'];
                 $account=$request->post('account');
+		if(empty($account))
+			return ['status'=>2,'msg'=>'缺少参数account'];
                 $password=$request->post('password');
+		if(empty($password))
+			return ['status'=>2,'msg'=>'缺少参数password'];
                 $login_target='CREDITCARD';
+		if(empty($login_target))
+			return ['status'=>2,'msg'=>'缺少参数login_target'];
                 $login_type=$request->post('login_type');
+		if(empty($login_type))
+			return ['status'=>2,'msg'=>'缺少参数login_type'];
                 $id_card=$request->post('id_card');
+		if(empty($id_card))
+			return ['status'=>2,'msg'=>'缺少参数id_card'];
                 $real_name=$request->post('real_name');
+		if(empty($real_name))
+			return ['status'=>2,'msg'=>'缺少参数real_name'];
                 $origin=$request->post('origin');
+		if(empty($origin))
+			return ['status'=>2,'msg'=>'缺少参数origin'];
                 $notify_url="";
                 $area_code="";
                 $location="";
@@ -396,7 +433,11 @@ class XinyanBillsApi extends Common{
                         $return = ['status' => 0,'msg'=>'创建任务成功！','data'=>['tradeNo'=>$arr_result['data']['tradeNo']]];
                 }else{
                         $errorId = uniqid("ERR");
-                        $return = ['status'=>1,'msg' => '创建任务失败！操作ID:'.$errorId];
+			if(is_array($arr_result))
+				$errMsg = $arr_result['errorMsg'];
+			else
+				$errMsg = '网络错误';
+                        $return = ['status'=>1,'msg' => '创建任务失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
                         Log::error('【'.$errorId.'】新颜API-创建任务失败（task-create）,API接口返回信息不能解析，API接口返回信息：'.$result[0]);
                 }
                 return json_encode($return,JSON_UNESCAPED_UNICODE);
@@ -407,6 +448,8 @@ class XinyanBillsApi extends Common{
          */
         public function cyberBankQueryTaskStatus(Request $request){
                 $tradeNo = $request->post('tradeNo');
+		if(empty($tradeNo))
+			return ['status'=>2,'msg'=>'缺少参数tradeNo'];
                 $requestUrl = 'https://api.xinyan.com/gateway-data/bank/v1/task/status'.'/'.$tradeNo;
                 $result = CurlRequest::get($requestUrl,$this->headers);
                 $arr_result = json_decode($result,true);
@@ -414,7 +457,11 @@ class XinyanBillsApi extends Common{
                         $return = ['status'=>0,'msg'=>'状态查询成功！','data'=>$arr_result['data']];
                 }else{
                         $errorId = uniqid("ERR");
-                        $return = ['status'=>1,'msg' => '【'.$errorId.'】新颜API-查询状态失败（task-status）,API接口返回信息不能解析，API接口返回信息：'.$result];
+			if(is_array($arr_result))
+				$errMsg = $arr_result['errorMsg'];
+			else
+				$errMsg = '网络错误';
+                        $return = ['status'=>1,'msg' => '查询失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
                         Log::error('【'.$errorId.'】新颜API-查询状态失败（task-status）,API接口返回信息不能解析，API接口返回信息：'.$result);
                 }
                 return json_encode($return,JSON_UNESCAPED_UNICODE);
@@ -427,7 +474,11 @@ class XinyanBillsApi extends Common{
          */
         public function cyberBankQueryTaskInput(Request $request){
                 $tradeNo = $request->post('tradeNo');
+		if(empty($tradeNo))
+			return ['status'=>2,'msg'=>'缺少参数tradeNo'];
                 $input = $request->post('input');
+		if(empty($input))
+			return ['status'=>2,'msg'=>'缺少参数input'];
                 $requestUrl = 'https://api.xinyan.com/gateway-data/bank/v1/task/input'.'/'.$tradeNo;
                 $PostArray = ['input'=>$input];
                 $PostArryJson = str_replace("\\/", "/",json_encode($PostArray));//转JSON
@@ -444,7 +495,11 @@ class XinyanBillsApi extends Common{
                         $return = ['status' => 0,'msg'=>'验证码已输入！','data'=>$arr_result['data']];
                 }else{
                         $errorId = uniqid("ERR");
-                        $return = ['status'=>1,'msg' => '验证码输入失败！操作ID:'.$errorId];
+			if(is_array($arr_result))
+				$errMsg = $arr_result['errorMsg'];
+			else
+				$errMsg = '网络错误';
+                        $return = ['status'=>1,'msg' => '输入验证码失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
                         Log::error('【'.$errorId.'】新颜API-验证码输入失败（task-input）,API接口返回信息不能解析，API接口返回信息：'.$result[0]);
                 }
                 return json_encode($return,JSON_UNESCAPED_UNICODE);
@@ -453,9 +508,12 @@ class XinyanBillsApi extends Common{
 
         /**
          * 网银账单查询银行卡卡号和账单信息
+	 * TODO 基本上用不到这个接口，如果真的没用就删了把
          */
         public function cyberBankQueryBills(Request $request){
                 $tradeNo = $request->post('tradeNo');
+		if(empty($tradeNo))
+			return ['status'=>2,'msg'=>'缺少参数tradeNo'];
                 $requestUrl = 'https://api.xinyan.com/data/bank/v2/bills/id/';
                 $requestUrl .= $tradeNo;
                 $result = CurlRequest::get($requestUrl,$this->headers);
@@ -464,8 +522,12 @@ class XinyanBillsApi extends Common{
                         $return = ['status'=>0,'msg'=>'查询成功！','data'=>$arr_result['data']];
                 }else{
                         $errorId = uniqid("ERR");
-                        $return = ['status'=>1,'msg' => '查询状态失败！操作ID:'.$errorId];
-                        Log::error('【'.$errorId.'】新颜API-查询失败（bank-bills）,API接口返回信息不能解析，API接口返回信息：'.$result[0]);
+			if(is_array($arr_result))
+				$errMsg = $arr_result['errorMsg'];
+			else
+				$errMsg = '网络错误';
+                        $return = ['status'=>1,'msg' => '查询失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
+                        Log::error('【'.$errorId.'】新颜API-查询失败（bank-bills）,API接口返回信息不能解析，API接口返回信息：'.$result);
                 }
                 return json_encode($return,JSON_UNESCAPED_UNICODE);
         }
@@ -475,18 +537,25 @@ class XinyanBillsApi extends Common{
          */
         public function cyberBankQueryCards(Request $request){
                 $tradeNo = $request->post('tradeNo');
+		if(empty($tradeNo))
+			return ['status'=>2,'msg'=>'缺少参数tradeNo'];
                 $user_series = $request->post('series');
+		if(empty($user_series))
+			return ['status'=>2,'msg'=>'缺少参数series'];
                 $userId = Users::where(['series'=>$user_series])->value('id');
 
                 $requestUrl = 'https://api.xinyan.com/data/bank/v2/cards/all/'.$tradeNo;
                 $result = CurlRequest::get($requestUrl,$this->headers);
                 $arr_result = json_decode($result,true);
+		$cardCount = 0;
+		$newCardCount = 0;
 
                 if(is_array($arr_result) && $arr_result['success'] == 'true'){
                         //将查询的数据写入数据库
                         foreach($arr_result['data'] as $card){
                                 //如果账单具有信用额度，则为信用卡，只处理信用卡
                                 if(isset($card['bills'][0]) && $card['credit_limit'] > 0){
+					$cardCount++;
                                         $bank_name = $card['bank_name'];
                                         $name_on_card = $card['name_on_card'];
                                         $card_no = $card['full_card_num'];
@@ -516,6 +585,7 @@ class XinyanBillsApi extends Common{
                                                 $cardDbInstance->save();
                                         }else{
                                                 //不存在，则创建信用卡记录
+						$newCardCount++;
                                                 $cardDbInstance = new Credit_cards();
                                                 $cardDbInstance->unique_string = $unique_string;
                                                 $cardDbInstance->user_id = $userId;
@@ -535,63 +605,76 @@ class XinyanBillsApi extends Common{
                                                 $cardId = $cardDbInstance->id;
                                         }
 
+					Bills::where('user_id',$userId)->where('credit_card_id',$cardId)->delete(); //删除卡片已有账单数据
+					Shopping_records::where('user_id',$userId)->where('credit_card_id',$cardId)->delete(); //删除卡片已有交易记录
                                         foreach($card['bills'] as $bill){
-                                                //如果账单记录不存在，插入账单记录
-                                                if(!Bills::get(['user_id'=>$userId,'credit_card_id'=>$cardId,'series'=>$bill['bill_id']])){
-                                                        $billDbInstance = new Bills();
-                                                        $billDbInstance->series = $bill['bill_id'];
-                                                        $billDbInstance->user_id = $userId;
-                                                        $billDbInstance->credit_card_id = $cardId;
-                                                        $billDbInstance->origin_type = 'bank';
-                                                        $billDbInstance->bill_type = $bill['bill_type'];
-                                                        $billDbInstance->bill_start_date = 
-                                                        date(
-                                                                'Y-m-d',
-                                                                strtotime(
-                                                                        '-1 month',
-                                                                        strtotime(
-                                                                                '+ 1 day',
-                                                                                strtotime($bill['bill_date'])
-                                                                        )
-                                                                )
-                                                        ); //账单周期开始时间是账单日前一个月后一天
-                                                        $billDbInstance->bill_date = $bill['bill_date'];
-                                                        $billDbInstance->payment_due_date = $bill['payment_due_date'];
-                                                        $billDbInstance->credit_limit = $bill['credit_limit'];
-                                                        $billDbInstance->new_balance = $bill['new_balance'];
-                                                        $billDbInstance->min_payment = $bill['min_payment'];
-                                                        $billDbInstance->min_payment = $bill['min_payment'];
-                                                        $billDbInstance->save();
-                                                        $billId = $billDbInstance->id;
+						$billDbInstance = new Bills();
+						$billDbInstance->series = $bill['bill_id'];
+						$billDbInstance->user_id = $userId;
+						$billDbInstance->credit_card_id = $cardId;
+						$billDbInstance->origin_type = 'bank';
+						$billDbInstance->bill_type = $bill['bill_type'];
+						$billDbInstance->bill_month = (int)date('Ym',strtotime($bill['bill_date']));
+						$billDbInstance->bill_start_date = 
+						date(
+							'Y-m-d',
+							strtotime(
+								'-1 month',
+								strtotime(
+									'+ 1 day',
+									strtotime($bill['bill_date'])
+								)
+							)
+						); //账单周期开始时间是账单日前一个月后一天
+						$billDbInstance->bill_date = $bill['bill_date'];
+						$billDbInstance->payment_due_date = $bill['payment_due_date'];
+						$billDbInstance->credit_limit = $bill['credit_limit'];
+						$billDbInstance->new_balance = $bill['new_balance'];
+						$billDbInstance->min_payment = $bill['min_payment'];
+						$billDbInstance->min_payment = $bill['min_payment'];
+						$billDbInstance->import_time = time();
+						$billDbInstance->save();
+						$billId = $billDbInstance->id;
 
-                                                        //插入消费记录
-                                                        foreach($bill['shopping_sheets'] as $shoppingRecord){
-                                                                $shoppingRecordDbInstance = new Shopping_records();
-                                                                $shoppingRecordDbInstance->credit_card_id = $cardId;
-                                                                $shoppingRecordDbInstance->user_id = $userId;
-                                                                $shoppingRecordDbInstance->bill_id = $billId;
-                                                                $shoppingRecordDbInstance->amount_money = $shoppingRecord['amount_money'];
-                                                                $shoppingRecordDbInstance->trans_addr = $shoppingRecord['trans_addr'];
-                                                                $shoppingRecordDbInstance->trans_date = $shoppingRecord['trans_date'];
-                                                                $shoppingRecordDbInstance->trans_type = $shoppingRecord['category'];
-                                                                $shoppingRecordDbInstance->bank_name = $bank_name;
-                                                                $shoppingRecordDbInstance->card_no_last4 = $shoppingRecord['card_num'];
-                                                                $shoppingRecordDbInstance->currency_type = $shoppingRecord['currency_type'];
-                                                                $shoppingRecordDbInstance->description = $shoppingRecord['description'];
-                                                                $shoppingRecordDbInstance->post_date = $shoppingRecord['post_date'];
-                                                                $shoppingRecordDbInstance->save();
-                                                        }
-                                                }
+						//插入消费记录
+						foreach($bill['shopping_sheets'] as $shoppingRecord){
+							$shoppingRecordDbInstance = new Shopping_records();
+							$shoppingRecordDbInstance->credit_card_id = $cardId;
+							$shoppingRecordDbInstance->user_id = $userId;
+							$shoppingRecordDbInstance->bill_id = $billId;
+							$shoppingRecordDbInstance->amount_money = $shoppingRecord['amount_money'];
+							$shoppingRecordDbInstance->trans_addr = $shoppingRecord['trans_addr'];
+							$shoppingRecordDbInstance->trans_date = $shoppingRecord['trans_date'];
+							$shoppingRecordDbInstance->trans_type = $shoppingRecord['category'];
+							$shoppingRecordDbInstance->bank_name = $bank_name;
+							$shoppingRecordDbInstance->card_no_last4 = $shoppingRecord['card_num'];
+							$shoppingRecordDbInstance->currency_type = $shoppingRecord['currency_type'];
+							$shoppingRecordDbInstance->description = $shoppingRecord['description'];
+							$shoppingRecordDbInstance->post_date = $shoppingRecord['post_date'];
+							$shoppingRecordDbInstance->save();
+						}
                                         }
 
 
                                 }
                         }
-                        $return = ['status'=>0,'msg'=>'查询成功！'];
+			if($cardCount > 0){
+				$cardCountMsg = '已更新信用卡'.($cardCount-$newCardCount).'张';
+				if($newCardCount > 0){
+					$cardCountMsg .= '，已导入信用卡'.$newCardCount.'张';
+				}
+			}else{
+				$cardCountMsg = '没有查询到可用的信用卡';
+			}
+                        $return = ['status'=>0,'msg'=>'查询成功，'.$cardCountMsg];
                 }else{
                         $errorId = uniqid("ERR");
-                        $return = ['status'=>1,'msg' => '查询状态失败！操作ID:'.$errorId];
-                        Log::error('【'.$errorId.'】新颜API-查询失败（bank-cards）,API接口返回信息不能解析，API接口返回信息：'.$result[0]);
+			if(is_array($arr_result))
+				$errMsg = $arr_result['errorMsg'];
+			else
+				$errMsg = '网络错误';
+                        $return = ['status'=>1,'msg' => '查询失败！'.$errMsg,'data'=>['errorId'=>$errorId]];
+                        Log::error('【'.$errorId.'】新颜API-查询失败（bank-cards）,API接口返回信息不能解析，API接口返回信息：'.$result);
                 }
                 return json_encode($return,JSON_UNESCAPED_UNICODE);
         }
