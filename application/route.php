@@ -119,3 +119,13 @@ Route::post('api/v1/card/markRepaid','mkapi/Card/markRepaid');
  * @param os 客户端操作系统,'a'=Android，'i'=iOS
  */
 Route::post('api/v1/version/getLatestVersion','mkapi/Version/getLatestVersion');
+
+
+// +----------------------------------------------------------------------
+// | 统计数据接口
+// +----------------------------------------------------------------------
+/**
+ * 首页统计数据接口[POST]
+ * @param series 用户series
+ */
+Route::post('api/v1/stat/home','mkapi/StatData/homePageStatData');
