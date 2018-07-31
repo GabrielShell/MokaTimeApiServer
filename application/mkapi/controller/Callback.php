@@ -362,7 +362,7 @@ class Callback extends Controller{
 
                         // D0提款
                         set_time_limit(95);
-                        sleep(0);
+                        sleep(85);
                         $withdrawResult = $this->withdrawByLkl($orderInfo);
                         write_to_log('【D0提款结果】' . $withdrawResult, '/mkapi/log/lakala/callback/openMerchant/');
                         $withdrawResult = json_decode($withdrawResult,true);
@@ -373,19 +373,12 @@ class Callback extends Controller{
                             $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1 - $orderInfo['pay_rate'] / 100)-2, 2);
                             $orderSave['other_fee'] = 2;
                             $orderSave['withdraw_time'] = time();
-                            write_to_log('【D0提款成功】' . json_encode($orderSave,JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
                         }else{
                             // 提款失败
                             $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1 - $orderInfo['pay_rate'] / 100), 2);
-                            write_to_log('【D0提款失败】' . json_encode($orderSave,JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
                         }
 
                         $orderResult = Db::name("lakala_order")->where("id", $orderInfo['id'])->update($orderSave);
-                        if(!$orderResult){
-                            write_to_log('【拉卡拉D0提款记录-更新失败-】' . json_encode($orderSave, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
-                        }else{
-                            write_to_log('【拉卡拉D0提款记录-更新成功-】' . json_encode($orderSave, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
-                        }
                     }
                 }else{
                     write_to_log('【拉卡拉交易支付结果通知/订单保存失败】' . json_encode($decrypted,JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
@@ -476,8 +469,6 @@ class Callback extends Controller{
             Log::init(['type'=>'file','path'=>APP_PATH.'/mkapi/log/lakala/sql/withdraw/']);
             Log::sql("拉卡拉提款记录新增失败");
             write_to_log('【拉卡拉提款信息储存失败】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
-        }else{
-            write_to_log('【拉卡拉提款记录新增成功】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
         }
 
         return json_encode(array('status'=>$status,'msg'=>$msg,'data'=>$responseData),JSON_UNESCAPED_UNICODE);
