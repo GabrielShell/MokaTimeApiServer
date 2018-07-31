@@ -369,15 +369,15 @@ class Callback extends Controller{
                         
                         //提款成功
                         if($withdrawResult['status'] == '10000'){
-                            write_to_log('【D0提款结果2】' . $withdrawResult, '/mkapi/log/lakala/callback/openMerchant/');
                             $orderSave['is_withdraw'] = 'y';
                             $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1 - $orderInfo['pay_rate'] / 100)-2, 2);
                             $orderSave['other_fee'] = 2;
                             $orderSave['withdraw_time'] = time();
+                            write_to_log('【D0提款成功】' . json_encode($orderSave,JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
                         }else{
                             // 提款失败
-                            write_to_log('【D0提款结果3】' . $orderInfo, '/mkapi/log/lakala/callback/openMerchant/');
                             $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1 - $orderInfo['pay_rate'] / 100), 2);
+                            write_to_log('【D0提款失败】' . json_encode($orderSave,JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
                         }
 
                         $orderResult = Db::name("lakala_order")->where("id", $orderInfo['id'])->update($orderSave);
