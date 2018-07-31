@@ -235,7 +235,6 @@ class XinyanBillsApi extends Common{
                                         $bill_record->new_balance = $bill['new_balance'];
                                         $bill_record->min_payment = $bill['min_payment'];
                                         $bill_record->point = $bill['point'];
-					$bill_record->import_time = time();
                                         $bill_record->save();
                                         
                                         foreach($bill['shopping_records'] as $shopping_record){
