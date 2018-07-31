@@ -44,7 +44,7 @@ class Callback extends Controller{
                 if(!empty($coreData['ver'])){
                     //更新用户表信息
                     $userData['is_merchant'] = 1;
-                    $userData['open_merchant_status'] = 1;
+                    $userData['open_merchant_time'] = time();
                     $userData['series'] = $decrypted['partnerUserId'];
                     //更新用户表
                     $userResult = Db::name('users')->where('series',$userData['series'])->update($userData);
@@ -78,7 +78,7 @@ class Callback extends Controller{
 
                     //配置商户表字段信息
                     $merchantData['merchant_no'] = $decrypted['merId'];//商户号
-                    $merchantData['bind_time'] = time();//绑定时间
+                    $merchantData['create_time'] = time();//绑定时间
                     $merchantData['series'] = $userData['series'];//用户唯一标识
                     $merchantData['store_name'] = $decrypted['merName'];//店铺名称
                     $merchantData['merchant_name'] = $decrypted['realName'];//商户名称
@@ -120,10 +120,24 @@ class Callback extends Controller{
     public function openD0($merchant_no = null){
         $curlUrl = 'https://api.lakala.com/thirdpartplatform/merchmanage/7011.dor';
        //$curlUrl = 'https://124.74.143.162:15023/thirdpartplatform/merchmanage/7011.dor';
-        $data['shopNo'] = $merchant_no == null ? $_POST['merchant_no']:$merchant_no;
+
+        if($merchant_no == null){
+            //开通D0传的参数
+            $series = $_POST['series'];
+            $userInfo = Db::name('users')->field('series,phone')->where('series',$series)->find();
+            $merchantInfo = Db::name('merchants')->field('merchant_no')->where('series',$series)->find();
+            $data['shopNo'] = $merchantInfo['merchant_no'];
+        }else{
+            $merchantInfo = Db::name('merchants')->field('series')->where('merchant_no',$merchant_no)->find();
+            $userInfo = Db::name('users')->field('series,phone')->where('series',$merchantInfo['series'])->find();
+            $data['shopNo'] = $merchant_no;
+        }
+
         if($data['shopNo'] == null){
             return my_json_encode(8,'参数不正确');
         }
+
+        //开通D0请求参数
         $data['FunCod'] = '7011';
         $data['compOrgCode'] = $this->_LklCompOrgCode;
         $data['reqLogNo'] = date("YmdHis") . '00';
@@ -134,18 +148,24 @@ class Callback extends Controller{
         $param = $this->toXml($data);
         $result = $this->request($curlUrl, true, 'post', $param);
         $result = json_decode(json_encode(simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
-        write_to_log('【拉卡拉D0开通/请求参数】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
-        write_to_log('拉卡拉D0交易开通' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
+        write_to_log('【拉卡拉D0开通/请求参数】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
+
         if ($result['responseCode'] == '000000'){
-            write_to_log('【拉卡拉D0开通/请求通知】成功：' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
+            write_to_log('【拉卡拉D0开通/请求通知】成功：' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
             $status = 10000;
             $msg = '开通成功';
             $resData = $merchant_no;
         }else{
-            write_to_log('【拉卡拉D0开通/请求通知】失败：' .json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
+            write_to_log('【拉卡拉D0开通/请求通知】失败：' .json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
             $status = 10002;
             $msg = '开通失败:'.$result['message'];
             $resData = $merchant_no;
+            $dataSave['err_note_d0'] = $result['message'];
+            //储存D0开通失败原因
+            Db::name("users")->where('series',$userInfo['series'])->update($dataSave);
+            //发送短信通知
+            $sms = new Sms();
+            $res = $sms->send($userInfo['phone'], '恭喜您已经成功开通商户，系统为您开通D0提款服务失败，失败原因：'.$dataSave['err_note_d0'].'。请自行到App重新开通D0提款服务【厦门刷呗】');
         }
         echo my_json_encode($status,$msg,$resData);
     }
@@ -158,20 +178,37 @@ class Callback extends Controller{
         if (empty($data)) {
             $data = file_get_contents("php://input");
         }
-        write_to_log('【拉卡拉D0开通/拉卡拉回调通知】' . $data, '/mkapi/log/lakala/callback/openD0/');
+        write_to_log('【拉卡拉D0开通/拉卡拉回调通知】' . $data, '/mkapi/log/lakala/callback/openMerchant/');
         $result = json_decode($data, true);
         $merchantId = $result['busData']['extInfo']['shopNo'];
+        //获取用户信息,获取用户电话号码
+        $merchantInfo = Db::name("merchants")->where("merchant_no", $merchantId)->find();
+        $userInfo = Db::name("users")->field('phone')->where("series",$merchantInfo['series'])->find();
         if ($result['busData']['status'] == 'SUCCESS'){
             $dataSave['is_d0'] = 1;
+            $dataSave['open_d0_time'] = time();
+            //发送短信通知
+            $sms = new Sms();
+            $res = $sms->send($userInfo['phone'], '恭喜您已成功开通商户，系统已经为您开启D0实时到账服务 【厦门刷呗】');
+
+            write_to_log('【拉卡拉D0开通成功】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
+            write_to_log('【拉卡拉D0开通成功】' . $merchantId, '/mkapi/log/lakala/callback/openMerchant/');
+           
+
+
         }else{
-            $dataSave['err_note'] = $result['busData']['extInfo']['retMsg'];
+            //储存D0错误信息
+            $dataSave['err_note_d0'] = $result['busData']['extInfo']['retMsg'];
+            //发送短信通知
+            $sms = new Sms();
+            $res = $sms->send($userInfo['phone'], '恭喜您已经成功开通商户，系统为您开通D0提款服务失败，失败原因：'.$dataSave['err_note_d0'].'。请自行到App重新开通D0提款服务【厦门刷呗】');
+
+            write_to_log('【拉卡拉D0开通失败】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
+            write_to_log('【拉卡拉D0开通失败】' . $merchantId, '/mkapi/log/lakala/callback/openMerchant/');
         }
-        write_to_log('【拉卡拉D0开通成功】' . json_encode($data, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openD0/');
-        write_to_log('【拉卡拉D0开通成功】' . $merchantId, '/mkapi/log/lakala/callback/openD0/');
-        $result = Db::name("merchants")->where("merchant_no", $merchantId)->find();
+
         if (!empty($result)){
-            
-            $result =Db::name("users")->where('series',$result['series'])->update($dataSave);
+            $result =Db::name("users")->where('series',$merchantInfo['series'])->update($dataSave);
         }
 
     }
@@ -223,7 +260,7 @@ class Callback extends Controller{
         $map['params'] = $AES->encryptString($json);
         $map['sign'] = $AES->sign($json, $this->_LklEncryptKeyPath);
         $map2Json = json_encode($map, JSON_UNESCAPED_UNICODE);
-        write_to_log('拉卡拉查询交易能否支付/响应拉卡拉未加密参数' . json_encode($param, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
+        write_to_log('【拉卡拉查询交易能否支付/响应拉卡拉未加密参数】' . json_encode($param, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
         write_to_log('【拉卡拉查询交易能否支/响应拉卡拉的加密参数】' . $map2Json, '/mkapi/log/lakala/callback/openMerchant/');
         echo $map2Json;
     }
@@ -283,6 +320,7 @@ class Callback extends Controller{
                     $order['paycard_type'] = $decrypted['payCardType'];
                 } else {
                     $order['trade_status'] = 1;
+                    $order['update_time'] = time();
                     $order['err_note'] = $decrypted['retCode'] . $decrypted['retMsg'];
                 }
 
@@ -316,7 +354,7 @@ class Callback extends Controller{
                         $merchantResult = Db::name('merchants')->where('series',$orderInfo['series'])->update($merchant);
                         if(!$merchantResult){
                             write_to_log('【拉卡拉交易支付结果通知-储存终端号失败】' . json_encode($merchantResult,JSON_UNESCAPED_UNICODE) , '/mkapi/log/lakala/callback/openMerchant/');
-                            Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/']);
+                            Log::init(['type'=>'file','path'=>APP_PATH.'/mkapi/log/lakala/sql/openMerchant/']);
                             Log::sql("【储存终端号——失败】");
                         }else{
                              write_to_log('【拉卡拉交易支付结果通知-储存终端号成功】' . json_encode($merchantResult,JSON_UNESCAPED_UNICODE) , '/mkapi/log/lakala/callback/openMerchant/');
@@ -325,12 +363,26 @@ class Callback extends Controller{
                         // D0提款
                         set_time_limit(95);
                         sleep(85);
-                        $this->withdrawByLkl($orderInfo);
+                        $withdrawResult = $this->withdrawByLkl($orderInfo);
+                        write_to_log('【D0提款结果】' . $withdrawResult, '/mkapi/log/lakala/callback/openMerchant/');
+                        $withdrawResult = json_decode($withdrawResult,true);
+                        
+                        //提款成功
+                        if($withdrawResult['status'] == '10000'){
+                            $orderSave['is_withdraw'] = 'y';
+                            $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1 - $orderInfo['pay_rate'] / 100)-2, 2);
+                            $orderSave['other_fee'] = 2;
+                            $orderSave['withdraw_time'] = time();
+                        }else{
+                            // 提款失败
+                            $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1 - $orderInfo['pay_rate'] / 100), 2);
+                        }
 
+                        $orderResult = Db::name("lakala_order")->where("id", $orderInfo['id'])->update($orderSave);
                     }
                 }else{
                     write_to_log('【拉卡拉交易支付结果通知/订单保存失败】' . json_encode($decrypted,JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
-                    Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/']);
+                    Log::init(['type'=>'file','path'=>APP_PATH.'/mkapi/log/lakala/sql/openMerchant/']);
                     Log::sql("【订单保存失败——失败】");
                 }
             }
@@ -398,6 +450,7 @@ class Callback extends Controller{
             $responseData['trannl'] = $result['tranJnl'];
             //储存提款信息
             $withdraw['tranjnl'] = $result['tranJnl'];
+            $withdraw['is_success'] = 'y';
 
             write_to_log('【D0提款请求成功-】' . json_encode($result, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
         }else{
@@ -416,13 +469,10 @@ class Callback extends Controller{
             Log::init(['type'=>'file','path'=>APP_PATH.'/mkapi/log/lakala/sql/withdraw/']);
             Log::sql("拉卡拉提款记录新增失败");
             write_to_log('【拉卡拉提款信息储存失败】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
-        }else{
-            write_to_log('【拉卡拉提款记录新增成功】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
         }
 
-        my_json_encode($status, $msg,$responseData);
+        return json_encode(array('status'=>$status,'msg'=>$msg,'data'=>$responseData),JSON_UNESCAPED_UNICODE);
 
-        $this->getResultOfWithdraw($result['tranJnl'],$withdraw['merchant_no'],$orderInfo['order_no']);
     }
 
 

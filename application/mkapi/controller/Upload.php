@@ -100,15 +100,16 @@ class Upload extends Controller{
 	 *上传单个文件
 	 *@param array $file 表单上传的文件信息
 	 *@param string $path 文件保存路径
+	 *@param string $dirName 文件保存路径
 	 *@param string $prefix 文件前缀
 	*/
 	public function uploadOne($file,$path = null,$dirName = null,$prefix = null){
 		//文件保存目录
-		is_null($dirName) ? $date = date('y-m-d') : $date = $dirName;
+		is_null($dirName) ? $dir = date('y-m-d') :$dir = $dirName;
 		if($path == null){
-			$realPath = $this->upload_path.$date;
+			$realPath = $this->upload_path.$dir;
 		}else{
-			$realPath = $path.$date;
+			$realPath = $path.$dir;
 		}
 		//判断目录是否创建
 		if(!is_dir($realPath)){
@@ -122,7 +123,7 @@ class Upload extends Controller{
 			$result = array('msg'=>'error','data'=>$info->getError());
 			return $result;
 		}else{
-			$result = array('msg'=>'success','data'=>$date.'/'.$info->getSaveName());
+			$result = array('msg'=>'success','data'=>$dir.'/'.$info->getSaveName());
 			return $result;
 		}
 
