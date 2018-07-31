@@ -354,7 +354,7 @@ class Callback extends Controller{
                         $merchantResult = Db::name('merchants')->where('series',$orderInfo['series'])->update($merchant);
                         if(!$merchantResult){
                             write_to_log('【拉卡拉交易支付结果通知-储存终端号失败】' . json_encode($merchantResult,JSON_UNESCAPED_UNICODE) , '/mkapi/log/lakala/callback/openMerchant/');
-                            Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/']);
+                            Log::init(['type'=>'file','path'=>APP_PATH.'/mkapi/log/lakala/sql/openMerchant/']);
                             Log::sql("【储存终端号——失败】");
                         }else{
                              write_to_log('【拉卡拉交易支付结果通知-储存终端号成功】' . json_encode($merchantResult,JSON_UNESCAPED_UNICODE) , '/mkapi/log/lakala/callback/openMerchant/');
@@ -366,7 +366,8 @@ class Callback extends Controller{
                         $withdrawResult = $this->withdrawByLkl($orderInfo);
                         write_to_log('【D0提款结果】' . $merchantResult, '/mkapi/log/lakala/callback/openMerchant/');
                         $withdrawResult = json_decode($withdrawResult,true);
-            
+                        
+                        //提款成功
                         if($withdrawResult['status'] == '10000'){
                         write_to_log('【D0提款结果2】' . $merchantResult, '/mkapi/log/lakala/callback/openMerchant/');
                             $orderSave['is_withdraw'] = 'y';
@@ -374,6 +375,7 @@ class Callback extends Controller{
                             $orderSave['other_fee'] = 2;
                             $orderSave['withdraw_time'] = time();
                         }else{
+                            // 提款失败
                             write_to_log('【D0提款结果3】' . $merchantResult, '/mkapi/log/lakala/callback/openMerchant/');
                             $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1-$orderInfo['pay_rate'])/100 , 2);
                         }
@@ -387,7 +389,7 @@ class Callback extends Controller{
                     }
                 }else{
                     write_to_log('【拉卡拉交易支付结果通知/订单保存失败】' . json_encode($decrypted,JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/openMerchant/');
-                    Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/']);
+                    Log::init(['type'=>'file','path'=>APP_PATH.'/mkapi/log/lakala/sql/openMerchant/']);
                     Log::sql("【订单保存失败——失败】");
                 }
             }
@@ -478,7 +480,7 @@ class Callback extends Controller{
             write_to_log('【拉卡拉提款记录新增成功】' . json_encode($withdraw, JSON_UNESCAPED_UNICODE), '/mkapi/log/lakala/callback/withdraw/');
         }
 
-        return my_json_encode($status, $msg,$responseData);
+        return json_encode(array('status'=>$status,'msg'=>$msg,'data'=>$responseData),JSON_UNESCAPED_UNICODE);
 
     }
 
