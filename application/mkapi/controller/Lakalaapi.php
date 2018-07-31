@@ -62,13 +62,13 @@ class Lakalaapi extends Common{
         $data['pay_rate'] = $pay_rate;
         $data['create_time'] = time();
         $data['trade_status'] = 0;
-        if($userInfo['is_d0'] == 1){
-            $data['other_fee'] = 2;
-            $data['arrive_money'] = round($amount * (1 - $pay_rate / 100)-2, 2);
-        }else{
-            $data['other_fee'] = 0;
-            $data['arrive_money'] = round($amount * (1 - $pay_rate / 100), 2);
-        }
+        // if($userInfo['is_d0'] == 1){
+        //     $data['other_fee'] = 2;
+        //     $data['arrive_money'] = round($amount * (1 - $pay_rate / 100)-2, 2);
+        // }else{
+        //     $data['other_fee'] = 0;
+        //     $data['arrive_money'] = round($amount * (1 - $pay_rate / 100), 2);
+        // }
 
         //储存订单信息
         
