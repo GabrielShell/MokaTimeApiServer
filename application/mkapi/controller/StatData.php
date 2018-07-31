@@ -21,7 +21,7 @@ class StatData extends Common{
             return ['status'=>2,'msg'=>'series不能为空'];
         $userId = Users::where(['series'=>$userSeries])->value('id');
 
-        my_json_encode(0,'',['7DaysRepay'=>1000]);
+        my_json_encode(0,'',['SevenDaysRepay'=>1000]);
     }
     
 }
