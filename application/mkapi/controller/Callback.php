@@ -364,7 +364,7 @@ class Callback extends Controller{
                         set_time_limit(95);
                         sleep(25);
                         $withdrawResult = $this->withdrawByLkl($orderInfo);
-                        write_to_log('【D0提款结果】' . $merchantResult, '/mkapi/log/lakala/callback/openMerchant/');
+                        write_to_log('【D0提款结果】' . $withdrawResult, '/mkapi/log/lakala/callback/openMerchant/');
                         $withdrawResult = json_decode($withdrawResult,true);
                         
                         //提款成功
