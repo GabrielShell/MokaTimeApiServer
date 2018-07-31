@@ -190,6 +190,7 @@ class XinyanBillsApi extends Common{
                                                 }
                                                 $card->credit_limit = $bill['credit_limit'];
                                                 $card->point = $bill['point'];
+                                                $card->import_time = time();
                                                 $card->save();
 
                                                 $searched[$unique_string] = $card->id;
@@ -205,6 +206,8 @@ class XinyanBillsApi extends Common{
                                                 }
                                                 $card->credit_limit = $bill['credit_limit'];
                                                 $card->point = $bill['point'];
+                                                $card->import_time = time();
+                                                $card->save();
 
                                                 //加入已查询列表中，避免重复查询数据库
                                                 $searched[$unique_string] = $card->id;
@@ -601,6 +604,7 @@ class XinyanBillsApi extends Common{
                                                 }
                                                 $cardDbInstance->credit_limit = $credit_limit;
                                                 $cardDbInstance->balance = $balance;
+                                                $cardDbInstance->import_time = time();
                                                 $cardDbInstance->save();
                                                 $cardId = $cardDbInstance->id;
                                         }
@@ -632,7 +636,6 @@ class XinyanBillsApi extends Common{
 						$billDbInstance->new_balance = $bill['new_balance'];
 						$billDbInstance->min_payment = $bill['min_payment'];
 						$billDbInstance->min_payment = $bill['min_payment'];
-						$billDbInstance->import_time = time();
 						$billDbInstance->save();
 						$billId = $billDbInstance->id;
 
