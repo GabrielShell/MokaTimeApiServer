@@ -7,6 +7,7 @@ use app\mkapi\model\Users;
 use app\mkapi\model\Bills;
 use app\mkapi\model\Shopping_records;
 use app\mkapi\model\Repay_plans;
+use app\mkapi\common\RepayPlan\RepayPlan;
 
 /**
  * 信用卡API
@@ -132,7 +133,7 @@ class Card extends Common{
                     'trans_date' => $srDbRecord->trans_date,
                     'trans_type' => $srDbRecord->trans_type,
                     'currency_type' => $srDbRecord->currency_type,
-                    'description' => $srDbRecord->description
+                    'des' => $srDbRecord->description
                 ];
             }
 
@@ -159,13 +160,23 @@ class Card extends Common{
                             ->order('bill_month desc,sort asc')
                             ->select();
         $repayPlansResult = [];
+        $repayPlansTmpResult = [];
         foreach($repayPlansDbResult as $rpDbResult){
-            $repayPlansResult[date('Y-m',strtotime($rpDbResult->bill_month))][] = [
+            $repayPlansTmpResult[date('Y-m',strtotime($rpDbResult->bill_month))][] = [
                 'plan_id' => $rpDbResult->id,
                 'sort' => $rpDbResult->sort,
                 'action' => $rpDbResult->action,
                 'amount' => $rpDbResult->amount,
-                'action_date' => $rpDbResult->action_date ];
+                'action_date' => $rpDbResult->action_date
+            ];
+        }
+
+        //改变格式
+        foreach($repayPlansTmpResult as $bill_month => $rpMonthPlan){
+            $repayPlansResult[] = [
+                'month' => $bill_month,
+                'plans' => $rpMonthPlan
+            ];
         }
 
         //示例数据
@@ -243,5 +254,25 @@ class Card extends Common{
         $cardDetailResult['bills'] = $billsResult;
         $cardDetailResult['repay_plan'] = $repayPlansResult;
         my_json_encode(0,'',$cardDetailResult);
+    }
+
+    public function getRepayPlan(Request $request){
+        $userSeries = $request->post('series');
+        if(empty($userSeries))
+            my_json_encode(2,'series不能为空');
+        $userId = Users::where(['series'=>$userSeries])->value('id');
+        $cardId = $request->post('card_id');
+        if(empty($cardId))
+            my_json_encode(2,'card_id不能为空');
+        $card = Credit_cards::where('id',$cardId)->where('user_id',$userId)->select();
+        if(!$card)
+            my_json_encode(3,'该用户没有指定ID的信用卡');
+
+        
+        //TODO 得到本期账单
+        $bill = Bills::where('credit_card_id',$cardId)->order('bill_month','desc')->limit(1)->select();
+        //TODO 验证是否本期账单
+        //TODO 根据还款日，与当前日期，算出计划日期和天数
+        $plan = RepayPlan::getPlan();
     }
 }
