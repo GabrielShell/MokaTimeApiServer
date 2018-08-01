@@ -165,71 +165,78 @@ class Card extends Common{
                 'sort' => $rpDbResult->sort,
                 'action' => $rpDbResult->action,
                 'amount' => $rpDbResult->amount,
-                'action_date' => $rpDbResult->action_date
-            ];
+                'action_date' => $rpDbResult->action_date ];
         }
 
         //示例数据
         $repayPlansResult = [
 
-            '2018-07'    =>  [
-                [
-                    'plan_id' => 5,
-                    'sort' => 1,
-                    'action' => 'repay',
-                    'amount' => '1002',
-                    'action_date' => '2018-07-03'
-                ],
-                [
-                    'plan_id' => 6,
-                    'sort' => 2,
-                    'action' => 'pay',
-                    'amount' => '1002',
-                    'action_date' => '2018-07-03'
-                ],
-                [
-                    'plan_id' => 7,
-                    'sort' => 3,
-                    'action' => 'repay',
-                    'amount' => '998',
-                    'action_date' => '2018-07-04'
-                ],
-                [
-                    'plan_id' => 8,
-                    'sort' => 4,
-                    'action' => 'pay',
-                    'amount' => '998',
-                    'action_date' => '2018-07-04'
+            [
+                "month" => "2018-07",
+                "plans" => [
+
+                    [
+                        'plan_id' => 5,
+                        'sort' => 1,
+                        'action' => 'repay',
+                        'amount' => '1002',
+                        'action_date' => '2018-07-03'
+                    ],
+                    [
+                        'plan_id' => 6,
+                        'sort' => 2,
+                        'action' => 'pay',
+                        'amount' => '1002',
+                        'action_date' => '2018-07-03'
+                    ],
+                    [
+                        'plan_id' => 7,
+                        'sort' => 3,
+                        'action' => 'repay',
+                        'amount' => '998',
+                        'action_date' => '2018-07-04'
+                    ],
+                    [
+                        'plan_id' => 8,
+                        'sort' => 4,
+                        'action' => 'pay',
+                        'amount' => '998',
+                        'action_date' => '2018-07-04'
+                    ]
                 ]
             ],
-            '2018-06'    =>  [
-                [
-                    'plan_id' => 1,
-                    'sort' => 1,
-                    'action' => 'repay',
-                    'amount' => '1002',
-                    'action_date' => '2018-06-03'
-                ],
-                [
-                    'plan_id' => 2,
-                    'sort' => 2,
-                    'action' => 'pay',
-                    'amount' => '1002',
-                    'action_date' => '2018-06-03'
-                ],
-                [
-                    'plan_id' => 3,
-                    'sort' => 3,
-                    'action' => 'repay',
-                    'amount' => '998',
-                    'action_date' => '2018-06-04'
-                ],
-                [
-                    'plan_id' => 4,
-                    'sort' => 4,
-                    'action' => 'pay',
-                    'amount' => '998',
-                    'action_date' => '2018-06-04'
+            [
+                "month" => '2018-06',
+                "plans" => [
+
+                    [
+                        'plan_id' => 1,
+                        'sort' => 1,
+                        'action' => 'repay',
+                        'amount' => '1002',
+                        'action_date' => '2018-06-03'
+                    ],
+                    [
+                        'plan_id' => 2,
+                        'sort' => 2,
+                        'action' => 'pay',
+                        'amount' => '1002',
+                        'action_date' => '2018-06-03'
+                    ],
+                    [
+                        'plan_id' => 3,
+                        'sort' => 3,
+                        'action' => 'repay',
+                        'amount' => '998',
+                        'action_date' => '2018-06-04'
+                    ],
+                    [
+                        'plan_id' => 4,
+                        'sort' => 4,
+                        'action' => 'pay',
+                        'amount' => '998',
+                        'action_date' => '2018-06-04'
+                    ]
                 ]
             ]
         ];
