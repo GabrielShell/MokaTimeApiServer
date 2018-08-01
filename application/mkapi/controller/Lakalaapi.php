@@ -124,9 +124,11 @@ class Lakalaapi extends Common{
             // $encryptData['branchBankno'] = $bankbranchInfo['bankbranch_no'];// 开户银行行号
             // $encryptData['settleBankname'] = $bankbranchInfo['bankbranch_name'];
             // $encryptData['settleBankno'] = $bankbranchInfo['bankbranch_name'];
-            $card_face_img = file_get_contents(APP_PATH.'mkapi/public/upload/user/card/'.$userInfo['card_face_img']);
-            $card_back_img = file_get_contents(APP_PATH.'mkapi/public/upload/user/card/'.$userInfo['card_back_img']);
-            $encryptData['pic'] = base64_encode(array($card_face_img,$card_back_img));
+            ///www/wwwroot/mk.xmjishiduo.com/application/mkapi/public/upload/user/card/mk17359491816887466/5b615c17f2500.jpg
+            ///www/wwwroot/mk.xmjishiduo.com/./application/mkapi/public/upload/user/card/user/card/mk17359491816887495/5b615c17f2500.jpg
+            $card_face_img = base64_encode(file_get_contents(APP_PATH.'mkapi/public/upload/'.$userInfo['card_face_img']));
+            $card_back_img = base64_encode(file_get_contents(APP_PATH.'mkapi/public/upload/'.$userInfo['card_back_img']));
+            $encryptData['pic'] = array($card_face_img,$card_back_img);
             $encryptData['accountType'] = '0'; //账户类型 0代表对私
 
             write_to_log('【拉卡拉开通商户参数：】'.json_encode($encryptData,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/openMerchant/');
