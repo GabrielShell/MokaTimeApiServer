@@ -391,7 +391,7 @@ class User extends Common{
 
 			}else{
 				$errorId = uniqid("ERR");
-				Log::error("【"$errorId"】" .json_encode($data,JSON_UNESCAPED_UNICODE));
+				Log::error("【".$errorId."】" .json_encode($data,JSON_UNESCAPED_UNICODE));
 				my_json_encode(9,'数据储存失败：errorId='.$errorId);
 			}
 
