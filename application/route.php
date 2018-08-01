@@ -116,6 +116,13 @@ Route::post('api/v1/card/markRepaid','mkapi/Card/markRepaid');
  */
 Route::post('api/v1/card/cardDetail','mkapi/Card/cardDetail');
 
+/**
+ * 获取还款计划
+ * @param series 用户series
+ * @param card_id 信用卡ID
+ */
+Route::post('api/v1/card/getRepayPlan','mkapi/Card/getRepayPlan');
+
 
 // +----------------------------------------------------------------------
 // | 客户端版本管理接口
