@@ -39,7 +39,7 @@ class Version extends Controller{
                 'content' => $latestVersionDbInstance->content
             ]
         ];
-        return json_encode($result,JSON_UNESCAPED_UNICODE);
+        return $result;
         
 
     }

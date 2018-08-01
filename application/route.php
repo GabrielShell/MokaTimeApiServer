@@ -102,6 +102,26 @@ Route::post('api/v1/open/merchant/','mkapi/Lakalaapi/PaymentTrade');
  */
 Route::post('api/v1/card/userCardList','mkapi/Card/userCardList');
 
+/**
+ * 标记已还接口[POST]
+ * @param series 用户series
+ * @param card_id 卡片ID
+ */
+Route::post('api/v1/card/markRepaid','mkapi/Card/markRepaid');
+
+/**
+ * 信用卡详情数据接口
+ * @param series 用户series
+ * @param card_id 信用卡ID
+ */
+Route::post('api/v1/card/cardDetail','mkapi/Card/cardDetail');
+
+/**
+ * 获取还款计划
+ * @param series 用户series
+ * @param card_id 信用卡ID
+ */
+Route::post('api/v1/card/getRepayPlan','mkapi/Card/getRepayPlan');
 
 
 // +----------------------------------------------------------------------
@@ -112,3 +132,13 @@ Route::post('api/v1/card/userCardList','mkapi/Card/userCardList');
  * @param os 客户端操作系统,'a'=Android，'i'=iOS
  */
 Route::post('api/v1/version/getLatestVersion','mkapi/Version/getLatestVersion');
+
+
+// +----------------------------------------------------------------------
+// | 统计数据接口
+// +----------------------------------------------------------------------
+/**
+ * 首页统计数据接口[POST]
+ * @param series 用户series
+ */
+Route::post('api/v1/stat/home','mkapi/StatData/homePageStatData');
