@@ -5,6 +5,8 @@ use think\Log;
 use app\mkapi\model\Credit_cards;
 use app\mkapi\model\Users;
 use app\mkapi\model\Bills;
+use app\mkapi\model\Shopping_records;
+use app\mkapi\model\Repay_plans;
 
 /**
  * 信用卡API
@@ -89,5 +91,150 @@ class Card extends Common{
         $bill->repaid = 1;
         $bill->save();
         return ['status'=>0,'msg'=>'成功标记已还'];
+    }
+
+
+    /**
+     * 信用卡详情数据接口
+     * @param series 用户series
+     * @param card_id 信用卡ID
+     */
+    public function cardDetail(Request $request){
+        $userSeries = $request->post('series');
+        if(empty($userSeries))
+            my_json_encode(2,'series不能为空');
+        $userId = Users::where(['series'=>$userSeries])->value('id');
+        $cardId = $request->post('card_id');
+        if(empty($cardId))
+            my_json_encode(2,'card_id不能为空');
+        
+        $cardDbInstance = Credit_cards::get($cardId);
+        if(!$cardDbInstance)
+            my_json_encode(3,'该用户下找不到对应ID的信用卡');
+
+        $cardDetailResult = [];
+
+        //查询账单和消费记录信息
+        $billsDbResult = Bills::where('user_id',$userId)
+                            ->where('credit_card_id',$cardId)
+                            ->order('bill_month','desc')
+                            ->select();
+        $billsResult = [];
+        foreach($billsDbResult as $billDbResult){
+            $shoppingRecordsDbInstance = Shopping_records::where('user_id',$userId)
+                            ->where('bill_id',$billDbResult->id)
+                            ->order('id','asc')
+                            ->select();
+            $shoppingRecords = [];
+            foreach($shoppingRecordsDbInstance as $srDbRecord){
+                $shoppingRecords[] = [
+                    'amount_money' => $srDbRecord->amount_money,
+                    'trans_date' => $srDbRecord->trans_date,
+                    'trans_type' => $srDbRecord->trans_type,
+                    'currency_type' => $srDbRecord->currency_type,
+                    'description' => $srDbRecord->description
+                ];
+            }
+
+            $billsResult [] = [
+                'bill_id' => $billDbResult->id,
+                'origin_type' => $billDbResult->origin_type,
+                'bill_type' => $billDbResult->bill_type,
+                'repay_amount' => $billDbResult->repay_amount,
+                'bill_start_date' => $billDbResult->bill_start_date,
+                'bill_date' => $billDbResult->bill_date,
+                'payment_due_date' => $billDbResult->payment_due_date,
+                'new_balance' => $billDbResult->new_balance,
+                'min_payment' => $billDbResult->min_payment,
+                'point' => $billDbResult->point,
+                'repaid' => $billDbResult->repaid,
+                'create_time' => $billDbResult->create_time,
+                'shopping_records' => $shoppingRecords
+            ];
+        }
+
+        //查询还款计划信息
+        $repayPlansDbResult = Repay_plans::where('user_id',$userId)
+                            ->where('credit_card_id',$cardId)
+                            ->order('bill_month desc,sort asc')
+                            ->select();
+        $repayPlansResult = [];
+        foreach($repayPlansDbResult as $rpDbResult){
+            $repayPlansResult[date('Y-m',strtotime($rpDbResult->bill_month))][] = [
+                'plan_id' => $rpDbResult->id,
+                'sort' => $rpDbResult->sort,
+                'action' => $rpDbResult->action,
+                'amount' => $rpDbResult->amount,
+                'action_date' => $rpDbResult->action_date
+            ];
+        }
+
+        //示例数据
+        $repayPlansResult = [
+
+            '2018-07'    =>  [
+                [
+                    'plan_id' => 5,
+                    'sort' => 1,
+                    'action' => 'repay',
+                    'amount' => '1002',
+                    'action_date' => '2018-07-03'
+                ],
+                [
+                    'plan_id' => 6,
+                    'sort' => 2,
+                    'action' => 'pay',
+                    'amount' => '1002',
+                    'action_date' => '2018-07-03'
+                ],
+                [
+                    'plan_id' => 7,
+                    'sort' => 3,
+                    'action' => 'repay',
+                    'amount' => '998',
+                    'action_date' => '2018-07-04'
+                ],
+                [
+                    'plan_id' => 8,
+                    'sort' => 4,
+                    'action' => 'pay',
+                    'amount' => '998',
+                    'action_date' => '2018-07-04'
+                ]
+            ],
+            '2018-06'    =>  [
+                [
+                    'plan_id' => 1,
+                    'sort' => 1,
+                    'action' => 'repay',
+                    'amount' => '1002',
+                    'action_date' => '2018-06-03'
+                ],
+                [
+                    'plan_id' => 2,
+                    'sort' => 2,
+                    'action' => 'pay',
+                    'amount' => '1002',
+                    'action_date' => '2018-06-03'
+                ],
+                [
+                    'plan_id' => 3,
+                    'sort' => 3,
+                    'action' => 'repay',
+                    'amount' => '998',
+                    'action_date' => '2018-06-04'
+                ],
+                [
+                    'plan_id' => 4,
+                    'sort' => 4,
+                    'action' => 'pay',
+                    'amount' => '998',
+                    'action_date' => '2018-06-04'
+                ]
+            ]
+        ];
+        $cardDetailResult['bills'] = $billsResult;
+        $cardDetailResult['repay_plan'] = $repayPlansResult;
+        my_json_encode(0,'',$cardDetailResult);
     }
 }
