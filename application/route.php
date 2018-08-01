@@ -109,6 +109,12 @@ Route::post('api/v1/card/userCardList','mkapi/Card/userCardList');
  */
 Route::post('api/v1/card/markRepaid','mkapi/Card/markRepaid');
 
+/**
+ * 信用卡详情数据接口
+ * @param series 用户series
+ * @param card_id 信用卡ID
+ */
+Route::post('api/v1/card/cardDetail','mkapi/Card/cardDetail');
 
 
 // +----------------------------------------------------------------------
