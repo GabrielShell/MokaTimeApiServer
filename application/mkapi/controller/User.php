@@ -518,11 +518,11 @@ class User extends Common{
 	public function index(){
 		$series = $_POST['series'];
 		$userInfo = Db::name('users')->field('real_name,phone,is_certificate,is_d0,is_merchant,user_point,bank_no')->where('series',$series)->find();
+		$beginToday = mktime(0,0,0,date('m'),date('d')-1,date('y'));
 		if($userInfo['is_d0'] == 1){
 			$callback = new Callback();
 			$userInfo['balance'] = $callback->getMoneyByLkl($series);
 		}else{
-			$beginToday = mktime(0,0,0,date('m'),date('d')-1,date('y'));
 
 			$balance= Db::name('lakala_order')->where([
 				'series' => ['=',$series],
