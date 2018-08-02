@@ -384,7 +384,7 @@ class User extends Common{
 				$data['is_certificate'] = "2";
 			}
 			
-			//标明用户通过实名认证
+			//更新用户信息
 			$users = model('Users');
 			if($users->save($data,['series'=>$data['series']])){
 				my_json_encode($status,$msg);
@@ -400,7 +400,44 @@ class User extends Common{
 		}
 	}
 
+	//用户上传身份证照片
+	public function uploadCard(){
+		$request = Request::instance();
+		$series = $request->post('series');
+		// 收集用户证件照
+		$cardFace = $request->file('cardFace') !== null ? $request->file('cardFace'):null; //身份证正面
+		$cardBack = $request->file('cardBack') !== null ? $request->file('cardBack'):null;  //身份证反面
+		$bankFace = $request->file('bankFace') !== null ? $request->file('bankFace'):null;  //银行卡正面
 
+		if($cardFace !== null && $cardBack !== null && $bankFace !== null){
+			// 上传文件
+			$cardFaceInfo = $this->uploadImg($cardFace,$series);
+			$cardBackInfo = $this->uploadImg($cardBack,$series);
+			$bankFaceInfo = $this->uploadImg($bankFace,$series);
+			if($cardFaceInfo['msg'] == 'success' && $cardBackInfo['msg'] == 'success' && $bankFaceInfo['msg'] == 'success'){
+				//数据库中储存文件路径
+				$data['card_face_img'] = "user/card/".$cardFaceInfo['data'];
+				$data['card_back_img'] = "user/card/".$cardBackInfo['data'];
+				$data['bank_face_img'] = "user/card/".$bankFaceInfo['data'];
+				$data['is_certificate'] = "1";
+				//更新用户信息
+				$users = model('Users');
+				if($users->save($data,['series'=>$series])){
+					my_json_encode(10000,'success');
+
+				}else{
+					$errorId = uniqid("ERR");
+					Log::error("【".$errorId."】" .json_encode($data,JSON_UNESCAPED_UNICODE));
+					my_json_encode(9,'数据储存失败：errorId='.$errorId);
+				}
+
+			}else{
+				my_json_encode(10,'文件上传错误',array('cardFace'=>$cardFaceInfo,'cardBack'=>$cardBackInfo,'bankFace'=>$bankFaceInfo));
+			}
+		}else{
+			my_json_encode(8,'请上传三张证件照');
+		}
+	}
 
 	/**
 	*上传文件
@@ -478,7 +515,7 @@ class User extends Common{
 	*获取用户信息
 	*@return array 放回信息列表
 	*/
-	public function userPage(){
+	public function index(){
 		$series = $_POST['series'];
 		$userInfo = Db::name('users')->field('real_name,phone,is_certificate,is_d0,is_merchant,user_point,bank_no')->where('series',$series)->find();
 		if($userInfo['is_d0'] == 1){
