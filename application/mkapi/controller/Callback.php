@@ -415,6 +415,7 @@ class Callback extends Controller{
             $merchant = Db::name("merchants")->field('merchant_no')->where("series",$withdraw['series'])->find();
             $withdraw['merchant_no'] = $merchant['merchant_no'];
             $withdraw['create_time'] = time();
+            $amount = number_format(($withdraw['withdraw_money']-2), 3, ".", "");
 
         }else{
             //储存提款记录信息
@@ -424,6 +425,7 @@ class Callback extends Controller{
             $withdraw['merchant_no'] = $orderInfo['merchant_no'];
             $withdraw['create_time'] = time();
             $withdraw['withdraw_money'] = $orderInfo['order_money'];
+            $amount = number_format(($withdraw['withdraw_money'] * 0.994 -2), 3, ".", "");
         }
 
         //请求参数
@@ -431,7 +433,6 @@ class Callback extends Controller{
         $data['compOrgCode'] = $this->_LklCompOrgCode;
         $data['reqLogNo'] = $withdraw['withdraw_no'];
         $data['shopNo'] = $withdraw['merchant_no'];
-        $amount = number_format(($withdraw['withdraw_money'] * 0.994 -2), 3, ".", "");
         $data['amount'] = substr($amount, 0, -1);
         $data['retUrl'] = 'http://wk.xmjishiduo.com/wxApi.php?m=Callback&a=getResultLkl';
         $queryString = $data['compOrgCode'] . $data['reqLogNo'] . $data['shopNo'] . $data['amount'] . $this->_LklHashKey;
@@ -666,14 +667,16 @@ class Callback extends Controller{
      * @author xxw
      * @date 2017年6月28日15:32:56
      */
-    public function getMoneyByLkl(){
+    public function getMoneyByLkl($series = null){
         $curlUrl = 'https://api.lakala.com/thirdpartplatform/merchmanage/7001.dor';
         //$curlUrl = 'https://124.74.143.162:15023/thirdpartplatform/merchmanage/7001.dor';
+        $series = is_null($series) ? $_POST['series'] : $series;
+        $merchantInfo = Db::name('merchants')->field('merchant_no')->where('series',$series)->find();
         $data['FunCod'] = '7001';
         $data['compOrgCode'] = $this->_LklCompOrgCode;
         $data['reqLogNo'] = date("YmdHis") . '11';
         //$data['accountNo'] = '62109840500016252';
-        $data['shopNo'] = $_POST['merchant_no'];
+        $data['shopNo'] = $merchantInfo['merchant_no'];
         $queryString = $data['compOrgCode'] . $data['shopNo'] . $this->_LklHashKey;
         //dump($queryString);
         $data['MAC'] = sha1($queryString);
@@ -684,7 +687,8 @@ class Callback extends Controller{
         echo $param;*/
         $result = $this->request($curlUrl, true, 'post', $param);
         $result = json_decode(json_encode(simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
-        dump($result);
+
+        return $result['balance'];
     }
 
 
