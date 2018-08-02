@@ -373,9 +373,12 @@ class Callback extends Controller{
                             $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1 - $orderInfo['pay_rate'] / 100)-2, 2);
                             $orderSave['other_fee'] = 2;
                             $orderSave['withdraw_time'] = time();
+                            $orderSave['arrive_type'] = 'D0';
+
                         }else{
                             // 提款失败
                             $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1 - $orderInfo['pay_rate'] / 100), 2);
+                            $orderSave['arrive_type'] = 'T+1';
                         }
 
                         $orderResult = Db::name("lakala_order")->where("id", $orderInfo['id'])->update($orderSave);
