@@ -531,9 +531,13 @@ class User extends Common{
 				'trade_status' =>['=',2],
 				'is_withdraw' => ['=','n'],
 			])->sum('arrive_money');
-			$balance = bcadd($balance,0,2);
-			$userInfo['balance'] = $balance;
 
+			if(!$balance){
+				$userInfo['balance'] = 0.00;
+			}else{
+				$balance = bcadd($balance,0,2);
+				$userInfo['balance'] = $balance;
+			}
 		}
 
 		$userInfo['today_income'] = Db::name('lakala_order')->where([
@@ -542,11 +546,17 @@ class User extends Common{
 				'trade_status' =>['=',2],
 			])->sum('order_money');
 
+		if(!$userInfo['today_income']){
+			$userInfo['today_income'] = 0.00;
+		}
+
 		$userInfo['gross_income'] = Db::name('lakala_order')->where([
 				'series' => ['=',$series],
 				'trade_status' =>['=',2],
 			])->sum('order_money');
-
+		if(!$userInfo['gross_income']){
+			$userInfo['gross_income'] = 0.00;
+		}
 		return my_json_encode(10000,'success',$userInfo);
 	}
 
