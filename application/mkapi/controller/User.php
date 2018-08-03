@@ -346,6 +346,7 @@ class User extends Common{
 						$msg = '银行卡号错误';break;
 		}
 
+
 		// 身份验证通过
 		if($result['status'] == '01'){
 			// 采集用户信息
@@ -396,7 +397,10 @@ class User extends Common{
 			}
 
 		}else{
-			my_json_encode($status,$msg);
+			$errorId = uniqid("ERR");
+			Log::error("【".$errorId."】" .json_encode($result,JSON_UNESCAPED_UNICODE));
+			//my_json_encode(9,'数据储存失败：errorId='.$errorId);
+			my_json_encode(10002,'验证错误：errorid='.$errorId);
 		}
 	}
 
@@ -532,12 +536,8 @@ class User extends Common{
 				'is_withdraw' => ['=','n'],
 			])->sum('arrive_money');
 
-			if(!$balance){
-				$userInfo['balance'] = 0.00;
-			}else{
-				$balance = bcadd($balance,0,2);
-				$userInfo['balance'] = $balance;
-			}
+			$balance = bcadd($balance,0,2);
+			$userInfo['balance'] = $balance;
 		}
 
 		$userInfo['today_income'] = Db::name('lakala_order')->where([
@@ -546,17 +546,12 @@ class User extends Common{
 				'trade_status' =>['=',2],
 			])->sum('order_money');
 
-		// if(!$userInfo['today_income']){
-		// 	$userInfo['today_income'] = 0.00;
-		// }
 
 		$userInfo['gross_income'] = Db::name('lakala_order')->where([
 				'series' => ['=',$series],
 				'trade_status' =>['=',2],
 			])->sum('order_money');
-		// if(!$userInfo['gross_income']){
-		// 	$userInfo['gross_income'] = 0.00;
-		// }
+		
 		return my_json_encode(10000,'success',$userInfo);
 	}
 
