@@ -315,12 +315,14 @@ class User extends Common{
 			my_json_encode(8,"参数不正确");
 			exit();
 		}
+		var_dump($data);
 
 		// 发送身份验证信息，并得到返回结果
 		$result = $this->certificateRequest($data['bank_no'],$data['card_no'],$data['real_name']);
 		$result = json_decode($result,true);
 		$msg = '';
-
+		var_dump($result);
+		exit();
 		//判断返回状态码
 		switch($result['status']){
 			case '01': 
