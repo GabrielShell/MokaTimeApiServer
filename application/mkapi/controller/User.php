@@ -546,17 +546,17 @@ class User extends Common{
 				'trade_status' =>['=',2],
 			])->sum('order_money');
 
-		if(!$userInfo['today_income']){
-			$userInfo['today_income'] = 0.00;
-		}
+		// if(!$userInfo['today_income']){
+		// 	$userInfo['today_income'] = 0.00;
+		// }
 
 		$userInfo['gross_income'] = Db::name('lakala_order')->where([
 				'series' => ['=',$series],
 				'trade_status' =>['=',2],
 			])->sum('order_money');
-		if(!$userInfo['gross_income']){
-			$userInfo['gross_income'] = 0.00;
-		}
+		// if(!$userInfo['gross_income']){
+		// 	$userInfo['gross_income'] = 0.00;
+		// }
 		return my_json_encode(10000,'success',$userInfo);
 	}
 
