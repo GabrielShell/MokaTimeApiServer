@@ -37,13 +37,16 @@ class Makecollections extends Common{
 			my_json_encode(8,'timeType参数不能为空');
 		}
 		if($timeType == 'd'){
-			$beginTime = mktime(0,0,0,date('m'),date('d')-1,date('y'));
+			$beginTime = mktime(0,0,0,date('m'),date('d'),date('y'));
+			echo date("y-m-d H:i:s",$beginTime).'<pr>';
 		}else if($timeType == 'm'){
-			$beginTime = mktime(0,0,0,date('m')-1,date('d'),date('y'));
+			$beginTime = mktime(0,0,0,date('m'),1,date('y'));
+			echo date("y-m-d H:i:s",$beginTime).'<pr>';
 		}else if($timeType == 'y'){
-			$beginTime = mktime(0,0,0,date('m'),date('d'),date('y')-1);
+			$beginTime = mktime(0,0,0,1,7,2018);
+			echo date("y-m-d H:i:s",$beginTime);
 		}
-
+		exit();
 		//查询收款记录 join Left
 		$result = DB::name('lakala_order')->field('channel_id,order_no,order_money,arrive_money,pay_time,a.merchant_no,pay_rate,other_fee,merchant_name, b.terminalno')->alias('a')->join('merchants b','a.merchant_no = b.merchant_no','left')->where([
 			'a.series' =>['=',$series],

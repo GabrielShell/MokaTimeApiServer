@@ -328,7 +328,7 @@ class User extends Common{
 					    $msg = '验证通过';break;
 			case '02': 
 						$status = 102;
-						$msg = '验证不通过';break;
+						$msg = '验证不通过,请检查信息是否正确';break;
 			case '202': 
 						$status = 202;
 						$msg = '无法验证';break;
@@ -518,7 +518,8 @@ class User extends Common{
 	public function index(){
 		$series = $_POST['series'];
 		$userInfo = Db::name('users')->field('real_name,phone,is_certificate,is_d0,is_merchant,user_point,bank_no')->where('series',$series)->find();
-		$beginToday = mktime(0,0,0,date('m'),date('d')-1,date('y'));
+		$beginToday = mktime(0,0,0,date('m'),date('d'),date('y'));
+		
 		if($userInfo['is_d0'] == 1){
 			$callback = new Callback();
 			$userInfo['balance'] = $callback->getMoneyByLkl($series);
