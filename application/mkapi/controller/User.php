@@ -321,6 +321,12 @@ class User extends Common{
 		$result = json_decode($result,true);
 		$msg = '';
 
+		if($result == null){
+			$errorId = uniqid("ERR");
+			Log::error("【".$errorId."】" .json_encode($result,JSON_UNESCAPED_UNICODE));
+			my_json_encode(9,'服务器错误：errorid='.$errorId);
+			exit();
+		}
 		//判断返回状态码
 		switch($result['status']){
 			case '01': 
@@ -397,10 +403,8 @@ class User extends Common{
 			}
 
 		}else{
-			$errorId = uniqid("ERR");
-			Log::error("【".$errorId."】" .json_encode($result,JSON_UNESCAPED_UNICODE));
-			//my_json_encode(9,'数据储存失败：errorId='.$errorId);
-			my_json_encode(10002,'验证错误：errorid='.$errorId);
+			
+			my_json_encode($status,$msg);
 		}
 	}
 
@@ -473,7 +477,7 @@ class User extends Common{
 		$host = "https://tbank.market.alicloudapi.com";
 	    $path = "/bankCheck";
 	    $method = "GET";
-	    $appcode = "16ca317574514528952b05eaedc353f0";
+	    $appcode = "770c11c80bdf461690d2944da6acc06e";
 	    $headers = array();
 	    array_push($headers, "Authorization:APPCODE " . $appcode);
 	    $querys = "accountNo=$accountNo&idCard=$idCard&name=$name";
