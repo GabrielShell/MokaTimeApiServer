@@ -302,6 +302,94 @@ class User extends Common{
 
 
 
+	// //用户实名认证
+	// public function certificate(){
+	// 	$request = Request::instance();
+	// 	$data['series'] = $request->post('series');
+	// 	$data['card_no'] = $request->post('card_no');
+	// 	$data['real_name'] = $request->post('real_name');
+	// 	$data['bank_no'] = $request->post('bank_no');
+	// 	$data['bankbranch_id'] = $request->post('bankbranch_id');
+
+	// 	if(empty($data['series']) || empty($data['card_no']) || empty($data['real_name']) || empty($data['bank_no'])){
+	// 		my_json_encode(8,"参数不正确");
+	// 		exit();
+	// 	}
+
+	// 	// 发送身份验证信息，并得到返回结果
+	// 	$result = $this->certificateRequest($data['bank_no'],$data['card_no'],$data['real_name']);
+	// 	$result = json_decode($result,true);
+	// 	$msg = '';
+
+	// 	if($result == null){
+	// 		$errorId = uniqid("ERR");
+	// 		Log::error("【".$errorId."】" .json_encode($result,JSON_UNESCAPED_UNICODE));
+	// 		my_json_encode(9,'服务器错误：errorid='.$errorId);
+	// 		exit();
+	// 	}
+	// 	//判断返回状态码
+	// 	switch($result['status']){
+	// 		case '01': 
+	// 					$status = 101;
+	// 				    $msg = '验证通过';break;
+	// 	}
+
+
+	// 	// 身份验证通过
+	// 	if($result['status'] == '01'){
+	// 		// 采集用户信息
+	// 		$data['bank_name'] = $result['bank'];  //开户行名称
+	// 		$data['card_name'] = $result['cardName'];  //银行卡名称
+	// 		$data['card_type'] = $result['cardType'];  //银行卡类型
+	// 		$data['sex'] = $result['sex'];  //性别
+	// 		$data['province'] = $result['province'];  //省
+	// 		$data['city'] = $result['city'];  //市
+	// 		$data['prefecture'] = $result['prefecture'];  //区县
+	// 		$data['birthday'] = $result['birthday'];  //生日
+	// 		$data['addr_code'] = $result['addrCode']; //地区代码
+
+	// 		// 收集用户证件照
+	// 		$cardFace = $request->file('cardFace') !== null ? $request->file('cardFace'):null; //身份证正面
+	// 		$cardBack = $request->file('cardBack') !== null ? $request->file('cardBack'):null;  //身份证反面
+	// 		$bankFace = $request->file('bankFace') !== null ? $request->file('bankFace'):null;  //银行卡正面
+	// 		//判断是否上传了文件
+	// 		if($cardFace !== null && $cardBack !== null && $bankFace !== null){
+	// 			// 上传文件
+	// 			$cardFaceInfo = $this->uploadImg($cardFace,$data['series']);
+	// 			$cardBackInfo = $this->uploadImg($cardBack,$data['series']);
+	// 			$bankFaceInfo = $this->uploadImg($bankFace,$data['series']);
+	// 			if($cardFaceInfo['msg'] == 'success' && $cardBackInfo['msg'] == 'success' && $bankFaceInfo['msg'] == 'success'){
+	// 				//数据库中储存文件路径
+	// 				$data['card_face_img'] = "user/card/".$cardFaceInfo['data'];
+	// 				$data['card_back_img'] = "user/card/".$cardBackInfo['data'];
+	// 				$data['bank_face_img'] = "user/card/".$bankFaceInfo['data'];
+	// 				$data['is_certificate'] = "1";
+
+	// 			}else{
+	// 				$data['is_certificate'] = "2";
+	// 				my_json_encode(10,'文件上传错误',array('cardFace'=>$cardFaceInfo,'cardBack'=>$cardBackInfo,'bankFace'=>$bankFaceInfo));
+	// 			}
+	// 		}else{
+	// 			$data['is_certificate'] = "2";
+	// 		}
+			
+	// 		//更新用户信息
+	// 		$users = model('Users');
+	// 		if($users->save($data,['series'=>$data['series']])){
+	// 			my_json_encode($status,$msg);
+
+	// 		}else{
+	// 			$errorId = uniqid("ERR");
+	// 			Log::error("【".$errorId."】" .json_encode($data,JSON_UNESCAPED_UNICODE));
+	// 			my_json_encode(9,'数据储存失败：errorId='.$errorId);
+	// 		}
+
+	// 	}else{
+			
+	// 		my_json_encode(102,$result['msg']);
+	// 	}
+	// }
+
 	//用户实名认证
 	public function certificate(){
 		$request = Request::instance();
@@ -328,43 +416,20 @@ class User extends Common{
 			exit();
 		}
 		//判断返回状态码
-		switch($result['status']){
-			case '01': 
-						$status = 101;
-					    $msg = '验证通过';break;
-			case '02': 
-						$status = 102;
-						$msg = '验证不通过,请检查信息是否正确';break;
-			case '202': 
-						$status = 202;
-						$msg = '无法验证';break;
-			case '203': 
-						$status = 203;
-						$msg = '异常情况';break;
-			case '204': 
-						$status = 204;
-						$msg = '姓名错误';break;
-			case '205': 
-						$status = 205;
-						$msg = '身份证号错误';break;
-			case '206': 
-						$status = 206;
-						$msg = '银行卡号错误';break;
+		switch($result['resp']['code']){
+			case '0': 
+					$status = 101;
+					$msg = '验证通过';break;	
 		}
 
 
 		// 身份验证通过
-		if($result['status'] == '01'){
+		if($result['resp']['code'] == '0'){
 			// 采集用户信息
-			$data['bank_name'] = $result['bank'];  //开户行名称
-			$data['card_name'] = $result['cardName'];  //银行卡名称
-			$data['card_type'] = $result['cardType'];  //银行卡类型
-			$data['sex'] = $result['sex'];  //性别
-			$data['province'] = $result['province'];  //省
-			$data['city'] = $result['city'];  //市
-			$data['prefecture'] = $result['prefecture'];  //区县
-			$data['birthday'] = $result['birthday'];  //生日
-			$data['addr_code'] = $result['addrCode']; //地区代码
+			$data['bank_name'] = $result['data']['bank_name'];  //开户行名称
+			$data['card_name'] = $result['data']['card_name'];  //银行卡名称
+			$data['card_type'] = $result['data']['card_type'];  //银行卡类型
+			$data['bank_logo'] = $result['data']['bank_logo'];  //银行logo
 
 			// 收集用户证件照
 			$cardFace = $request->file('cardFace') !== null ? $request->file('cardFace'):null; //身份证正面
@@ -404,9 +469,10 @@ class User extends Common{
 
 		}else{
 			
-			my_json_encode($status,$msg);
+			my_json_encode(102,$result['resp']['desc']);
 		}
 	}
+
 
 	//用户上传身份证照片
 	public function uploadCard(){
@@ -474,13 +540,13 @@ class User extends Common{
 	*@return array  第三方返回请求结果
 	*/
 	public function certificateRequest($accountNo,$idCard,$name){
-		$host = "https://tbank.market.alicloudapi.com";
-	    $path = "/bankCheck";
+		$host = "http://lundroid.market.alicloudapi.com";
+	    $path = "/lianzhuo/verifi";
 	    $method = "GET";
 	    $appcode = "770c11c80bdf461690d2944da6acc06e";
 	    $headers = array();
 	    array_push($headers, "Authorization:APPCODE " . $appcode);
-	    $querys = "accountNo=$accountNo&idCard=$idCard&name=$name";
+	    $querys = "acct_pan=$accountNo&cert_id=$idCard&acct_name=$name";
 	    $bodys = "";
 	    $url = $host . $path . "?" . $querys;
 

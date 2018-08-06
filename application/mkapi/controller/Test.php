@@ -217,6 +217,9 @@ class Test extends Common{
         $result = $this->certificateRequest($data['bank_no'],$data['card_no'],$data['real_name']);
         $result = json_decode($result,true);
         $msg = '';
+        echo '<pre>';
+        var_dump($result);
+        exit();
         switch($result['status']){
             case '01': $msg = '验证通过';break;
             case '02': $msg = '验证不通过';break;
@@ -242,13 +245,13 @@ class Test extends Common{
 
     //实名认证请求
     public function certificateRequest($accountNo,$idCard,$name){
-        $host = "https://tbank.market.alicloudapi.com";
-        $path = "/bankCheck";
+        $host = "http://lundroid.market.alicloudapi.com";
+        $path = "/lianzhuo/verifi";
         $method = "GET";
         $appcode = "770c11c80bdf461690d2944da6acc06e";
         $headers = array();
         array_push($headers, "Authorization:APPCODE " . $appcode);
-        $querys = "accountNo=$accountNo&idCard=$idCard&name=$name";
+        $querys = "acct_pan=$accountNo&cert_id=$idCard&acct_name=$name";
         $bodys = "";
         $url = $host . $path . "?" . $querys;
 
