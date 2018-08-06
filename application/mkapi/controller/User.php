@@ -332,24 +332,6 @@ class User extends Common{
 	// 		case '01': 
 	// 					$status = 101;
 	// 				    $msg = '验证通过';break;
-	// 		case '02': 
-	// 					$status = 102;
-	// 					$msg = '验证不通过,请检查信息是否正确';break;
-	// 		case '202': 
-	// 					$status = 202;
-	// 					$msg = '无法验证';break;
-	// 		case '203': 
-	// 					$status = 203;
-	// 					$msg = '异常情况';break;
-	// 		case '204': 
-	// 					$status = 204;
-	// 					$msg = '姓名错误';break;
-	// 		case '205': 
-	// 					$status = 205;
-	// 					$msg = '身份证号错误';break;
-	// 		case '206': 
-	// 					$status = 206;
-	// 					$msg = '银行卡号错误';break;
 	// 	}
 
 
@@ -404,7 +386,7 @@ class User extends Common{
 
 	// 	}else{
 			
-	// 		my_json_encode($status,$msg);
+	// 		my_json_encode(102,$result['msg']);
 	// 	}
 	// }
 
