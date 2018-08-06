@@ -269,10 +269,73 @@ class Card extends Common{
             my_json_encode(3,'该用户没有指定ID的信用卡');
 
         
-        //TODO 得到本期账单
-        $bill = Bills::where('credit_card_id',$cardId)->order('bill_month','desc')->limit(1)->select();
-        //TODO 验证是否本期账单
-        //TODO 根据还款日，与当前日期，算出计划日期和天数
-        $plan = RepayPlan::getPlan();
+        //得到本期账单
+        $bill = Bills::where('credit_card_id',$cardId)->where('bill_type','DONE')->order('bill_month','desc')->limit(1)->select();
+        if(!$bill){
+            my_json_encode(4,'请导入账单');
+        }
+        //验证是否本期账单
+        $bill_date = $bill[0]->bill_date;
+        $payment_due_date = $bill[0]->payment_due_date;
+
+        //TODO 此处需要换成time();
+        $nowTime = strtotime('2018-07-25 00:00:00');
+        if(!($nowTime >= strtotime($bill_date) && $nowTime < strtotime($payment_due_date ))){
+            //如果不是本期账单
+            my_json_encode(4,'未找到本期账单，请更新账单或重新导入账单');
+        }
+        //根据还款日，与当前时间，算出计划天数
+        if((int)date('H') <= 16){ //当天超过16点后不安排当天计划
+            $planStartDateTime = date('Y-m-d 00:00:00');
+        }else{
+            $planStartDateTime = date('Y-m-d 00:00:00',strtotime('+1 day'));
+        }
+        $nowDateTimeInst = new \DateTime($planStartDateTime);
+        $dueDayDateTimeInst = new \DateTime($payment_due_date.' 00:00:00');
+        $interval = $nowDateTimeInst->diff($dueDayDateTimeInst);
+        $dayCount = (int)$interval->format('%a');
+
+        //根据计划天数得到计划日期列表
+        $dayList = [];
+        $count = $dayCount;
+        $planDate = date('Y-m-d',strtotime($planStartDateTime));
+        do{
+            $dayList[] = $planDate;
+            $planDate = date('Y-m-d',strtotime('+1 day',strtotime($planDate)));
+            $count--;
+        }while($count <> 0);
+
+        $repayPlan = new RepayPlan;
+        //得到计划
+        $plan = $repayPlan->getPlan($dayCount,$bill[0]->new_balance);
+
+        //删除数据库中已存在的计划
+        $bill_month = $bill[0]->bill_month;
+        Repay_plans::where('credit_card_id',$cardId)->where('bill_month',$bill_month)->delete();
+        //将计划与卡片还款日期关联,同时储存到数据库
+        $resultPlan = [];
+        $sort = 0;
+        foreach($plan as $key=> $dailyPlan){
+            $resultPlan[$key] = [
+                'date' => $dayList[$key],
+                'plan' => $dailyPlan
+            ];
+            foreach($dailyPlan as $action){
+                $repayPlanDbInst = new Repay_plans;
+                $repayPlanDbInst->user_id = $userId;
+                $repayPlanDbInst->credit_card_id = $cardId;
+                $repayPlanDbInst->sort = $sort;
+                $repayPlanDbInst->bill_month = $bill_month;
+                $repayPlanDbInst->action = $action['type'];
+                $repayPlanDbInst->amount = $action['amount'];
+                $repayPlanDbInst->action_date = $dayList[$key];
+                $repayPlanDbInst->save();
+                $sort++;
+            }
+        }
+
+
+        $data = ['plan'=>$resultPlan];
+        my_json_encode(0,'',$data);
     }
 }
