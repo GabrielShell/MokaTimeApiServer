@@ -48,7 +48,7 @@ class Makecollections extends Common{
 		}
 		
 		//查询收款记录 join Left
-		$result = DB::name('lakala_order')->field('channel_id,order_no,order_money,arrive_money,pay_time,a.merchant_no,pay_rate,other_fee,merchant_name, b.terminalno')->alias('a')->join('merchants b','a.merchant_no = b.merchant_no','left')->where([
+		$result = DB::name('lakala_order')->field('channel_id,arrive_type,order_money,arrive_money,pay_time,order_no,a.merchant_no,pay_rate,other_fee,merchant_name, b.terminalno')->alias('a')->join('merchants b','a.merchant_no = b.merchant_no','left')->where([
 			'a.series' =>['=',$series],
 			'trade_status' => ['=',2],
 			'pay_time' => ['>',$beginTime],
