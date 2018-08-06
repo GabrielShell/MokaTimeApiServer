@@ -10,24 +10,65 @@ use app\mkapi\model\Repay_plans;
 //TODO 正式环境将继承类改成Common
 class RepayPlan extends Controller{
     public function getPlan($dayCount,$repayAmount){
-        //TODO 根据计划日期得到还款序列
+        //根据计划天数和还款金额得到还款序列
+        $repaySequence = $this->randomFixSumArry($repayAmount,$dayCount,$repayAmount * 0.2);
 
-        //TODO 每一笔还款，随机增减后，可以切分成1-3笔刷卡
+        //还款金额取整
+        foreach ($repaySequence as &$value) {
+            if($value > 1000){
+                $value = floor($value / 1000) * 1000;
+            }
+        }
+        //将取整后的差额随机补在最后一笔还款
+        $repaySequence[count($repaySequence) - 1] += ceil($repayAmount - array_sum($repaySequence));
+        
+
+        //每一笔还款，随机增减后，可以切分成1-3笔刷卡
+        //TODO 随机增减还款金额
+        $planSequence = [];
+        foreach($repaySequence as $key => $repay){
+            $paySequence = [];
+            $randNum = mt_rand(0,100);
+            if($randNum < 30){
+                //生成1笔刷卡
+                $paySequence = [$repay];
+            }elseif($randNum >= 30 && $randNum < 80){
+                //生成2笔刷卡
+                $paySequence = $this->randomFixSumArry($repay,2,$repay * 0.5);
+            }else{
+                //生成3笔刷卡
+                $paySequence = $this->randomFixSumArry($repay,3,$repay * 0.5);
+            }
+
+            $planSequence[$key][] = ['type' => 'repay' , 'amount' =>ceil($repay)];
+            foreach($paySequence as $pay){
+                $planSequence[$key][] = [
+                    'type' => 'pay',
+                    'amount' => ceil($pay)
+                ];
+            }
+            
+
+            
+        }
 
         //TODO 差额补上
         
+        return $planSequence;
 
     }
 
     /**
      * 红包算法，平均随机切分算法
+     * 
+     * @param int $total 待划分的数字
+     * @param int $div 分成的份数
+     * @param int $area 各份数间允许的最大差值
+     * @return array
      */
-    private function randomFixSumArry($total,$div){
+    private function randomFixSumArry($total,$div,$area = 50){
         if($div == 0)
             return [];
-        $total = $total; //待划分的数字
-        $div = $div; //分成的份数
-        $area = 50; //各份数间允许的最大差值
         $average = floor($total / $div);
         $_floor_total = $average * $div;
         $offset = $total - $_floor_total;
@@ -61,5 +102,6 @@ class RepayPlan extends Controller{
 //        var_dump($data);exit;
         return $data;
     }
+
 }
 //FIXME dfa
