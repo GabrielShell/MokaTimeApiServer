@@ -245,7 +245,7 @@ class Test extends Common{
         $host = "https://tbank.market.alicloudapi.com";
         $path = "/bankCheck";
         $method = "GET";
-        $appcode = "16ca317574514528952b05eaedc353f0";
+        $appcode = "770c11c80bdf461690d2944da6acc06e";
         $headers = array();
         array_push($headers, "Authorization:APPCODE " . $appcode);
         $querys = "accountNo=$accountNo&idCard=$idCard&name=$name";

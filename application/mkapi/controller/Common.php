@@ -40,7 +40,10 @@ class Common extends Controller{
 			$refresh_token = $request->post('refresh_token');
           
 			//验证access_token格式是否正确
-          
+          	if(empty($series)){
+          		my_json_encode(8, 'series不能为空');
+          	}
+
             if(empty($access_token) || !preg_match('/[a-z0-9]{32}/', $access_token)){
                 my_json_encode(8, 'access_token为空或者格式不正确');
             }

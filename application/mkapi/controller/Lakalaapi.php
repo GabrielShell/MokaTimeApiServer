@@ -12,12 +12,12 @@ class Lakalaapi extends Common{
 	
 	private $_LklAesKey = '340D2C2F15204082B14092DDE811AA22';
     private $_LklEncryptKeyPath = APP_PATH.'/mkapi/public/key/ct_rsa_private_key.pem';
-	
+
     /**
     *拉卡拉支付交易
     */
-	public function PaymentTrade(){
-		$request = Request::instance();
+    public function PaymentTrade(){
+        $request = Request::instance();
         
         //收集表单信息
         $series = $request->post('series'); //用户唯一标识
@@ -151,5 +151,5 @@ class Lakalaapi extends Common{
         //     'param'=>$AES->decryptString($map['params'])
         //     ));
 
-	}
+    }
 }
