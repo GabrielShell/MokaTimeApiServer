@@ -25,11 +25,43 @@ class Shopping extends Common{
 			my_json_encode(10002,'您已申请过收款宝，不能重复申请');
 			exit();
 		}
-		if($data['shipping_id'] == null || $data['payment_id'] == null || $data['pos_name'] == null || $data['pos_num'] == null){
+
+		//未传地址id ,新增收货地址
+		if($data['shipping_id'] == null){
+			$addrData['series'] = $_POST['series'];
+			$addrData['province'] = isset($_POST['province']) ? $_POST['province'] : null;
+			$addrData['city'] = isset($_POST['city']) ? $_POST['city'] : null;
+			$addrData['district'] = isset($_POST['district']) ? $_POST['district'] : null;
+			$addrData['street'] = isset($_POST['street']) ? $_POST['street'] : null;
+			$addrData['consignee'] = isset($_POST['consignee']) ? $_POST['consignee'] : null;
+			$addrData['phone'] = isset($_POST['phone']) ? $_POST['phone'] : null;
+			$addrData['is_default'] = isset($_POST['is_default']) ? $_POST['is_default'] : null;
+			$addrData['create_time'] = time();
+			//判断参数是否传正确了
+			if($data['province'] == null || $data['city'] == null || $data['district'] == null || $data['street'] == null || $data['consignee'] == null || $data['phone'] == null || $data['is_default'] == null){
+				my_json_encode(8,'参数错误');
+				exit();
+			}
+
+			//更改默认地址
+			if($_POST['is_default'] == 1){
+				Db::name('shipping')->where('series',$data['series'])->update(['is_default'=>0]);
+			}
+			
+		    $addrResult = Db::name('shipping')->insert($addrData);
+		    if(!$addrResult){
+		    	echo '地址信息插入失败';
+		    	exit();
+		    }
+			$data['shipping_id'] = Db::name('shipping')->getLastInsID();
+		}
+
+		if($data['payment_id'] == null || $data['pos_name'] == null){
 			my_json_encode(8,'参数错误');
 			exit();
 		}
 
+		//创建订单
 		$result = Db::name('pos_order')->insert($data);
 		if(!$result){
 			$errorId = uniqid('ERR');
