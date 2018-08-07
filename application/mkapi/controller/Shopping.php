@@ -38,7 +38,7 @@ class Shopping extends Common{
 			$addrData['is_default'] = isset($_POST['is_default']) ? $_POST['is_default'] : null;
 			$addrData['create_time'] = time();
 			//判断参数是否传正确了
-			if($data['province'] == null || $data['city'] == null || $data['district'] == null || $data['street'] == null || $data['consignee'] == null || $data['phone'] == null || $data['is_default'] == null){
+			if($addrData['province'] == null || $addrData['city'] == null || $addrData['district'] == null || $addrData['street'] == null || $addrData['consignee'] == null || $addrData['phone'] == null || $addrData['is_default'] == null){
 				my_json_encode(8,'参数错误');
 				exit();
 			}
