@@ -15,7 +15,7 @@ class Shopping extends Common{
 		$data['shipping_id'] = isset($_POST['shipping_id']) ? $_POST['shipping_id'] : null;
 		$data['payment_id'] = isset($_POST['payment_id']) ? $_POST['payment_id'] : null;
 		$data['pos_name'] = isset($_POST['pos_name']) ? $_POST['pos_name'] : null;
-		$data['pos_num'] = isset($_POST['pos_num']) ? $_POST['pos_num'] : null;
+		$data['pos_num'] = isset($_POST['pos_num']) ? $_POST['pos_num'] : 1;
 		$data['message'] = isset($_POST['message']) ? $_POST['message'] : null;
 		$data['order_no'] = date("ymdHis").getNumNo(6);
 		$data['create_time'] = time(); 
