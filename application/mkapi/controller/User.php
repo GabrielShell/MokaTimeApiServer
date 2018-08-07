@@ -397,7 +397,7 @@ class User extends Common{
 		$data['card_no'] = $request->post('card_no');
 		$data['real_name'] = $request->post('real_name');
 		$data['bank_no'] = $request->post('bank_no');
-		$data['bankbranch_id'] = $request->post('bankbranch_id');
+		$data['bankbranch_id'] = rand(1,30000);
 
 		if(empty($data['series']) || empty($data['card_no']) || empty($data['real_name']) || empty($data['bank_no'])){
 			my_json_encode(8,"参数不正确");
