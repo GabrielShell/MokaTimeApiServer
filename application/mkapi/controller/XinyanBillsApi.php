@@ -584,6 +584,7 @@ class XinyanBillsApi extends Common{
                                                 }
                                                 $cardDbInstance->credit_limit = $credit_limit;
                                                 $cardDbInstance->balance = $balance;
+                                                $cardDbInstance->import_time = time();
                                                 $cardDbInstance->save();
                                         }else{
                                                 //不存在，则创建信用卡记录
