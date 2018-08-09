@@ -95,12 +95,20 @@ class Shipping extends Common{
 			exit();
 		}
 
+		$shippingInfo = Db::name('shipping')->field('is_default')->where('id',$shipping_id)->find();
 		$result = Db::name('shipping')->delete($shipping_id);
+
 		if(!$result){
 			$errorId = uniqid('ERR');
 			Log::error('【'.$errorId.'】删除收货地址失败');
 			my_json_encode(10002,'删除收货地址失败：errorId ='.$errorId);
 		}else{
+			//判断是否为默认
+			if($shippingInfo['is_default'] == 1){
+				//自动设置默认地址
+				$maxId = Db::name('shipping')->where('series',$_POST['series'])->max('id');;
+				Db::name('shipping')->where('id','=',$maxId)->update(['is_default'=>1]);
+			}
 			my_json_encode(10000,'success');
 		}
 	}
@@ -108,7 +116,7 @@ class Shipping extends Common{
 	//读取用户所有收货地址
 	public function select(){
 		$series = $_POST['series'];
-		$result = Db::name('shipping')->field('id as shipping_id,series,province,city,district,street,consignee,phone,is_default')->where('series',$series)->select();
+		$result = Db::name('shipping')->field('id as shipping_id,series,province,city,district,street,consignee,phone,is_default')->where('series',$series)->order('id desc')->select();
 
 		my_json_encode(10000,'success',$result);
 	}
