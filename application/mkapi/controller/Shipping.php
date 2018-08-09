@@ -19,14 +19,15 @@ class Shipping extends Common{
 		$data['street'] = isset($_POST['street']) ? $_POST['street'] : null;
 		$data['consignee'] = isset($_POST['consignee']) ? $_POST['consignee'] : null;
 		$data['phone'] = isset($_POST['phone']) ? $_POST['phone'] : null;
+		$data['is_default'] = isset($_POST['is_default']) ? $_POST['is_default'] : null;
 		$data['create_time'] = time();
-		if($data['province'] == null || $data['city'] == null || $data['district'] == null || $data['street'] == null || $data['consignee'] == null || $data['phone'] == null){
+		if($data['province'] == null || $data['city'] == null || $data['district'] == null || $data['street'] == null || $data['consignee'] == null || $data['phone'] == null || $data['is_default'] == null){
 			my_json_encode(8,'参数错误');
 			exit();
 		}
 		
 		//设置为默认地址
-		if(isset($_POST['is_default'])){
+		if($_POST['is_default'] == 1){
 			$data['is_default'] = $_POST['is_default'];
 			Db::name('shipping')->where('series',$data['series'])->update(['is_default'=>0]);
 		}
