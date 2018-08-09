@@ -73,7 +73,7 @@ class User extends Common{
 			$result = $User->where('phone',$data['phone'])->find();
 			//判断用户是否已经注册
 			if(empty($result)){
-				$series = $this->register($data)；
+				$series = $this->register($data);
 			}else{
 				$series = $result['series'];
 			}
