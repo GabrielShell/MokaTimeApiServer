@@ -159,9 +159,8 @@ class User extends Common{
 		$data['series'] = getUserId(6,$data['phone']);
 		$User->data($data);
 		if($User->save()){
-		    echo $data['series'];
-			exit();
-			//return $data['series'];
+		  
+			return $data['series'];
 		}
 	}
 
