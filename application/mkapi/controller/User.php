@@ -74,8 +74,6 @@ class User extends Common{
 			//判断用户是否已经注册
 			if(empty($result)){
 				$series = $this->register($data);
-				echo $series;
-				exit();
 			}else{
 				$series = $result['series'];
 			}
@@ -102,7 +100,7 @@ class User extends Common{
 			if($saveResult){
 				$responseData = array(
 					'msg' => 'success',
-					'series' => $result['series'],
+					'series' => $series,
 					'access_token' => $token_data['access_token'],
 					'refresh_token' => $token_data['refresh_token']
 					);
