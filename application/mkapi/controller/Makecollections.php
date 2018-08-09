@@ -52,6 +52,7 @@ class Makecollections extends Common{
 			'a.series' =>['=',$series],
 			'trade_status' => ['=',2],
 			'pay_time' => ['>',$beginTime],
+			'arrive_type' => ['<>',''],
 		])->order('pay_time desc')->select();
 		
 		my_json_encode(10000,'success',$result);
