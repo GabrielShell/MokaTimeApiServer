@@ -160,7 +160,7 @@ class User extends Common{
 		$User->data($data);
 		if($User->save()){
 		  	
-			echo $data['series'];
+			return $data['series'];
 		}
 	}
 
