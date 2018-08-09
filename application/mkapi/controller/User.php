@@ -74,6 +74,8 @@ class User extends Common{
 			//判断用户是否已经注册
 			if(empty($result)){
 				$series = $this->register($data);
+				echo $series;
+				exit();
 			}else{
 				$series = $result['series'];
 			}
@@ -159,9 +161,7 @@ class User extends Common{
 		$data['series'] = getUserId(6,$data['phone']);
 		$User->data($data);
 		if($User->save()){
-		  	echo $data['series'];
-		  	exit();
-			//return $data['series'];
+			return $data['series'];
 		}
 	}
 
