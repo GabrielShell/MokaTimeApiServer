@@ -59,6 +59,9 @@ class Common extends Controller{
             if(empty($result)){//token过期
             	my_json_encode(7, 'token过期，请重新登录');
             }else{
+            	var_dump($result);
+            	echo time();
+            	exit();
             	if($access_token !== $result[0]['access_token'] || $result[0]['ac_start_time'] < time() - 3600){
             		$data['access_token'] = getkey(32);
             		$data['ac_start_time'] = time();
