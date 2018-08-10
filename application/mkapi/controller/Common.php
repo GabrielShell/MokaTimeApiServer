@@ -60,12 +60,6 @@ class Common extends Controller{
             	my_json_encode(7, 'token过期，请重新登录');
             }else{
             	if($access_token !== $result[0]['access_token'] || $result[0]['ac_start_time'] < time() - 3600){
-            		echo date('y-m-d H:i:s',$result[0]['ac_start_time']).'<br>';
-	            	echo date('y-m-d H:i:s',time()).'<br>';
-	        		echo date('y-m-d H:i:s',time()-3600).'<br>';
-	        		echo $access_token.'<br>';
-	        		echo $result[0]['access_token'];
-	            	exit();
             		$data['access_token'] = getkey(32);
             		$data['ac_start_time'] = time();
                   	$tokenMessage = model('tokenMessages');
