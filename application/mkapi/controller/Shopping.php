@@ -97,7 +97,7 @@ class Shopping extends Common{
 		$data['create_time'] = time(); 
 		$data['order_status'] = 1;
 		//判断参数是否正确
-		if($data['shipping_id'] == null || $data['payment_id'] == null || $data['pay_money'] == null || $data['goods_name'] == null || $data['goods_num'] == null || $data['order_type'] == null || $data['goods_money'] == null || $data['order_money'] == null || $data['message'] == null){
+		if($data['payment_id'] == null || $data['pay_money'] == null || $data['goods_name'] == null || $data['goods_num'] == null || $data['order_type'] == null || $data['goods_money'] == null || $data['order_money'] == null || $data['message'] == null){
 			my_json_encode(8,'参数错误');
 			exit();
 		}
