@@ -16,20 +16,20 @@ class Umeng{
 		$this->timestamp = strval(time());
 	}
 
-	public function sendAndroidUnicast(){
+	public function sendAndroidUnicast($param){
 		try {
 			$unicast = new AndroidUnicast();
 			$unicast->setAppMasterSecret($this->appMasterSecret);
 			$unicast->setPredefinedKeyValue("appkey",           $this->appkey);
 			$unicast->setPredefinedKeyValue("timestamp",        $this->timestamp);
 			// Set your device tokens here
-			// foreach($param as $key => $value){
-			// 	$unicast->setPredefinedKeyValue($key,$value);
-			// }
-			$unicast->setPredefinedKeyValue("device_tokens",    "AtqxL9I_jgZJs5951idxtWKDhSTulJmFyrlvO8oAsLwE"); 
-			$unicast->setPredefinedKeyValue("ticker",           "Android unicast ticker");
-			$unicast->setPredefinedKeyValue("title",            "Android unicast title");
-			$unicast->setPredefinedKeyValue("text",             "Android unicast text");
+			foreach($param as $key => $value){
+				$unicast->setPredefinedKeyValue($key,$value);
+			}
+			// $unicast->setPredefinedKeyValue("device_tokens",    "AtqxL9I_jgZJs5951idxtWKDhSTulJmFyrlvO8oAsLwE"); 
+			// $unicast->setPredefinedKeyValue("ticker",           "Android unicast ticker");
+			// $unicast->setPredefinedKeyValue("title",            "Android unicast title");
+			// $unicast->setPredefinedKeyValue("text",             "Android unicast text");
 			$unicast->setPredefinedKeyValue("after_open",       "go_app");
 			// Set 'production_mode' to 'false' if it's a test device. 
 			// For how to register a test device, please see the developer doc.
