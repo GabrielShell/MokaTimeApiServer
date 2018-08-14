@@ -8,6 +8,7 @@ use think\Request;
 use think\Db;
 use crypt\AesCbc;
 use think\Log;
+use app\mkapi\common\UMeng\Umeng;
 class Test extends Common{
 	//拉卡拉交易D0提款参数
     // 机构号： 425510
@@ -279,6 +280,12 @@ class Test extends Common{
         }else{
           	echo my_json_encode(0,'success');
         } 
+    }
+
+    public function sendMessge(){
+        $umeng = new Umeng();
+        $umeng->sendAndroidUnicast();
+
     }
 
 }

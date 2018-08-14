@@ -80,7 +80,7 @@ class Shopping extends Common{
 	}
 
 	//生成商品订单
-	public function posOrder(){
+	public function createOrder(){
 		$data['series'] = $_POST['series'];
 		$data['shipping_id'] = isset($_POST['shipping_id']) ? $_POST['shipping_id'] : null;
 		$data['payment_id'] = isset($_POST['payment_id']) ? $_POST['payment_id'] : null;
@@ -90,7 +90,7 @@ class Shopping extends Common{
 		$data['goods_num'] = isset($_POST['goods_num']) ? $_POST['goods_num'] : null;
 		$data['order_type'] = isset($_POST['order_type']) ? $_POST['order_type'] : null;
 		$data['goods_money'] = isset($_POST['goods_money']) ? $_POST['goods_money'] : null;
-		$data['order_money'] = isset($_POST['order_money']) ? $_POST['order_money'] :null;
+		$data[','] = isset($_POST['order_money']) ? $_POST['order_money'] :null;
 
 		$data['message'] = isset($_POST['message']) ? $_POST['message'] : null;
 		$data['order_no'] = date("ymdHis").getNumNo(6);

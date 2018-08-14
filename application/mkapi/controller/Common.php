@@ -25,7 +25,7 @@ class Common extends Controller{
 		$request = Request::instance();
 		$no_list = array(
 			'User' => array('login','sendverify','register'),
-			'Test' => array('certificate','login','testupload'));
+			'Test' => array('certificate','login','testupload','sendmessge'));
 		if(isset($no_list[__CONTROLLER__]) && in_array(__ACTION__, $no_list[__CONTROLLER__])){
 			return;
 		}else if ($request->post('cheat-code') == 'mokatime-999') {
