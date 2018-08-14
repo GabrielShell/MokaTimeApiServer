@@ -55,6 +55,7 @@ class User extends Common{
 		$data['phone'] = $request->post('phone');
 		$data['sys_type'] = $request->post('sys_type');
 		$data['phone_type'] = $request->post('phone_type');
+		$data['device_token'] = $request->post('device_token');
 		//判断验证码是否正确
       	//echo 'pre';
       	//echo Session::get($data['phone']);
@@ -76,6 +77,7 @@ class User extends Common{
 				$series = $this->register($data);
 			}else{
 				$series = $result['series'];
+				$User->save(['device_token' => $data['device_token']],['series'=>$series]);
 			}
 
 			//实例化tokenMessage模型
