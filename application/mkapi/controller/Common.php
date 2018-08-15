@@ -54,7 +54,7 @@ class Common extends Controller{
             }
 
             // 判断token是否存在
-           $result = Db::query("select * from mk_token_messages where series = '$series' and re_start_time > unix_timestamp()-2592000");
+            $result = Db::query("select * from mk_token_messages where series = '$series' and re_start_time > unix_timestamp()-2592000");
         	//var_dump($result);
             if(empty($result)){//token过期
             	my_json_encode(7, 'token过期，请重新登录');
