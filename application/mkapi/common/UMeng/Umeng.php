@@ -16,6 +16,11 @@ class Umeng{
 		$this->timestamp = strval(time());
 	}
 
+	/**
+	*向指定设备发送消息
+	*@param $accountNo string 银行卡号
+	*@return null
+	*/
 	public function sendAndroidUnicast($param){
 		try {
 			$unicast = new AndroidUnicast();
@@ -36,9 +41,7 @@ class Umeng{
 			$unicast->setPredefinedKeyValue("production_mode", "true");
 			// Set extra fields
 			$unicast->setExtraField("test", "helloworld");
-			print("Sending unicast notification, please wait...\r\n");
 			$unicast->send();
-			print("Sent SUCCESS\r\n");
 		} catch (Exception $e) {
 			print("Caught exception: " . $e->getMessage());
 		}
