@@ -54,7 +54,6 @@ class User extends Common{
 		$verify_code = $request->post('verify_code');
 		$data['phone'] = $request->post('phone');
 		$data['sys_type'] = $request->post('sys_type');
-		$data['phone_type'] = $request->post('phone_type');
 		$data['device_token'] = $request->post('device_token');
 		//判断验证码是否正确
       	//echo 'pre';
