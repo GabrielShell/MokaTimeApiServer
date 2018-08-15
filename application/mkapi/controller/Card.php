@@ -29,7 +29,7 @@ class Card extends Common
                 $due_date = date('Y-m-' . $due_date_pure);
             } else {
                 //还款日与账单日不同月
-                $due_date = date('Y-m-d', strtotime('+1 month', strtotime('Y-m-' . $due_date_pure)));
+                $due_date = date('Y-m-d', strtotime('+1 month', strtotime(date('Y-m-' . $due_date_pure))));
             }
             $billsDbResult = Bills::all(['credit_card_id' => $card->id]);
             $billsResult = [];
