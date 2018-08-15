@@ -213,7 +213,7 @@ class User extends Common{
 	// 	//判断返回状态码
 	// 	switch($result['status']){
 	// 		case '01': 
-	// 					$status = 101;
+	// 					$status = 0;
 	// 				    $msg = '验证通过';break;
 	// 	}
 
@@ -301,7 +301,7 @@ class User extends Common{
 		//判断返回状态码
 		switch($result['resp']['code']){
 			case '0': 
-					$status = 101;
+					$status = 0;
 					$msg = '验证通过';break;	
 		}
 
