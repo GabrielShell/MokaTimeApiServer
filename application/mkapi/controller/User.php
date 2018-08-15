@@ -476,7 +476,7 @@ class User extends Common{
 	*/
 	public function index(){
 		$series = $_POST['series'];
-		$userInfo = Db::name('users')->field('real_name,phone,is_certificate,is_d0,is_merchant,user_point,bank_no,card_no')->where('series',$series)->find();
+		$userInfo = Db::name('users')->field('real_name,phone,is_certificate,is_d0,is_merchant,user_point,bank_no,card_no,bank_name')->where('series',$series)->find();
 		$beginToday = mktime(0,0,0,date('m'),date('d'),date('y'));
 		
 		if($userInfo['is_d0'] == 1){
