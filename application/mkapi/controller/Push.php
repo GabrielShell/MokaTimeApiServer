@@ -18,28 +18,26 @@ class Push extends Controller{
         //美洽验签
         $signer = new DTSigner($secret_key);
         if($signer->sign($data) !== $_SERVER['HTTP_AUTHORIZATION']){
-        	write_to_log("【美洽验签成功】","mkapi/log/");
         	exit();
         }else{
-        	write_to_log("【美洽验签失败】sign1=".$signer->sign($data)." sign2=".$_SERVER['HTTP_AUTHORIZATION'],"mkapi/log/");
-        }
-        write_to_log("【美洽推送数据】".$data,"mkapi/log/");
-        $data = json_decode($data);
-        $series = $data['customizedId'];
-        // 判断token是否存在
-        $result = Db::query("select * from mk_token_messages where series = '$series' and re_start_time > unix_timestamp()-2592000");
-        if(!$result){
-        	exit();
-        }else{
-        	$umeng = new Umeng();
-	        $param = array(
-	            'device_tokens' => $data['deviceToken']
-	            ,'ticker' => $data['fromName']
-	            ,'title' => "摩卡时代"
-	            ,'text' => $data['content']
-	        );
-	        $umeng->sendAndroidUnicast($param);
-
+        	write_to_log("【美洽推送数据】".$data,"mkapi/log/");
+	        $data = json_decode($data);
+	        $series = $data['customizedId'];
+	        // 判断token是否存在
+	        $result = Db::query("select * from mk_token_messages where series = '$series' and re_start_time > unix_timestamp()-2592000");
+	        if(!$result){
+	        	exit();
+	        }else{
+	        	$umeng = new Umeng();
+		        $param = array(
+		            'device_tokens' => $data['deviceToken']
+		            ,'ticker' => $data['fromName']
+		            ,'title' => "摩卡时代"
+		            ,'text' => $data['content']
+		        );
+		        write_to_log("【推送数据】".json_encode($['param']),"mkapi/log/");
+		        $umeng->sendAndroidUnicast($param);
+	        }
         }
 	}
 }

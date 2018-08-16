@@ -283,12 +283,13 @@ class Test extends Common{
     }
 
     public function sendMessge(){
+        $device_tokens = $_POST['device_tokens'];
         $umeng = new Umeng();
         $param = array(
-            'device_tokens' => 'AtqxL9I_jgZJs5951idxtWKDhSTulJmFyrlvO8oAsLwE'
-            ,'ticker' => '火热少女'
-            ,'title' => '周三早餐'
-            ,'text' => '明天一定给你带肠粉'
+            'device_tokens' => $device_tokens
+            ,'ticker' => '兵长好帅'
+            ,'title' => '兵长好矮'
+            ,'text' => '兵长棒棒哒'
         );
         $umeng->sendAndroidUnicast($param);
 
