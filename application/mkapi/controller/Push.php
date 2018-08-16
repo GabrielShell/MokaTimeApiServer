@@ -22,7 +22,7 @@ class Push extends Controller{
         	exit();
         }else{
         	write_to_log("【美洽推送数据】".$data,"mkapi/log/");
-	        $data = json_decode($data);
+	        $data = json_decode($data,true);
 	        $series = $data['customizedId'];
 	        write_to_log("【用户id】".$series,"mkapi/log/");
 	        // 判断token是否存在
