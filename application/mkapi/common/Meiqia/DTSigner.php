@@ -7,8 +7,8 @@
 // $headers = apache_request_headers()
 // if($dt->sign($body) != $headers['Authorization']){
 //
-//}
-  class DTSigner {
+namespace app\mkapi\common\Meiqia;
+class DTSigner{
     private $raw_data;
     private $key;
     public function __construct($key) {
