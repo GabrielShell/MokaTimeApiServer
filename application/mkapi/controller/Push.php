@@ -17,7 +17,7 @@ class Push extends Controller{
       	$data = file_get_contents("php://input");
         //美洽验签
         $signer = new DTSigner($secret_key);
-        if($signer->sign(json_decode($data)) !== $_SERVER['HTTP_AUTHORIZATION']){
+        if($signer->sign($data) !== $_SERVER['HTTP_AUTHORIZATION']){
         	write_to_log("【美洽验签成功】","mkapi/log/");
         	exit();
         }else{
