@@ -13,6 +13,6 @@ class Push extends Controller{
         }
 
         write_to_log('【美洽消息推送】'.$data,'mkapi/log/');
-        write_to_log('【美洽消息推送-请求头】'.$_SERVER,'mkapi/log/');
+        write_to_log('【美洽消息推送-请求头】'.json_encode($_SERVER),'mkapi/log/');
 	}
 }
