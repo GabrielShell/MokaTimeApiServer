@@ -13,11 +13,14 @@ class Push extends Controller{
         if(empty($data)){
             $data = file_get_contents("php://input");
         }
-
-        write_to_log('【美洽消息推送】'.$data,'mkapi/log/');
-        write_to_log('【美洽消息推送body】'.http_get_request_body(),'mkapi/log/');
-        write_to_log('【美洽消息推送input】'.file_get_contents("php://input"),'mkapi/log/');
-        $meiqia_sign = $_SERVER['HTTP_AUTHORIZATION'];
+        //美洽验签
+        $signer = new DTSigner($secret_key);
+        if($signer->sign($data) !== $_SERVER['HTTP_AUTHORIZATION']){
+        	write_to_log("【美洽验签成功】");
+        	exit();
+        }else{
+        	write_to_log("【美洽验签失败】sign1=".$signer->sign($data)." sign2=".$_SERVER['HTTP_AUTHORIZATION']);
+        }
         $data = json_decode($data);
         $series = $data['customizedId'];
 	}
