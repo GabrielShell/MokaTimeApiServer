@@ -26,6 +26,7 @@ class Push extends Controller{
 	        // 判断token是否存在
 	        $result = Db::query("select * from mk_token_messages where series = '$series' and re_start_time > unix_timestamp()-2592000");
 	        if(!$result){
+	        	write_to_log("【用户退出登录了】","mkapi/log/");
 	        	exit();
 	        }else{
 	        	$umeng = new Umeng();
