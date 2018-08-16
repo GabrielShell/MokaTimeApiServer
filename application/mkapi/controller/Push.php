@@ -1,11 +1,11 @@
 <?php
 namespace app\mkapi\controller;
 use think\Controller;
-use think\Request;
 use think\Db;
 use think\Session;
 use think\Log;
 use app\mkapi\common\Meiqia\DTSigner;
+use app\mkapi\common\UMeng\Umeng;
 class Push extends Controller{
 	public function pushMeiqia(){
 		$secret_key = '$2a$12$M3Je3l0qTy4Gy12E6PqviuOI25cfRRpEHFI.ARteS/v8TVhBeX3na';
