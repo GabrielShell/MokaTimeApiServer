@@ -21,13 +21,15 @@ class Shopping extends Common{
 		$data['order_type'] = isset($_POST['order_type']) ? $_POST['order_type'] : null;
 		$data['goods_money'] = isset($_POST['goods_money']) ? $_POST['goods_money'] : null;
 		$data['order_money'] = isset($_POST['order_money']) ? $_POST['order_money'] :null;
-
+		$data['promotion_price'] = isset($_POST['promotion_price']) ? $_POST['promotion_price'] : null;
 		$data['message'] = isset($_POST['message']) ? $_POST['message'] : null;
+
 		$data['order_no'] = date("ymdHis").getNumNo(6);
 		$data['create_time'] = time(); 
 		$data['order_status'] = 1;
+		$data['express_money'] = 0;
 		//判断参数是否正确
-		if($data['payment_id'] == null || $data['pay_money'] == null || $data['goods_name'] == null || $data['goods_num'] == null || $data['order_type'] == null || $data['goods_money'] == null || $data['order_money'] == null){
+		if($data['payment_id'] == null || $data['pay_money'] == null || $data['goods_name'] == null || $data['goods_num'] == null || $data['order_type'] == null || $data['goods_money'] == null || $data['order_money'] == null || $data['promotion_price'] == null){
 			my_json_encode(8,'参数错误');
 			exit();
 		}
@@ -94,6 +96,10 @@ class Shopping extends Common{
 	//我的订单
 	public function userOrder(){
 		$series = $_POST['series'];
-		// $orderList = Db::name("order")->where()
+		$orderList = Db::name("order")->field('goods_name,order_status,goods_money,order_money,express_money,goods_num,promotion_price')->where([
+				'series'       => ['=',$series],
+				'order_status' => ['<',7]
+			])->select();
+		my_json_encode(10000,'success',$orderList);
 	}
 }
