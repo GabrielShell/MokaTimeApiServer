@@ -284,15 +284,11 @@ class Test extends Common{
 
     public function sendMessge(){
        // AtqxL9I_jgZJs5951idxtWKDhSTulJmFyrlvO8oAsLwE
-        $device_tokens = $_POST['device_tokens'];
-        $umeng = new Umeng();
-        $param = array(
-            'device_tokens' => $device_tokens
-            ,'ticker' => '兵长好帅'
-            ,'title' => '兵长好矮'
-            ,'text' => '兵长棒棒哒'
-        );
-        $umeng->sendAndroidUnicast($param);
+       $UMengdata['series'] = "mk17359491816887495";
+       $UMengdata['title'] = "测试";
+       $UMengdata['content'] = "老司机的爱情故事好看";
+
+       systemPush($UMengdata);
     }
 
 }
