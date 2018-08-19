@@ -8,6 +8,7 @@ use think\Request;
 use think\Db;
 use crypt\AesCbc;
 use think\Log;
+use app\mkapi\common\UMeng;
 class Callback extends Controller{
     //拉卡拉交易D0提款参数
     private $_LklCompOrgCode = 'QFTMPOS';
@@ -38,9 +39,9 @@ class Callback extends Controller{
             //验签
             $checkSign = $AES->checkSign($decrypted, $coreData['sign'], $this->_LklDecryptKeyPath);
             //验证通过
+            $decrypted = json_decode($decrypted, true);
             if($checkSign){
                 write_to_log('【拉卡拉注册/回调信息解密：】'.json_encode($decrypted,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/callback/openMerchant/');
-                $decrypted = json_decode($decrypted, true);
                 if(!empty($coreData['ver'])){
                     //更新用户表信息
                     $userData['is_merchant'] = 1;
@@ -74,7 +75,7 @@ class Callback extends Controller{
                     write_to_log('【拉卡拉注册/绑定通知输出给拉卡拉的内容】' . $responseData, '/mkapi/log/lakala/callback/openMerchant/');
                     //响应拉卡拉请求
                     echo $responseData;
-                    sleep(5);
+                    sleep(8);
 
                     //配置商户表字段信息
                     $merchantData['merchant_no'] = $decrypted['merId'];//商户号
@@ -102,12 +103,19 @@ class Callback extends Controller{
                         $this->openD0($merchantData['merchant_no']);
                     }
 
+                }else{
+                    $UMengdata['content'] = '商户开通失败，失败原因不详';
                 }
 
             }else{
                 write_to_log('【拉卡拉注册/绑定通知-验签失败】' . json_encode($decrypted), '/mkapi/log/lakala/callback/openMerchant/');
+                $UMengdata['content'] = '商户开通失败，失败原因：验签失败';
             }
-      
+
+            $UMengdata['series'] = $decrypted['partnerUserId'];
+            $UMengdata['title'] = '开通商户通知';
+            $push = new Push();
+            $push->pushSystem($UMengdata);
         }    
     }
 
@@ -302,12 +310,31 @@ class Callback extends Controller{
                 write_to_log('【拉卡拉交易支付结果通知/响应拉卡拉参数】' . $json, '/mkapi/log/lakala/callback/openMerchant/');
     
                 write_to_log('【拉卡拉交易支付结果通知/响应拉卡拉参数/生成加密串】' . $map2Json, '/mkapi/log/lakala/callback/openMerchant/');
-    
                 echo $map2Json;
+                if($decrypted['isSuccess'] == 'N'){
+
+                    write_to_log('【拉卡拉交易支付结果通知/交易失败】' . $decrypted['retMsg'], '/mkapi/log/lakala/callback/openMerchant/');
+                    //推送消息
+                    $UMengdata['series'] = $orderInfo['series'];
+                    $UMengdata['title'] = '支付结果通知';
+                    $UMengdata['content'] = '交易失败，失败原因：'.$decrypted['retMsg'];
+                   
+                    $push = new Push();
+                    $push->pushSystem($UMengdata);
+                    exit();
+                }else{
+                    //推送消息
+                    $UMengdata['series'] = $orderInfo['series'];
+                    $UMengdata['title'] = '支付结果通知';
+                    $UMengdata['content'] = '尊敬的用户，您本次使用摩卡时代进行的刷卡交易已经成功，交易金额为'.$orderInfo['order_money'].'元，系统已为您本次交易提交D0提款申请，请耐心等待提款结果通知';
+                    $push = new Push();
+                    $push->pushSystem($UMengdata);
+                }
             }else{
-                write_to_log('【拉卡拉交易支付结果通知/订单信息不存在】' . $map2Json, '/mkapi/log/lakala/callback/openMerchant/');
+                write_to_log('【拉卡拉交易支付结果通知/订单信息不存在】', '/mkapi/log/lakala/callback/openMerchant/');
                 Log::init(['type'=>'file','path'=>'/mkapi/log/lakala/sql/openMerchant/']);
                 Log::sql("【订单信息不存在】");
+                exit();
             }
 
             //判断交易订单状态
@@ -375,12 +402,30 @@ class Callback extends Controller{
                             $orderSave['withdraw_time'] = time();
                             $orderSave['arrive_type'] = 'D0';
 
+                            //推送消息
+                            $UMengdata['series'] = $orderInfo['series'];
+                             //获取用户设备号
+                            $userInfo = Db::name('users')->field('device_token')->where('sereis',$orderInfo['series'])->find();
+                            $UMengdata['title'] = '提款结果通知';
+                            $UMengdata['content'] = '尊敬的摩卡用户，您本次的交易已成功提款，提款金额为'.$orderInfo['order_money'].'，到账金额为'.$orderSave['arrive_money'].'，扣除手续费'.($orderInfo['order_money']-$orderSave['arrive_money']);
+                            $push = new Push();
+                            $push->pushSystem($UMengdata);
+
                         }else{
                             // 提款失败
                             $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1 - $orderInfo['pay_rate'] / 100), 2);
                             $orderSave['arrive_type'] = 'T+1';
+
+                            //推送消息
+                            $UMengdata['series'] = $orderInfo['series'];
+                            $UMengdata['title'] = '支付结果通知';
+                            $UMengdata['content'] = '交易成功，系统已为您本次交易提交D0提款申请，请耐心等待提款结果通知';
+                            $push = new Push();
+                            $push->pushSystem($UMengdata);
+                           
                         }
 
+                        //更新订单状态
                         $orderResult = Db::name("lakala_order")->where("id", $orderInfo['id'])->update($orderSave);
                     }
                 }else{
@@ -390,7 +435,7 @@ class Callback extends Controller{
                 }
             }
         }else{
-            write_to_log('【拉卡拉交易支付结果通知-验签失败】' . $decrypted, '/mkapi/log/lakala/callback/openMerchant/');
+            write_to_log('【拉卡拉交易支付结果通知-验签失败】', '/mkapi/log/lakala/callback/openMerchant/');
             exit();
         }
     }
