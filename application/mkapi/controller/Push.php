@@ -39,7 +39,7 @@ class Push extends Controller{
 	        }
         }
 	}
-	
+
 	/**
     *系统消息推送
     *@param array $param 推送消息数组
@@ -49,7 +49,7 @@ class Push extends Controller{
 		//推送消息
         $UMengdata['create_time'] = time();
         //获取用户设备号
-        $userInfo =Db::name('users')->field('device_token')->where('sereis',$UMengdata['series'])->find();
+        $userInfo =Db::name('users')->field('device_token')->where('series',$UMengdata['series'])->find();
         $UMengdata['device_token'] = $userInfo['device_token'];
 
         //储存系统推送消息
