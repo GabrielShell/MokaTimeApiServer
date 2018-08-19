@@ -405,7 +405,7 @@ class Callback extends Controller{
                             //推送消息
                             $UMengdata['series'] = $orderInfo['series'];
                              //获取用户设备号
-                            $userInfo = Db::name('users')->field('device_token')->where('sereis',$orderInfo['series'])->find();
+                            $userInfo = Db::name('users')->field('device_token')->where('series',$orderInfo['series'])->find();
                             $UMengdata['title'] = '提款结果通知';
                             $UMengdata['content'] = '尊敬的摩卡用户，您本次的交易已成功提款，提款金额为'.$orderInfo['order_money'].'，到账金额为'.$orderSave['arrive_money'].'，扣除手续费'.($orderInfo['order_money']-$orderSave['arrive_money']);
                             $push = new Push();
