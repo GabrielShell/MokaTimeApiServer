@@ -153,12 +153,7 @@ class Lakalaapi extends Common{
 
     }
 
-<<<<<<< HEAD
-     public function PaymentTrade1(){
-=======
-
     public function PaymentTrade1(){
->>>>>>> 0c826266eb9a92ba498008afce30b84a86db4a0c
         $request = Request::instance();
         
         //收集表单信息
@@ -274,15 +269,11 @@ class Lakalaapi extends Common{
         $AES = new AesCbc($this->_LklAesKey);
         $map['channelCode'] = $channel_code;
         $map['ver'] = '1.4';
-<<<<<<< HEAD
+
         $map['params'] = $jsonData;
         $map['sign'] = $AES->sign($jsonData, $this->_LklEncryptKeyPath);
         $param = json_encode($map, JSON_UNESCAPED_UNICODE);
-=======
-        $map['params'] = $AES->encryptString($jsonData);
-        $map['sign'] = $AES->sign($jsonData, $this->_LklEncryptKeyPath);
-        $param = base64_encode(json_encode($map, JSON_UNESCAPED_UNICODE));
->>>>>>> 0c826266eb9a92ba498008afce30b84a86db4a0c
+
 
         write_to_log('【请求拉卡拉params参数：】'.json_encode($jsonData,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/openMerchant/');
         write_to_log('【请求拉卡拉待加密参数：】'.json_encode($map,JSON_UNESCAPED_UNICODE),'mkapi/log/lakala/param/openMerchant/');
