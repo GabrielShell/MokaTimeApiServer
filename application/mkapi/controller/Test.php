@@ -288,6 +288,7 @@ class Test extends Common{
        $UMengdata['title'] = "测试";
        $UMengdata['content'] = "老司机的爱情故事好看";
 
-       $pushSystem = new Push($UMengdata);
+       $push = new Push();
+       $push->pushSystem($UMengdata);
     }
 }
