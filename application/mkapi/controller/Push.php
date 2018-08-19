@@ -7,13 +7,14 @@ use think\Log;
 use app\mkapi\common\Meiqia\DTSigner;
 use app\mkapi\common\UMeng\Umeng;
 class Push extends Controller{
+	
 	public function pushMeiqia(){
 		$secret_key = '$2a$12$M3Je3l0qTy4Gy12E6PqviuOI25cfRRpEHFI.ARteS/v8TVhBeX3na';
 		// $data = $_REQUEST;
-  //       if(empty($data)){
-  //           $data = file_get_contents("php://input");
-  //           write_to_log("【返回数据流】".$data,"mkapi/log/");
-  //       }
+		// if(empty($data)){
+		//      $data = file_get_contents("php://input");
+		  //      write_to_log("【返回数据流】".$data,"mkapi/log/");
+		  // }
       	$data = file_get_contents("php://input");
         //美洽验签
         $signer = new DTSigner($secret_key);
@@ -37,5 +38,29 @@ class Push extends Controller{
 		        $umeng->sendAndroidUnicast($param);
 	        }
         }
+	}
+	
+	/**
+    *系统消息推送
+    *@param array $param 推送消息数组
+    *
+    */
+	public function pushSystem($UMengdata){
+		//推送消息
+        $UMengdata['create_time'] = time();
+        //获取用户设备号
+        $userInfo =Db::name('users')->field('device_token')->where('sereis',$UMengdata['series'])->find();
+        $UMengdata['device_token'] = $userInfo['device_token'];
+
+        //储存系统推送消息
+        Db::name('system_message')->insert($UMengdata);
+        $umeng = new Umeng();
+        $Umengparam = array(
+            'device_tokens' => $UMengdata['device_token']
+            ,'ticker' => '摩卡时代-系统消息'
+            ,'title' => $UMengdata['title']
+            ,'text' => $UMengdata['content']
+        );
+        $umeng->sendAndroidUnicast($Umengparam);	
 	}
 }

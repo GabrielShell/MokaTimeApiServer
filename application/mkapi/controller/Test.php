@@ -283,12 +283,11 @@ class Test extends Common{
     }
 
     public function sendMessge(){
-       // AtqxL9I_jgZJs5951idxtWKDhSTulJmFyrlvO8oAsLwE
+       //AtqxL9I_jgZJs5951idxtWKDhSTulJmFyrlvO8oAsLwE
        $UMengdata['series'] = "mk17359491816887495";
        $UMengdata['title'] = "测试";
        $UMengdata['content'] = "老司机的爱情故事好看";
 
-       systemPush($UMengdata);
+       $pushSystem = new Push($UMengdata);
     }
-
 }
