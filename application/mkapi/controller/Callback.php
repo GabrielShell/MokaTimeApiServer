@@ -104,18 +104,21 @@ class Callback extends Controller{
                     }
 
                 }else{
+                    $UMengdata['series'] = $decrypted['partnerUserId'];
+                    $UMengdata['title'] = '开通商户通知';
                     $UMengdata['content'] = '商户开通失败，失败原因不详';
+                    $push = new Push();
+                    $push->pushSystem($UMengdata);
                 }
 
             }else{
                 write_to_log('【拉卡拉注册/绑定通知-验签失败】' . json_encode($decrypted), '/mkapi/log/lakala/callback/openMerchant/');
+                $UMengdata['series'] = $decrypted['partnerUserId'];
+                $UMengdata['title'] = '开通商户通知';
                 $UMengdata['content'] = '商户开通失败，失败原因：验签失败';
+                $push = new Push();
+                $push->pushSystem($UMengdata);
             }
-
-            $UMengdata['series'] = $decrypted['partnerUserId'];
-            $UMengdata['title'] = '开通商户通知';
-            $push = new Push();
-            $push->pushSystem($UMengdata);
         }    
     }
 
@@ -318,6 +321,7 @@ class Callback extends Controller{
                     $UMengdata['series'] = $orderInfo['series'];
                     $UMengdata['title'] = '支付结果通知';
                     $UMengdata['content'] = '交易失败，失败原因：'.$decrypted['retMsg'];
+                    $UMengdata['unique'] = $decrypted['partnerBillNo'];
                    
                     $push = new Push();
                     $push->pushSystem($UMengdata);
@@ -327,6 +331,7 @@ class Callback extends Controller{
                     $UMengdata['series'] = $orderInfo['series'];
                     $UMengdata['title'] = '支付结果通知';
                     $UMengdata['content'] = '尊敬的用户，您本次使用摩卡时代进行的刷卡交易已经成功，交易金额为'.$orderInfo['order_money'].'元，系统已为您本次交易提交D0提款申请，请耐心等待提款结果通知';
+                    $UMengdata['unique'] = $decrypted['partnerBillNo'];
                     $push = new Push();
                     $push->pushSystem($UMengdata);
                 }

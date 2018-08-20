@@ -53,15 +53,20 @@ class Push extends Controller{
         $UMengdata['device_token'] = $userInfo['device_token'];
 
         //储存系统推送消息
-        Db::name('system_message')->insert($UMengdata);
-        $umeng = new Umeng();
-        $Umengparam = array(
-            'device_tokens' => $UMengdata['device_token']
-            ,'ticker' => '摩卡时代-系统消息'
-            ,'title' => $UMengdata['title']
-            ,'text' => $UMengdata['content']
-        );
-        $umeng->sendAndroidUnicast($Umengparam);	
-	}
+        $result = Db::name('system_message')->field("unique")->where('unique',$UMengdata['unique'])->find();
+       	if(!$result){
+       		Db::name('system_message')->insert($UMengdata);
 
+       		$umeng = new Umeng();
+	        $Umengparam = array(
+	            'device_tokens' => $UMengdata['device_token']
+	            ,'ticker' => '摩卡时代-系统消息'
+	            ,'title' => $UMengdata['title']
+	            ,'text' => $UMengdata['content']
+	        );
+	        $umeng->sendAndroidUnicast($Umengparam);	
+       	}else{
+       		return;
+       	}
+	}
 }
