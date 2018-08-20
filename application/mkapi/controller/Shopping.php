@@ -96,10 +96,18 @@ class Shopping extends Common{
 	//我的订单
 	public function userOrder(){
 		$series = $_POST['series'];
-		$orderList = Db::name("order")->field('goods_name,order_status,goods_money,order_money,express_money,goods_num,promotion_price')->where([
+		$order_status = isset($_POST['order_status']) ? $_POST['order_status'] : null;
+		if($order_status == null){
+			$orderList = Db::name("order")->field('goods_name,order_status,goods_money,order_money,express_money,goods_num,promotion_price')->where([
 				'series'       => ['=',$series],
 				'order_status' => ['<',7]
 			])->select();
+		}else{
+			$orderList = Db::name("order")->field('goods_name,order_status,goods_money,order_money,express_money,goods_num,promotion_price')->where([
+				'series'       => ['=',$series],
+				'order_status' => ['=',$order_status]
+			])->select();
+		}
 		my_json_encode(10000,'success',$orderList);
 	}
 }
