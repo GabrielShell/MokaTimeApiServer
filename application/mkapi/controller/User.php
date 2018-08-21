@@ -453,7 +453,7 @@ class User extends Common{
 
 	/**
 	*获取用户信息
-	*@return array 放回信息列表
+	*@return array 返回信息列表
 	*/
 	public function getInfo(){
 		$request = Request::instance();
@@ -471,11 +471,11 @@ class User extends Common{
 
 	/**
 	*获取用户信息
-	*@return array 放回信息列表
+	*@return array 返回信息列表
 	*/
 	public function index(){
 		$series = $_POST['series'];
-		$userInfo = Db::name('users')->field('real_name,phone,is_certificate,is_d0,is_merchant,user_point,bank_no,card_no,bank_name')->where('series',$series)->find();
+		$userInfo = Db::name('users')->field('real_name,phone,is_certificate,is_d0,is_merchant,user_point,bank_no,card_no,bank_name,nick_name,sex,birthday,avatar_img')->where('series',$series)->find();
 		$beginToday = mktime(0,0,0,date('m'),date('d'),date('y'));
 		
 		if($userInfo['is_d0'] == 1){
@@ -509,4 +509,42 @@ class User extends Common{
 		return my_json_encode(10000,'success',$userInfo);
 	}
 
+	/**
+	*储存用户资料
+	*/
+	public function saveInformation(){
+		$data['nick_name'] = $_POST['nick_name'];
+		$data['sex']       = $_POST['sex'];
+		$data['birthday']  = $_POST['birthday'];
+		$series = $_POST['series'];
+		//储存用户头像
+		$request = Request::instance();
+		$file = $request->file('avatar_img') != null ? $request->file('avatar_img') : null;
+		if($file != null){
+			$upload = new Upload();
+	        // 验证文件是否合法
+	        $result = $upload->check($file);
+	        if($result == 'success'){
+	        	//文件保存位置
+	            $path = APP_PATH.'/mkapi/public/upload/user/avatar/';
+	            $result = $upload->uploadOne($file,$path,$series);
+	            if($result['msg'] == 'success'){
+	            	//删除服务器已经储存的头像
+	            	$userInfo = Db::name('users')->field('avatar_img')->where('series',$series)->find();
+	            	$avatarPath = APP_PATH.'/mkapi/public/upload/'.$userInfo['avatar_img'];
+	            	@unlink($avatarPath);
+	            	@rmdir(strchr($avatarPath,strrchr($avatarPath, '/'),true));
+	            	$data['avatar_img'] = 'user/avatar/'.$result['data'];
+	            }else{
+	            	my_json_encode(1002,'文件上传错误',['errorMsg'=>$result]);
+	            }
+	        }else{
+	        	my_json_encode(10002,$result);
+	        }
+		}
+		//储存用户资料
+		$result = Db::name('users')->where('series',$series)->update($data);
+		my_json_encode(10000,'success',['affectRow' => $result]);
+
+	}
 }
