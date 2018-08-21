@@ -54,13 +54,13 @@ class Push extends Controller{
 
         //储存系统推送消息
         if(isset($UMengdata['unique'])){
-        	$result = Db::name('system_message')->field("unique")->where('unique',$UMengdata['unique'])->find();
+        	$result = Db::name('system_information')->field("unique")->where('unique',$UMengdata['unique'])->find();
 	       	if($result){
 	       		return;
 	       	}
         }
         
-       	Db::name('system_message')->insert($UMengdata);
+       	Db::name('system_information')->insert($UMengdata);
 
    		$umeng = new Umeng();
         $Umengparam = array(
