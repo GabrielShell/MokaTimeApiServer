@@ -292,7 +292,7 @@ class Test extends Common{
     }
 
     public function getImg(){
-        header('Content-type:image/jpg');
+        header('Content-type:image/png');
         $imgcontent = file_get_contents("/www/wwwroot/mk.xmjishiduo.com/application/mkapi/public/upload/goods/20180822154017.png");
         echo $imgcontent;
     }
