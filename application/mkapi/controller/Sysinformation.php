@@ -49,10 +49,11 @@ class Sysinformation extends Common{
 		my_json_encode(10000,'success',['affectRow'=>$result]);
 	}
 
-	//订单消息
-	public function order(){
-		$series = $_POST['series'];
-		$result = Db::name('order');
-	}
+	// //订单消息
+	// public function order(){
+	// 	$series = $_POST['series'];
+	// 	$orderList = Db::name('order')->field('a.content,a.update_time,c.goods_name,c.goods_img')->alias('a')->join('order b','a.order_id = b.id')->join('goods c','b.goods_id = c.id')->where('series',$series)->order('update_time desc')->select();
+	// 	my_json_encode(10000,'success',$orderList);
+	// }
 }
 	
