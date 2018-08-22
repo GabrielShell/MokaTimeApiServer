@@ -52,7 +52,7 @@ class Sysinformation extends Common{
 	//订单消息
 	public function order(){
 		$series = $_POST['series'];
-		$result = Db::name('order')
+		$result = Db::name('order');
 	}
 }
 	
