@@ -513,9 +513,10 @@ class User extends Common{
 	*储存用户资料
 	*/
 	public function saveInformation(){
-		$data['nick_name'] = $_POST['nick_name'];
-		$data['sex']       = $_POST['sex'];
-		$data['birthday']  = $_POST['birthday'];
+
+		isset($_POST['nick_name']) ? $data['nick_name'] = $_POST['nick_name'] : false;
+		isset($_POST['sex'])       ? $data['sex']       = $_POST['sex'] : false;
+		isset($_POST['birthday'])  ? $data['birthday']  = $_POST['birthday'] : false;
 		$series = $_POST['series'];
 		//储存用户头像
 		$request = Request::instance();
@@ -542,9 +543,12 @@ class User extends Common{
 	        	my_json_encode(10002,$result);
 	        }
 		}
+		if(!isset($data)){
+			my_json_encode(8,'参数错误');
+
+		}
 		//储存用户资料
 		$result = Db::name('users')->where('series',$series)->update($data);
 		my_json_encode(10000,'success',['affectRow' => $result]);
-
 	}
 }
