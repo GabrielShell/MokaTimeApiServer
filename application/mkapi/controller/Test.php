@@ -290,4 +290,10 @@ class Test extends Common{
        $push = new Push();
        $push->pushSystem($UMengdata);
     }
+
+    public function getImg(){
+        header('Content-type:image/jpg');
+        $imgcontent = file_get_contents("http://mk.xmjishiduo.com/application/mkapi/public/upload/goods/20180822154017.png");
+        echo $imgcontent;
+    }
 }
