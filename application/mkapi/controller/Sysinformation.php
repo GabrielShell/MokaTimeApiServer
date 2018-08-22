@@ -10,7 +10,7 @@ class Sysinformation extends Common{
 	*/
 	public function system(){
 		$series = $_POST['series'];
-		$systemMessageList = Db::name('system_information')->field('id,title,content,is_read,is_new,from_unixtime(create_time) as create_time')->where('series',$series)->select();
+		$systemMessageList = Db::name('system_information')->field('id,title,content,is_read,is_new,create_time')->where('series',$series)->order('id desc')->select();
 
 		//更新消息状态
 		Db::name('system_information')->where([
