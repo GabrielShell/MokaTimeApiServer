@@ -12,17 +12,10 @@ class Goods extends Common{
 	//获取商品列表
 	public function goodsList(){
 		$goodsList = Db::name('goods')->field('id as goods_id,goods_name,goods_img,goods_money,is_limit,limit_money')->select();
-		$filesize = filesize($goodsList[0]['goods_img']);
-		$handle = fopen($goodsList[0]['goods_img'], 'r');
-		$file = fread($handle, $filesize);
-		echo $file;
-		fclose($handle);
-
-		exit();
 		foreach ($goodsList as $key => $value) {
 			$handle = fopen($value['goods_img'],'r');
 			$imgData = fread($handle,filesize($value['goods_img']));
-			$goodsList[$key]['goods_img'] = base64_encode($imgData);
+			$goodsList[$key]['goods_img'] = $imgData;
 			fclose($handle);
 		}
 		my_json_encode(10000,'success',$goodsList);
