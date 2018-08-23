@@ -31,8 +31,13 @@ class Goods extends Common{
 	public function goodsAttribute(){
 		$goodsId = $_POST['goods_id'];
 		$goodsAttribute = Db::name('goods_attribute')->field('id as attribute_id,attribute_name,attribute_value,attribute_img')->where('goods_id',$goodsId)->select();
-		echo "<pre>";
-		var_dump($goodsAttribute);
-		//my_json_encode(10000,'success',$goodsAttribute);
+		foreach ($goodsAttribute as $key => $value){
+			$handle = fopen($value['attribute_img'],'r');
+			$imgData = fread($handle,filesize($value['attribute_img']));
+			$goodsAttribute[$key]['attribute_img'] = base64_encode($imgData);
+			fclose($handle);
+		}
+		
+		my_json_encode(10000,'success',$goodsAttribute);
 	}
 }
