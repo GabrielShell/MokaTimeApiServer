@@ -14,35 +14,45 @@ class Shopping extends Common{
 		$data['series'] = $_POST['series'];
 		$data['shipping_id'] = isset($_POST['shipping_id']) ? $_POST['shipping_id'] : null;
 		$data['payment_id'] = isset($_POST['payment_id']) ? $_POST['payment_id'] : null;
-
 		$data['pay_money'] = isset($_POST['pay_money']) ? $_POST['pay_money'] : null;
-		$data['goods_name'] = isset($_POST['goods_name']) ? $_POST['goods_name'] : null;
-		$data['goods_num'] = isset($_POST['goods_num']) ? $_POST['goods_num'] : null;
 		$data['order_type'] = isset($_POST['order_type']) ? $_POST['order_type'] : null;
-		$data['goods_money'] = isset($_POST['goods_money']) ? $_POST['goods_money'] : null;
 		$data['order_money'] = isset($_POST['order_money']) ? $_POST['order_money'] :null;
-		$data['promotion_price'] = isset($_POST['promotion_price']) ? $_POST['promotion_price'] : null;
 		$data['message'] = isset($_POST['message']) ? $_POST['message'] : null;
-
+		$data['goods_id'] = isset($_POST['goods_id']) ? $_POST['goods_id'] : null;
+		$data['goods_num'] = isset($_POST['goods_num']) ? $_POST['goods_num'] : null;
 		$data['order_no'] = date("ymdHis").getNumNo(6);
 		$data['create_time'] = time(); 
 		$data['order_status'] = 1;
 		$data['express_money'] = 0;
 		//判断参数是否正确
-		if($data['payment_id'] == null || $data['pay_money'] == null || $data['goods_name'] == null || $data['goods_num'] == null || $data['order_type'] == null || $data['goods_money'] == null || $data['order_money'] == null || $data['promotion_price'] == null){
+		if($data['payment_id'] == null || $data['pay_money'] == null || $data['goods_id'] == null || $data['goods_num'] == null || $data['order_type'] == null || $data['order_money'] == null){
 			my_json_encode(8,'参数错误');
 			exit();
 		}
 
-		//如果订单类型为申请pos机
-		if($data['order_type'] ==  1){
-			$userInfo = Db::name('users')->field('is_pos')->where('series',$data['series'])->find();	
-			if($userInfo['is_pos'] == 1){
-				my_json_encode(10002,'您已申请过收款宝，不能重复申请');
-				exit();
-			}
-			$data['order_status'] = 2;
+		// 如果订单类型为申请pos机
+		// if($data['order_type'] ==  1){
+		// 	$userInfo = Db::name('users')->field('is_pos')->where('series',$data['series'])->find();	
+		// 	if($userInfo['is_pos'] == 1){
+		// 		my_json_encode(10002,'您已申请过收款宝，不能重复申请');
+		// 		exit();
+		// 	}
+		// 	$data['order_status'] = 2;
+		// }
 
+		//判断用户是否已经领过限领商品
+		if($data['order_type'] ==  1){
+			$orderInfo = Db::name('order')->field('id')->where([
+				'series'        => ['=', $data['series']],
+				'goods_id'      => ['=', $data['goods_id']],
+				'order_status'  => ['<', 6]
+			])->find();
+
+			if(!empty($orderInfo)){
+				my_json_encode(10002,'您已申请过收款宝，不能重复申请');
+		 		exit();
+			}
+			$data['order_status'] = 2;		
 		}
 
 		//未传地址id ,新增收货地址
