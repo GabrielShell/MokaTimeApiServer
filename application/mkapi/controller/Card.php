@@ -23,27 +23,48 @@ class Card extends Common
         foreach ($cards as $card) {
             //计算账单日还款日
             $due_date_pure = substr($card->due_date, 1, strlen($card->due_date) - 1);
-            if(date('d') >= $due_date_pure){
-                $bill_date = date('Y-m-' . $card->bill_date,strtotime('+1 month'));
-
-                if (substr($card->due_date, 0, 1) == '-') {
-                    //还款日与账单日同月
+            if (substr($card->due_date, 0, 1) == '-') {
+                //还款日与账单日同月
+                if(date('d') >= $due_date_pure){
+                    $bill_date = date('Y-m-' . $card->bill_date,strtotime('+1 month'));
                     $due_date = date('Y-m-' . $due_date_pure,strtotime('+1 month'));
-                } else {
-                    //还款日与账单日不同月
-                    $due_date = date('Y-m-d', strtotime('+2 month', strtotime(date('Y-m-' . $due_date_pure))));
-                }
-            }else{
-                $bill_date = date('Y-m-' . $card->bill_date);
-
-                if (substr($card->due_date, 0, 1) == '-') {
-                    //还款日与账单日同月
+                }else{
+                    $bill_date = date('Y-m-' . $card->bill_date);
                     $due_date = date('Y-m-' . $due_date_pure);
-                } else {
-                    //还款日与账单日不同月
-                    $due_date = date('Y-m-d', strtotime('+1 month', strtotime(date('Y-m-' . $due_date_pure))));
+                }
+            } else {
+                //还款日与账单日不同月
+                $_bill_date = date('Y-m-' . $card->bill_date);
+                $_due_date = date('Y-m-' . $due_date_pure);
+                if(time() >= strtotime($_due_date)){
+                    $bill_date = $_bill_date;
+                    $due_date = date('Y-m-d',strtotime('+1 month',strtotime($_due_date)));
+                }else{
+                    $bill_date = date('Y-m-d',strtotime('-1 month',strtotime($_bill_date)));
+                    $due_date = $_due_date;
                 }
             }
+            // if(date('d') >= $due_date_pure){
+            //     $bill_date = date('Y-m-' . $card->bill_date,strtotime('+1 month'));
+
+            //     if (substr($card->due_date, 0, 1) == '-') {
+            //         //还款日与账单日同月
+            //         $due_date = date('Y-m-' . $due_date_pure,strtotime('+1 month'));
+            //     } else {
+            //         //还款日与账单日不同月
+            //         $due_date = date('Y-m-d', strtotime('+2 month', strtotime(date('Y-m-' . $due_date_pure))));
+            //     }
+            // }else{
+            //     $bill_date = date('Y-m-' . $card->bill_date);
+
+            //     if (substr($card->due_date, 0, 1) == '-') {
+            //         //还款日与账单日同月
+            //         $due_date = date('Y-m-' . $due_date_pure);
+            //     } else {
+            //         //还款日与账单日不同月
+            //         $due_date = date('Y-m-d', strtotime('+1 month', strtotime(date('Y-m-' . $due_date_pure))));
+            //     }
+            // }
             $billsDbResult = Bills::all(['credit_card_id' => $card->id]);
             $billsResult = [];
             foreach ($billsDbResult as $billDbResult) {
