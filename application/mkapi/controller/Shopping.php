@@ -11,21 +11,22 @@ use think\Log;
 class Shopping extends Common{
 	//生成商品订单
 	public function createOrder(){
-		$data['series'] = $_POST['series'];
-		$data['shipping_id'] = isset($_POST['shipping_id']) ? $_POST['shipping_id'] : null;
-		$data['payment_id'] = isset($_POST['payment_id']) ? $_POST['payment_id'] : null;
-		$data['pay_money'] = isset($_POST['pay_money']) ? $_POST['pay_money'] : null;
-		$data['order_type'] = isset($_POST['order_type']) ? $_POST['order_type'] : null;
-		$data['order_money'] = isset($_POST['order_money']) ? $_POST['order_money'] :null;
-		$data['message'] = isset($_POST['message']) ? $_POST['message'] : null;
-		$data['goods_id'] = isset($_POST['goods_id']) ? $_POST['goods_id'] : null;
-		$data['goods_num'] = isset($_POST['goods_num']) ? $_POST['goods_num'] : null;
-		$data['order_no'] = date("ymdHis").getNumNo(6);
-		$data['create_time'] = time(); 
-		$data['order_status'] = 1;
+		$data['series']        = $_POST['series'];
+		$data['shipping_id']   = isset($_POST['shipping_id']) ? $_POST['shipping_id'] : null;
+		$data['payment_id']    = isset($_POST['payment_id'])  ? $_POST['payment_id'] : null;
+		$data['pay_money']     = isset($_POST['pay_money'])   ? $_POST['pay_money'] : null;
+		$data['order_type']    = isset($_POST['order_type'])  ? $_POST['order_type'] : null;
+		$data['order_money']   = isset($_POST['order_money']) ? $_POST['order_money'] :null;
+		$data['message']       = isset($_POST['message'])     ? $_POST['message'] : null;
+		$data['goods_id']      = isset($_POST['goods_id'])    ? $_POST['goods_id'] : null;
+		$data['goods_num']     = isset($_POST['goods_num'])   ? $_POST['goods_num'] : null;
+		$data['attribute_ids'] = isset($_POST['attribute_ids']) ? $_POST['attribute_ids'] : null;
+		$data['order_no']      = date("ymdHis").getNumNo(6);
+		$data['create_time']   = time(); 
+		$data['order_status']  = 1;
 		$data['express_money'] = 0;
 		//判断参数是否正确
-		if($data['payment_id'] == null || $data['pay_money'] == null || $data['goods_id'] == null || $data['goods_num'] == null || $data['order_type'] == null || $data['order_money'] == null){
+		if($data['payment_id'] == null || $data['pay_money'] == null || $data['goods_id'] == null || $data['goods_num'] == null || $data['order_type'] == null || $data['order_money'] == null || $data['attribute_ids'] == null){
 			my_json_encode(8,'参数错误');
 			exit();
 		}

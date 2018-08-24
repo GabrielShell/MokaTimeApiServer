@@ -10,14 +10,19 @@ class Sysinformation extends Common{
 	*/
 	public function system(){
 		$series = $_POST['series'];
-		$systemMessageList = Db::name('system_information')->field('id,title,content,is_read,is_new,create_time')->where('series',$series)->order('id desc')->select();
+		$systemMessageList = Db::name('system_information')->field('id,title,content,is_read,create_time')->where('series',$series)->order('id desc')->select();
 
+		my_json_encode(10000,'success',$systemMessageList);
+	}
+
+	public function setIsNew(){
+		$series = $_POST['series'];
 		//更新消息状态
 		Db::name('system_information')->where([
 			'series' => $series,
 			'is_new' => 'y'
 		])->update(['is_new'=>'n']);
-		my_json_encode(10000,'success',$systemMessageList);
+		my_json_encode(10000,'success');
 	}
 
 	//获取新消息数量
