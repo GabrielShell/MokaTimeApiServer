@@ -10,7 +10,7 @@ class Sysinformation extends Common{
 	*/
 	public function system(){
 		$series = $_POST['series'];
-		$systemMessageList = Db::name('system_information')->field('id,title,content,is_read,create_time')->where('series',$series)->order('id desc')->select();
+		$systemMessageList = Db::name('system_information')->field('id,title,content,is_read,is_new,create_time')->where('series',$series)->order('id desc')->select();
 
 		my_json_encode(10000,'success',$systemMessageList);
 	}
