@@ -109,12 +109,12 @@ class Shopping extends Common{
 		$series = $_POST['series'];
 		$order_status = isset($_POST['order_status']) ? $_POST['order_status'] : null;
 		if($order_status == null){
-			$orderList = Db::name("order")->field('goods_name,order_status,goods_money,order_money,express_money,goods_num,promotion_price')->where([
+			$orderList = Db::name("order")->field('goods_name,order_status,goods_money,order_money,express_money,goods_num,limit_money as promotion_price')->alias('a')->join('goods b','a.goods_id = b.id')->where([
 				'series'       => ['=',$series],
 				'order_status' => ['<',7]
 			])->select();
 		}else{
-			$orderList = Db::name("order")->field('goods_name,order_status,goods_money,order_money,express_money,goods_num,promotion_price')->where([
+			$orderList = Db::name("order")->field('goods_name,order_status,goods_money,order_money,express_money,goods_num,limit_money as promotion_price')->alias('a')->join('goods b','a.goods_id = b.id')->where([
 				'series'       => ['=',$series],
 				'order_status' => ['=',$order_status]
 			])->select();
