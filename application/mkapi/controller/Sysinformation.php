@@ -54,11 +54,17 @@ class Sysinformation extends Common{
 		my_json_encode(10000,'success',['affectRow'=>$result]);
 	}
 
-	// //订单消息
-	// public function order(){
-	// 	$series = $_POST['series'];
-	// 	$orderList = Db::name('order')->field('a.content,a.update_time,c.goods_name,c.goods_img')->alias('a')->join('order b','a.order_id = b.id')->join('goods c','b.goods_id = c.id')->where('series',$series)->order('update_time desc')->select();
-	// 	my_json_encode(10000,'success',$orderList);
-	// }
+	//订单消息
+	public function order(){
+		$series = $_POST['series'];
+		$orderList = Db::name('order_information')->field('a.id,a.content,a.order_id,c.goods_name,c.goods_img,a.update_time')->alias('a')->join('order b','a.order_id = b.id')->join('goods c','b.goods_id = c.id')->where('a.series',$series)->order('a.update_time desc')->select();
+		foreach ($orderList as $key => $value) {
+			$handle = fopen($value['goods_img'],'r');
+			$imgData = fread($handle,filesize($value['goods_img']));
+			$orderList[$key]['goods_img'] = base64_encode($imgData);
+			fclose($handle);
+		}
+		my_json_encode(10000,'success',$orderList);
+	}
 }
 	
