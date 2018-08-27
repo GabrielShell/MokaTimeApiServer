@@ -4,13 +4,13 @@ use think\Controller;
 use think\Db;
 use think\Session;
 use think\Log;
-class Sysinformation extends Common{
+class Mallinformation extends Common{
 	/**
 	*获取系统推送消息
 	*/
 	public function info(){
 		$series = $_POST['series'];
-		$systemMessageList = Db::name('system_information')->field('id,title,content,is_read,is_new,create_time')->where('series',$series)->order('id desc')->select();
+		$systemMessageList = Db::name('user_mall')->field('a.id,b.title,b.content,is_read,is_new,a.create_time')->alias('a')->join('mall_information','a.mall_id = b.id')->where('series',$series)->order('id desc')->select();
 
 		my_json_encode(10000,'success',$systemMessageList);
 	}

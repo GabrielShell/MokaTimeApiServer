@@ -49,13 +49,15 @@ class Goods extends Common{
 		}
 
 		$attributeList = array();
+		$index = 0;
 		foreach ($reorganization as $key => $value){
-			$attributeList[]['attribute_name'] = $key;
-			$attributeList[]['attribute_value'] = $value['attribute_value'];
-			$attributeList[]['attribute_id'] = $value['attribute_id'];
-			$attributeList[]['attribute_img'] = $value['attribute_img'];
+			$attributeList[$index]['attribute_name'] = $key;
+			$attributeList[$index]['attribute_value'] = $value['attribute_value'];
+			$attributeList[$index]['attribute_id'] = $value['attribute_id'];
+			$attributeList[$index]['attribute_img'] = $value['attribute_img'];
+			$index++;
 		}
-
+		
 		//==============================重组商品属性=============================//
 
 		//=====================商品详情（轮播图片，图文详情）======================//
