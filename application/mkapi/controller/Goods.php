@@ -42,10 +42,12 @@ class Goods extends Common{
 
 		//==============================重组商品属性=============================//
 		$reorganization = array();
+		$index = 0;
 		foreach($goodsAttribute as $key => $value){
-			$reorganization[$value['attribute_name']]['attribute_value'][] = $value['attribute_value'];
-			$reorganization[$value['attribute_name']]['attribute_id'][] = $value['attribute_id'];
-			$reorganization[$value['attribute_name']]['attribute_img'][] = $value['attribute_img'];
+			$reorganization[$value['attribute_name']]['attribute_value'][$index]['id'] = $value['attribute_id'];
+			$reorganization[$value['attribute_name']]['attribute_value'][$index]['value'] = $value['attribute_value'];
+			$reorganization[$value['attribute_name']]['attribute_value'][$index]['img'] = $value['attribute_img'];
+			$index++;
 		}
 
 		$attributeList = array();
@@ -53,8 +55,6 @@ class Goods extends Common{
 		foreach ($reorganization as $key => $value){
 			$attributeList[$index]['attribute_name'] = $key;
 			$attributeList[$index]['attribute_value'] = $value['attribute_value'];
-			$attributeList[$index]['attribute_id'] = $value['attribute_id'];
-			$attributeList[$index]['attribute_img'] = $value['attribute_img'];
 			$index++;
 		}
 		
