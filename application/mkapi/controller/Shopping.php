@@ -110,15 +110,22 @@ class Shopping extends Common{
 		$series = $_POST['series'];
 		$order_status = isset($_POST['order_status']) ? $_POST['order_status'] : null;
 		if($order_status == null){
-			$orderList = Db::name("order")->field('goods_name,order_status,goods_money,order_money,express_money,goods_num,limit_money as promotion_price')->alias('a')->join('goods b','a.goods_id = b.id')->where([
+			$orderList = Db::name("order")->field('goods_name,goods_thumb,order_status,goods_money,order_money,express_money,goods_num,limit_money as promotion_price')->alias('a')->join('goods b','a.goods_id = b.id')->where([
 				'series'       => ['=',$series],
 				'order_status' => ['<',7]
 			])->select();
 		}else{
-			$orderList = Db::name("order")->field('goods_name,order_status,goods_money,order_money,express_money,goods_num,limit_money as promotion_price')->alias('a')->join('goods b','a.goods_id = b.id')->where([
+			$orderList = Db::name("order")->field('goods_name,goods_thumb,order_status,goods_money,order_money,express_money,goods_num,limit_money as promotion_price')->alias('a')->join('goods b','a.goods_id = b.id')->where([
 				'series'       => ['=',$series],
 				'order_status' => ['=',$order_status]
 			])->select();
+		}
+
+		foreach($orderList as $key => $value){
+			$handle = fopen($value['goods_thumb'],'r');
+			$imgData = fread($handle,filesize($value['goods_thumb']));
+			$orderList[$key]['goods_thumb'] = base64_encode($imgData);
+			fclose($handle);
 		}
 		my_json_encode(10000,'success',$orderList);
 	}
