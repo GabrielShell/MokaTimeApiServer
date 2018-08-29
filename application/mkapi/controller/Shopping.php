@@ -50,7 +50,7 @@ class Shopping extends Common{
 			])->find();
 
 			if(!empty($orderInfo)){
-				my_json_encode(10002,'您已申请过收款宝，不能重复申请');
+				my_json_encode(10002,'您已申请过此商品，不能重复申请');
 		 		exit();
 			}
 			$data['order_status'] = 2;		
@@ -93,14 +93,15 @@ class Shopping extends Common{
 			Log::error('【'.$errorId.'】 订单储存错误');
 			my_json_encode(10002,'订单储存错误：errorId='.$errorId);
 		}else{
-			$result = Db::name('users')->where('series',$data['series'])->update(['is_pos'=>'1']);
-			if($result){
-				my_json_encode(10000,'success');
-			}else{
-				$errorId = uniqid('ERR');
-				Log::error('【'.$errorId.'】 订单储存错误');
-				my_json_encode(10002,'数据更新失败：errorId='.$errorId);
-			}
+			my_json_encode(10000,'success');
+			// $result = Db::name('users')->where('series',$data['series'])->update(['is_pos'=>'1']);
+			// if($result){
+			// 	my_json_encode(10000,'success');
+			// }else{
+			// 	$errorId = uniqid('ERR');
+			// 	Log::error('【'.$errorId.'】 订单储存错误');
+			// 	my_json_encode(10002,'数据更新失败：errorId='.$errorId);
+			// }
 		}
 	}
 
