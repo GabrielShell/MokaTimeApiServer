@@ -109,24 +109,39 @@ class Shopping extends Common{
 	public function userOrder(){
 		$series = $_POST['series'];
 		$order_status = isset($_POST['order_status']) ? $_POST['order_status'] : null;
+		//获取全部订单
 		if($order_status == null){
-			$orderList = Db::name("order")->field('goods_name,goods_thumb,order_status,goods_money,order_money,express_money,goods_num,limit_money as promotion_price')->alias('a')->join('goods b','a.goods_id = b.id')->where([
+			$orderList = Db::name("order")->field('goods_name,goods_thumb,attribute_ids as goods_attribute,order_status,goods_money,order_money,express_money,goods_num,limit_money as promotion_price')->alias('a')->join('goods b','a.goods_id = b.id')->where([
 				'series'       => ['=',$series],
 				'order_status' => ['<',7]
 			])->select();
 		}else{
-			$orderList = Db::name("order")->field('goods_name,goods_thumb,order_status,goods_money,order_money,express_money,goods_num,limit_money as promotion_price')->alias('a')->join('goods b','a.goods_id = b.id')->where([
+			//获取指定订单
+			$orderList = Db::name("order")->field('goods_name,goods_thumb,attribute_ids as goods_attribute,order_status,goods_money,order_money,express_money,goods_num,limit_money as promotion_price')->alias('a')->join('goods b','a.goods_id = b.id')->where([
 				'series'       => ['=',$series],
 				'order_status' => ['=',$order_status]
 			])->select();
 		}
 
-		foreach($orderList as $key => $value){
-			$handle = fopen($value['goods_thumb'],'r');
-			$imgData = fread($handle,filesize($value['goods_thumb']));
-			$orderList[$key]['goods_thumb'] = base64_encode($imgData);
+		foreach($orderList as $key1 => $value1){
+			//获取商品属性
+			$attributeList = Db::name('goods_attribute')->field('attribute_name,attribute_value')->where('id','in',$value1['goods_attribute'])->select();
+
+			//=============================属性信息重组=========================//
+			$attributeArray = array();
+			foreach ($attributeList as $key2 => $value2) {
+				$attributeArray[] = $value2['attribute_name'].':'. $value2['attribute_value'];
+			}
+
+			$orderList[$key1]['goods_attribute'] = $attributeArray;
+			//=============================属性信息重组=========================//
+
+			$handle = fopen($value1['goods_thumb'],'r');
+			$imgData = fread($handle,filesize($value1['goods_thumb']));
+			$orderList[$key1]['goods_thumb'] = base64_encode($imgData);
 			fclose($handle);
 		}
+
 		my_json_encode(10000,'success',$orderList);
 	}
 }
