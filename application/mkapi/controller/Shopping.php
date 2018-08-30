@@ -130,7 +130,7 @@ class Shopping extends Common{
 			//=============================属性信息重组=========================//
 			$attributeArray = array();
 			foreach ($attributeList as $key2 => $value2) {
-				$attributeArray[] = $value2['attribute_name'].':'. $value2['attribute_value'];
+				$attributeArray[] = $value2['attribute_name'].'：'. $value2['attribute_value'];
 			}
 
 			$orderList[$key1]['goods_attribute'] = $attributeArray;
