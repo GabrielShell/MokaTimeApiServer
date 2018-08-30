@@ -360,6 +360,10 @@ class Card extends Common
 
     /**
      * 获取新还款计划接口
+     * @param int cardId 卡片ID
+     * @param string dayList 日期列表,英文逗号分隔，如"2018-07-03,2018-03-04"
+     * @param int repayAmount 还款金额，只接受整数
+     * @param int planType 规划模式 1=资金不过夜：当日还，当日刷; 2=资金过夜：当日还，次日刷
      */
     public function getNewRepayPlan(Request $request)
     {
@@ -379,6 +383,33 @@ class Card extends Common
             my_json_encode(3, '该用户没有指定ID的信用卡');
         }
 
+        $dayListStr = $request->post('dayList');
+        if (empty($dayListStr)) {
+            my_json_encode(4, 'dayList不能为空');
+        }
+        $dayList = explode(',',$dayListStr);
+        if(!is_array($dayList) || count($dayList) < 1){
+            my_json_encode(5,'dayList格式不正确');
+        }
+        
+        $repayAmount = $request->post('repayAmount');
+        if (empty($repayAmount)) {
+            my_json_encode(6, 'repayAmount不能为空');
+        }
+        if(!is_numeric($repayAmount)){
+            my_json_encode(8, 'repayAmount格式不正确');
+        }else if(strpos($repayAmount,'.')){
+            my_json_encode(9, 'repayAmount只接受整数');
+        }
+
+        $planType = $request->post('planType');
+        if (empty($planType)) {
+            my_json_encode(7, 'planType不能为空');
+        }
+        if($planType != 1 && $planType != 2){
+            my_json_encode(10, 'planType格式错误');
+        }
+
         //得到本期账单
         $bill = Bills::where('credit_card_id', $cardId)->where('bill_type', 'DONE')->order('bill_month', 'desc')->limit(1)->select();
         if (!$bill) {
@@ -389,35 +420,19 @@ class Card extends Common
         $payment_due_date = $bill[0]->payment_due_date;
 
         //TODO 此处需要换成time();
-        $nowTime = strtotime('2018-07-25 00:00:00');
+        $nowTime = time();
+        // $nowTime = strtotime('2018-07-25 00:00:00');
         if (!($nowTime >= strtotime($bill_date) && $nowTime < strtotime($payment_due_date))) {
             //如果不是本期账单
             my_json_encode(4, '未找到本期账单，请更新账单或重新导入账单');
         }
-        //根据还款日，与当前时间，算出计划天数
-        if ((int) date('H') <= 16) { //当天超过16点后不安排当天计划
-            $planStartDateTime = date('Y-m-d 00:00:00');
-        } else {
-            $planStartDateTime = date('Y-m-d 00:00:00', strtotime('+1 day'));
-        }
-        $nowDateTimeInst = new \DateTime($planStartDateTime);
-        $dueDayDateTimeInst = new \DateTime($payment_due_date . ' 00:00:00');
-        $interval = $nowDateTimeInst->diff($dueDayDateTimeInst);
-        $dayCount = (int) $interval->format('%a');
 
         //根据计划天数得到计划日期列表
-        $dayList = [];
-        $count = $dayCount;
-        $planDate = date('Y-m-d', strtotime($planStartDateTime));
-        do {
-            $dayList[] = $planDate;
-            $planDate = date('Y-m-d', strtotime('+1 day', strtotime($planDate)));
-            $count--;
-        } while ($count != 0);
+        $dayCount = count($dayList);
 
         $repayPlan = new RepayPlan;
         //得到计划
-        $plan = $repayPlan->getPlan($dayCount, $bill[0]->new_balance);
+        $plan = $repayPlan->getPlan($dayCount, $repayAmount, $planType);
 
         //删除数据库中已存在的计划
         $bill_month = $bill[0]->bill_month;

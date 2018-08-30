@@ -9,7 +9,11 @@ use app\mkapi\model\Repay_plans;
 
 //TODO 正式环境将继承类改成Common
 class RepayPlan extends Controller{
-    public function getPlan($dayCount,$repayAmount){
+    public function getPlan($dayCount,$repayAmount,$planType){
+        if($planType == 2){
+            //资金过夜：当日还，次日刷
+            $dayCount = $dayCount - 1;
+        }
         //根据计划天数和还款金额得到还款序列
         $repaySequence = $this->randomFixSumArry($repayAmount,$dayCount,$repayAmount * 0.2);
 
@@ -29,10 +33,10 @@ class RepayPlan extends Controller{
         foreach($repaySequence as $key => $repay){
             $paySequence = [];
             $randNum = mt_rand(0,100);
-            if($randNum < 30){
-                //生成1笔刷卡
-                $paySequence = [$repay];
-            }elseif($randNum >= 30 && $randNum < 80){
+            if($randNum < 70){
+            //     //生成1笔刷卡
+            //     $paySequence = [$repay];
+            // }elseif($randNum >= 30 && $randNum < 80){
                 //生成2笔刷卡
                 $paySequence = $this->randomFixSumArry($repay,2,$repay * 0.5);
             }else{
@@ -42,7 +46,12 @@ class RepayPlan extends Controller{
 
             $planSequence[$key][] = ['type' => 'repay' , 'amount' =>ceil($repay)];
             foreach($paySequence as $pay){
-                $planSequence[$key][] = [
+                if($planType == 2){
+                    $planKey = $key + 1;
+                }else{
+                    $planKey = $key;
+                }
+                $planSequence[$planKey][] = [
                     'type' => 'pay',
                     'amount' => ceil($pay)
                 ];
