@@ -4,13 +4,13 @@ use think\Controller;
 use think\Db;
 use think\Session;
 use think\Log;
-class Sysinformation extends Common{
+class Mallinformation extends Common{
 	/**
 	*获取系统推送消息
 	*/
 	public function info(){
 		$series = $_POST['series'];
-		$systemMessageList = Db::name('system_information')->field('id,title,content,is_read,is_new,create_time')->where('series',$series)->order('id desc')->select();
+		$systemMessageList = Db::name('user_mall')->field('a.id,b.title,b.content,is_read,is_new,a.create_time')->alias('a')->join('mall_information b','a.mall_id = b.id')->where('series',$series)->order('a.create_time desc')->select();
 
 		my_json_encode(10000,'success',$systemMessageList);
 	}
@@ -18,7 +18,7 @@ class Sysinformation extends Common{
 	public function setIsNew(){
 		$series = $_POST['series'];
 		//更新消息状态
-		Db::name('system_information')->where([
+		Db::name('user_mall')->where([
 			'series' => $series,
 			'is_new' => 'y'
 		])->update(['is_new'=>'n']);
@@ -28,7 +28,7 @@ class Sysinformation extends Common{
 	//获取新消息数量
 	public function newNum(){
 		$series = $_POST['series'];
-		$newNum = Db::name('system_information')->where([
+		$newNum = Db::name('user_mall')->where([
 			'series' => $series,
 			'is_new' => 'y'
 		])->count();
@@ -38,7 +38,7 @@ class Sysinformation extends Common{
 	//设置消息为新消息（测试用）
 	public function setNew(){
 		$series = $_POST['series'];
-		$result = Db::name('system_information')->where([
+		$result = Db::name('user_mall')->where([
 			'series' => $series,
 			'is_new' => 'n'
 		])->update(['is_new'=>'y']);
@@ -47,11 +47,11 @@ class Sysinformation extends Common{
 
 	public function setIsRead(){
 		$id = $_POST['id'];
-		$result = Db::name('system_information')->where([
+		$result = Db::name('user_mall')->where([
 			'id' => $id,
 			'is_read' => 'n'
 		])->update(['is_read'=>'y']);
-		my_json_encode(10000,'success',['affectRow'=>$result]);
+		my_json_encode(10000,'success');
 	}
 
 }
