@@ -304,24 +304,10 @@ class Card extends Common
             my_json_encode(3, '该用户没有指定ID的信用卡');
         }
 
-        //得到本期账单
-        $bill = Bills::where('credit_card_id', $cardId)->where('bill_type', 'DONE')->order('bill_month', 'desc')->limit(1)->select();
-        if (!$bill) {
-            my_json_encode(4, '请导入账单');
-        }
-        //验证是否本期账单
-        $bill_date = $bill[0]->bill_date;
-        $payment_due_date = $bill[0]->payment_due_date;
 
-        //TODO 此处需要换成time();
-        $nowTime = strtotime('2018-07-25 00:00:00');
-        if (!($nowTime >= strtotime($bill_date) && $nowTime < strtotime($payment_due_date))) {
-            //如果不是本期账单
-            my_json_encode(4, '未找到本期账单，请更新账单或重新导入账单');
-        }
-
-        $bill_month = $bill[0]->bill_month;
-        $repayPlanDbInstArr = Repay_plans::where('credit_card_id', $cardId)->where('bill_month', $bill_month)->select();
+        $billDueRes = $card->getThisBillDateAndDueDate();
+        $billMonth = date('Y-m',strtotime($billDueRes[0]));
+        $repayPlanDbInstArr = Repay_plans::where('credit_card_id', $cardId)->where('bill_month', $billMonth)->select();
         $planData = [];
         foreach ($repayPlanDbInstArr as $repayPlanDbInst) {
             $planData[] = [
