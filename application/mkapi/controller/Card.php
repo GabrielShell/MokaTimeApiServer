@@ -456,8 +456,24 @@ class Card extends Common
         // $billDate = $billDueRes[0];
         $dueDate = $billDueRes[1];
 
-        $nowDateTime = new DateTime();
-        $dueDateTime = new DateTime($dueDate);
-        // $interval = $nowDate();
+        if(date('H') <= 16){
+            $nowDateTime = new \DateTime(date('Y-m-d 00:00:00'));
+        }else{
+            $nowDateTime = new \DateTime(date('Y-m-d 00:00:00',strtotime('+1 day')));
+        }
+        $dueDateTime = new \DateTime($dueDate.' 00:00:00');
+        $interval = $nowDateTime->diff($dueDateTime);
+        $dayCount = $interval->format('%R%a');
+        if($dayCount < 1){
+            my_json_encode(1,'距离还款日不足1天，不能生成计划');
+        }
+
+        $dayList = [];
+        $doDate = $nowDateTime;
+        do{
+            $dayList[] = $doDate->format('Y-m-d');
+            $doDate->add(new \DateInterval('P1D'));
+        }while($doDate->format('Y-m-d') != $dueDateTime->format('Y-m-d'));
+        my_json_encode(0,'',$dayList);
     }
 }
