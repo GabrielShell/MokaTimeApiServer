@@ -147,16 +147,20 @@ class XinyanBillsApi extends Common{
                         //每条账单查询对应的消费记录
                         foreach($data['data']['bills'] as &$bill){
                                 $shoppingRecord = [];
+				/*
                                 $shoppingRecordResult = $this->emailQueryShoppingRecords($orderNo,$bill['bill_id']);
 
                                 if($shoppingRecordResult['success'] == 'true')
                                         $shoppingRecord = $shoppingRecordResult['data']['shopping_sheets'];
+				 */
                                 
                                 $bill['shopping_records'] = $shoppingRecord;
                         }
 
                         //查询支持银行列表
+
                         $supportBanks = Xinyan_banks::all();
+			
                         $banks = [];
                         foreach($supportBanks as $supportBank){
                                 $banks[$supportBank->id] = $supportBank->bank_name;
