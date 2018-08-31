@@ -132,6 +132,12 @@ Route::post('api/v1/card/getRepayPlan','mkapi/Card/getRepayPlan');
 Route::post('api/v1/card/getNewRepayPlan','mkapi/Card/getNewRepayPlan');
 
 
+/**
+ * 获取信用卡可用计划日期接口
+ * @param int card_id 信用卡ID
+ */
+Route::post('api/v1/card/availablePlanDate','mkapi/Card/availablePlanDate');
+
 // +----------------------------------------------------------------------
 // | 客户端版本管理接口
 // +----------------------------------------------------------------------
@@ -150,3 +156,4 @@ Route::post('api/v1/version/getLatestVersion','mkapi/Version/getLatestVersion');
  * @param series 用户series
  */
 Route::post('api/v1/stat/home','mkapi/StatData/homePageStatData');
+

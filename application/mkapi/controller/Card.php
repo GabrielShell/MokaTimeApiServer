@@ -22,28 +22,9 @@ class Card extends Common
         $resultData = [];
         foreach ($cards as $card) {
             //计算账单日还款日
-            $due_date_pure = substr($card->due_date, 1, strlen($card->due_date) - 1);
-            if (substr($card->due_date, 0, 1) == '-') {
-                //还款日与账单日同月
-                if(date('d') >= $due_date_pure){
-                    $bill_date = date('Y-m-' . $card->bill_date,strtotime('+1 month'));
-                    $due_date = date('Y-m-' . $due_date_pure,strtotime('+1 month'));
-                }else{
-                    $bill_date = date('Y-m-' . $card->bill_date);
-                    $due_date = date('Y-m-' . $due_date_pure);
-                }
-            } else {
-                //还款日与账单日不同月
-                $_bill_date = date('Y-m-' . $card->bill_date);
-                $_due_date = date('Y-m-' . $due_date_pure);
-                if(time() >= strtotime($_due_date)){
-                    $bill_date = $_bill_date;
-                    $due_date = date('Y-m-d',strtotime('+1 month',strtotime($_due_date)));
-                }else{
-                    $bill_date = date('Y-m-d',strtotime('-1 month',strtotime($_bill_date)));
-                    $due_date = $_due_date;
-                }
-            }
+            $billDueRes = $card->getThisBillDateAndDueDate();
+            $bill_date = $billDueRes[0];
+            $due_date = $billDueRes[1];
             // if(date('d') >= $due_date_pure){
             //     $bill_date = date('Y-m-' . $card->bill_date,strtotime('+1 month'));
 
@@ -461,5 +442,22 @@ class Card extends Common
 
         $data = ['plan' => $resultPlan];
         my_json_encode(0, '', $data);
+    }
+
+    /**
+     * 获取信用卡可用计划日期接口
+     * @param int card_id 信用卡ID
+     */
+    public function availablePlanDate(Request $request){
+        $cardId = $request->post('card_id');
+
+        $card = Credit_cards::get($cardId);
+        $billDueRes = $card->getThisBillDateAndDueDate();
+        // $billDate = $billDueRes[0];
+        $dueDate = $billDueRes[1];
+
+        $nowDateTime = new DateTime();
+        $dueDateTime = new DateTime($dueDate);
+        // $interval = $nowDate();
     }
 }
