@@ -377,22 +377,24 @@ class Card extends Common
             my_json_encode(10, 'planType格式错误');
         }
 
-        //得到本期账单
-        $bill = Bills::where('credit_card_id', $cardId)->where('bill_type', 'DONE')->order('bill_month', 'desc')->limit(1)->select();
-        if (!$bill) {
-            my_json_encode(4, '请导入账单');
-        }
-        //验证是否本期账单
-        $bill_date = $bill[0]->bill_date;
-        $payment_due_date = $bill[0]->payment_due_date;
+        // //得到本期账单
+        // $bill = Bills::where('credit_card_id', $cardId)->where('bill_type', 'DONE')->order('bill_month', 'desc')->limit(1)->select();
+        // if (!$bill) {
+        //     my_json_encode(4, '请导入账单');
+        // }
+        // //验证是否本期账单
+        // $bill_date = $bill[0]->bill_date;
+        // $payment_due_date = $bill[0]->payment_due_date;
 
-        //TODO 此处需要换成time();
-        $nowTime = time();
-        // $nowTime = strtotime('2018-07-25 00:00:00');
-        if (!($nowTime >= strtotime($bill_date) && $nowTime < strtotime($payment_due_date))) {
-            //如果不是本期账单
-            my_json_encode(4, '未找到本期账单，请更新账单或重新导入账单');
-        }
+        // //TODO 此处需要换成time();
+        // $nowTime = time();
+        // // $nowTime = strtotime('2018-07-25 00:00:00');
+        // if (!($nowTime >= strtotime($bill_date) && $nowTime < strtotime($payment_due_date))) {
+        //     //如果不是本期账单
+        //     my_json_encode(4, '未找到本期账单，请更新账单或重新导入账单');
+        // }
+        $billDueRes = $card[0]->getThisBillDateAndDueDate();
+        $billMonth = date('Y-m',strtotime($billDueRes[0]));
 
         //根据计划天数得到计划日期列表
         $dayCount = count($dayList);
@@ -402,8 +404,8 @@ class Card extends Common
         $plan = $repayPlan->getPlan($dayCount, $repayAmount, $planType);
 
         //删除数据库中已存在的计划
-        $bill_month = $bill[0]->bill_month;
-        Repay_plans::where('credit_card_id', $cardId)->where('bill_month', $bill_month)->delete();
+        // $bill_month = $bill[0]->bill_month;
+        Repay_plans::where('credit_card_id', $cardId)->where('bill_month', $billMonth)->delete();
         //将计划与卡片还款日期关联,同时储存到数据库
         $resultPlan = [];
         $sort = 0;
@@ -417,7 +419,7 @@ class Card extends Common
                 $repayPlanDbInst->user_id = $userId;
                 $repayPlanDbInst->credit_card_id = $cardId;
                 $repayPlanDbInst->sort = $sort;
-                $repayPlanDbInst->bill_month = $bill_month;
+                $repayPlanDbInst->bill_month = $billMonth;
                 $repayPlanDbInst->action = $action['type'];
                 $repayPlanDbInst->amount = $action['amount'];
                 $repayPlanDbInst->action_date = $dayList[$key];
