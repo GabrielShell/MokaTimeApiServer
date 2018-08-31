@@ -305,7 +305,7 @@ class Card extends Common
         }
 
 
-        $billDueRes = $card->getThisBillDateAndDueDate();
+        $billDueRes = $card[0]->getThisBillDateAndDueDate();
         $billMonth = date('Y-m',strtotime($billDueRes[0]));
         $repayPlanDbInstArr = Repay_plans::where('credit_card_id', $cardId)->where('bill_month', $billMonth)->select();
         $planData = [];
