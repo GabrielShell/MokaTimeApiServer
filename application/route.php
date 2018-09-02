@@ -138,6 +138,14 @@ Route::post('api/v1/card/getNewRepayPlan','mkapi/Card/getNewRepayPlan');
  */
 Route::post('api/v1/card/availablePlanDate','mkapi/Card/availablePlanDate');
 
+
+/**
+ * 还款计划列表接口
+ * @param string type 类型 "today" 今日计划; "future" 未来计划; "past" 过去计划
+ * @param string series 用户series
+ */
+Route::post('api/v1/card/repayPlanList','mkapi/Card/repayPlanList');
+
 // +----------------------------------------------------------------------
 // | 客户端版本管理接口
 // +----------------------------------------------------------------------

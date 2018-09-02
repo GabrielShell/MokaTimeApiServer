@@ -304,24 +304,32 @@ class Card extends Common
             my_json_encode(3, '该用户没有指定ID的信用卡');
         }
 
-
         $billDueRes = $card[0]->getThisBillDateAndDueDate();
-        $billMonth = date('Y-m',strtotime($billDueRes[0]));
-        $repayPlanDbInstArr = Repay_plans::where('credit_card_id', $cardId)->where('bill_month', $billMonth)->select();
+        $billMonth = date('Ym', strtotime($billDueRes[0]));
+        $repayPlanDbInstArr = Repay_plans::where('credit_card_id', $cardId)
+        ->where('bill_month', $billMonth)
+        ->order('sort asc')
+        ->select();
+
         $planData = [];
         foreach ($repayPlanDbInstArr as $repayPlanDbInst) {
-            $planData[] = [
-                'id' => $repayPlanDbInst->id,
-                'sort' => $repayPlanDbInst->sort,
-                'action' => $repayPlanDbInst->action,
-                'amount' => $repayPlanDbInst->amount,
-                'action_date' => $repayPlanDbInst->action_date,
+            $planData[$repayPlanDbInst->action_date][] = [
+                'type' => $repayPlanDbInst->action,
+                'amount' => $repayPlanDbInst->amount
             ];
 
         }
 
-        $data = ['plan' => $planData];
-        my_json_encode(0,'',$data);
+        $planResult = [];
+        foreach($planData as $actionDate => $planList){
+            $planResult[] = [
+                'date' => $actionDate,
+                'plan' => $planList
+            ];
+        }
+
+        $data = ['plan' => $planResult];
+        my_json_encode(0, '', $data);
 
     }
 
@@ -354,18 +362,18 @@ class Card extends Common
         if (empty($dayListStr)) {
             my_json_encode(4, 'dayList不能为空');
         }
-        $dayList = explode(',',$dayListStr);
-        if(!is_array($dayList) || count($dayList) < 1){
-            my_json_encode(5,'dayList格式不正确');
+        $dayList = explode(',', $dayListStr);
+        if (!is_array($dayList) || count($dayList) < 1) {
+            my_json_encode(5, 'dayList格式不正确');
         }
-        
+
         $repayAmount = $request->post('repayAmount');
         if (empty($repayAmount)) {
             my_json_encode(6, 'repayAmount不能为空');
         }
-        if(!is_numeric($repayAmount)){
+        if (!is_numeric($repayAmount)) {
             my_json_encode(8, 'repayAmount格式不正确');
-        }else if(strpos($repayAmount,'.')){
+        } else if (strpos($repayAmount, '.')) {
             my_json_encode(9, 'repayAmount只接受整数');
         }
 
@@ -373,7 +381,7 @@ class Card extends Common
         if (empty($planType)) {
             my_json_encode(7, 'planType不能为空');
         }
-        if($planType != 1 && $planType != 2){
+        if ($planType != 1 && $planType != 2) {
             my_json_encode(10, 'planType格式错误');
         }
 
@@ -394,7 +402,7 @@ class Card extends Common
         //     my_json_encode(4, '未找到本期账单，请更新账单或重新导入账单');
         // }
         $billDueRes = $card[0]->getThisBillDateAndDueDate();
-        $billMonth = date('Y-m',strtotime($billDueRes[0]));
+        $billMonth = date('Ym', strtotime($billDueRes[0]));
 
         //根据计划天数得到计划日期列表
         $dayCount = count($dayList);
@@ -436,7 +444,8 @@ class Card extends Common
      * 获取信用卡可用计划日期接口
      * @param int card_id 信用卡ID
      */
-    public function availablePlanDate(Request $request){
+    public function availablePlanDate(Request $request)
+    {
         $cardId = $request->post('card_id');
 
         $card = Credit_cards::get($cardId);
@@ -444,24 +453,87 @@ class Card extends Common
         // $billDate = $billDueRes[0];
         $dueDate = $billDueRes[1];
 
-        if(date('H') <= 16){
+        if (date('H') <= 16) {
             $nowDateTime = new \DateTime(date('Y-m-d 00:00:00'));
-        }else{
-            $nowDateTime = new \DateTime(date('Y-m-d 00:00:00',strtotime('+1 day')));
+        } else {
+            $nowDateTime = new \DateTime(date('Y-m-d 00:00:00', strtotime('+1 day')));
         }
-        $dueDateTime = new \DateTime($dueDate.' 00:00:00');
+        $dueDateTime = new \DateTime($dueDate . ' 00:00:00');
         $interval = $nowDateTime->diff($dueDateTime);
         $dayCount = $interval->format('%R%a');
-        if($dayCount < 1){
-            my_json_encode(1,'距离还款日不足1天，不能生成计划');
+        if ($dayCount < 1) {
+            my_json_encode(1, '距离还款日不足1天，不能生成计划');
         }
 
         $dayList = [];
         $doDate = $nowDateTime;
-        do{
+        do {
             $dayList[] = $doDate->format('Y-m-d');
             $doDate->add(new \DateInterval('P1D'));
-        }while($doDate->format('Y-m-d') != $dueDateTime->format('Y-m-d'));
-        my_json_encode(0,'',$dayList);
+        } while ($doDate->format('Y-m-d') != $dueDateTime->format('Y-m-d'));
+        my_json_encode(0, '', $dayList);
+    }
+
+    /**
+     * 还款计划列表接口
+     * @param string type 类型 "today" 今日计划; "future" 未来计划; "past" 过去计划
+     * @param string series 用户series
+     */
+    public function repayPlanList(Request $request)
+    {
+        $type = $request->post('type');
+        $userSeries = $request->post('series');
+        if (empty($userSeries)) {
+            my_json_encode(2, 'series不能为空');
+        }
+
+        $userId = Users::where(['series' => $userSeries])->value('id');
+        $nowTime = strtotime('2018-09-01');
+        if ($type == 'future') {
+            //未来计划
+            $plans = Repay_plans::where('user_id',$userId)
+                ->where('action_date', '>', date('Y-m-d', $nowTime))
+                ->order('credit_card_id desc,sort asc')
+                ->select();
+
+        } else if ($type == 'past') {
+            //过去计划
+            $plans = Repay_plans::where('user_id',$userId)
+                ->where('action_date', '<', date('Y-m-d', $nowTime))
+                ->order('credit_card_id desc,sort asc')
+                ->select();
+
+        } else {
+            //今日计划
+            $plans = Repay_plans::where('user_id',$userId)
+                ->where('action_date', '=', date('Y-m-d', $nowTime))
+                ->order('credit_card_id desc,sort asc')
+                ->select();
+        }
+        $planResult = [];
+        foreach($plans as $plan){
+            $planResult[$plan->bill_month][$plan->credit_card_id][] = [
+                'type'=>$plan->action,
+                'amount'=>$plan->amount,
+            ];
+        }
+
+        //改变响应格式
+        $planData = [];
+        foreach($planResult as $billMonth => $cardsPlan){
+            $cardsPlanData = [];
+            foreach($cardsPlan as $cardId => $planList){
+                $cardsPlanData[] = [
+                    'credit_card_id' => $cardId,
+                    'plan' => $planList
+                ];
+            }
+            $planData[] = [
+                'bill_month' => $billMonth,
+                'data' => $cardsPlanData
+            ];
+        }
+
+        my_json_encode(0,'',$planData);
     }
 }
