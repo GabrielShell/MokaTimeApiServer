@@ -114,7 +114,7 @@ class Card extends Common
             return ['status' => 1, 'msg' => '该用户没有指定ID的账单'];
         }
 
-        $status = CardStatus::getInst($bill->credit_card_id,$bill->bill_month);
+        $status = CardStatus::getInst($userId,$bill->credit_card_id,$bill->bill_month);
         $status->repaid = $bill->new_balance;
         $status->save();
 
@@ -565,7 +565,7 @@ class Card extends Common
                     $newBalance = $billInst[0]->new_balance;
                 }
 
-                
+               $status = CardStatus::getInst($userId,$cardId,$billMonth); 
 
                 $cardsPlanData[] = [
                     'credit_card_id' => $cardId,
@@ -574,6 +574,8 @@ class Card extends Common
                     'card_no_last4' => $cardInst->card_no_last4,
                     'credit_limit' =>  $cardInst->credit_limit,
                     'new_balance' => $newBalance,
+                    'repaid' => $status->repaid,
+                    'paid' => $status->paid,
                     'data' => $planResDateList
                 ];
             }
@@ -613,7 +615,7 @@ class Card extends Common
         }
 
 
-        $status = CardStatus::getInst($planInst->credit_card_id,$planInst->bill_month);
+        $status = CardStatus::getInst($userId,$planInst->credit_card_id,$planInst->bill_month);
         if($action == 'mark'){
             if($planInst->finish_time){
                 my_json_encode(6,'该计划已标记执行，不能重复标记');
