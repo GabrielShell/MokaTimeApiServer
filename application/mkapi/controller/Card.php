@@ -316,7 +316,8 @@ class Card extends Common
             $planData[$repayPlanDbInst->action_date][] = [
                 'id' => $repayPlanDbInst->id,
                 'type' => $repayPlanDbInst->action,
-                'amount' => $repayPlanDbInst->amount
+                'amount' => $repayPlanDbInst->amount,
+                'finish_time' => $repayPlanDbInst->finish_time
             ];
 
         }
@@ -422,11 +423,7 @@ class Card extends Common
         $resultPlan = [];
         $sort = 0;
         foreach ($plan as $key => $dailyPlan) {
-            $resultPlan[$key] = [
-                'date' => $dayList[$key],
-                'plan' => $dailyPlan,
-            ];
-            foreach ($dailyPlan as $action) {
+            foreach ($dailyPlan as &$action) {
                 $repayPlanDbInst = new Repay_plans;
                 $repayPlanDbInst->user_id = $userId;
                 $repayPlanDbInst->credit_card_id = $cardId;
@@ -437,7 +434,13 @@ class Card extends Common
                 $repayPlanDbInst->action_date = $dayList[$key];
                 $repayPlanDbInst->save();
                 $sort++;
+                $action['id'] = $repayPlanDbInst->id;
+                $action['finish_time'] = null;
             }
+            $resultPlan[$key] = [
+                'date' => $dayList[$key],
+                'plan' => $dailyPlan,
+            ];
         }
 
         $data = ['plan' => $resultPlan];
@@ -519,6 +522,7 @@ class Card extends Common
                 'id' => $plan->id,
                 'type'=>$plan->action,
                 'amount'=>$plan->amount,
+                'finish_time'=>$plan->finish_time
             ];
         }
 
@@ -563,4 +567,7 @@ class Card extends Common
      * 标记计划项已执行接口
      * @param int plan_id planID
      */
+    public function markPlanExec(Request $request){
+
+    }
 }
