@@ -49,6 +49,7 @@ class Card extends Common
             $billsDbResult = Bills::all(['credit_card_id' => $card->id]);
             $billsResult = [];
             foreach ($billsDbResult as $billDbResult) {
+                $repaid = $billDbResult->repaid >= $billDbResult->new_balance ? 1 : 0;
                 $billsResult[] = [
                     'bill_id' => $billDbResult->id,
                     'origin_type' => $billDbResult->origin_type,
@@ -60,7 +61,7 @@ class Card extends Common
                     'new_balance' => $billDbResult->new_balance,
                     'min_payment' => $billDbResult->min_payment,
                     'point' => $billDbResult->point,
-                    'repaid' => $billDbResult->repaid,
+                    'repaid' => $repaid,
                     'create_time' => $billDbResult->create_time,
                 ];
 
@@ -565,9 +566,60 @@ class Card extends Common
 
     /**
      * 标记计划项已执行接口
-     * @param int plan_id planID
+     * @param int plan_id 计划ID
+     * @param string action 执行动作 "mark"标记已完成;"unmark"取消标记
      */
     public function markPlanExec(Request $request){
+        $action = $request->post('action');
+        if(!$action){
+            my_json_encode(1,'请输入正确的参数action');
+        }
+        $planId = $request->post('planId');
+        if(!$planId || !is_integer($planId)){
+            my_json_encode(2,'请输入正确的参数planId');
+        }
 
+        $userSeries = $request->post('series');
+        if (empty($userSeries)) {
+            my_json_encode(3, 'series不能为空');
+        }
+
+        $userId = Users::where(['series' => $userSeries])->value('id');
+        $planInst = Repay_plans::get($planId);
+        if($planId->user_id != $userId){
+            my_json_encode(4, '该计划不属于该用户');
+        }
+
+        $bill = Bills::where('credit_card_id',$planInst->credit_card_id)
+        ->where('bill_month',$planInst->bill_month)
+        ->select();
+
+        if($action == 'mark'){
+            $planInst->finish_time = time();
+            if($planInst->action == "repay"){
+                $bill->repaid += $planInst->amount;
+            }else{
+                $bill->paid += $planInst->amount;
+            }
+        }else if($action == 'unmark'){
+            $planInst->finish_time = null;
+            if($planInst->action == "repay"){
+                $bill->repaid -= $planInst->amount;
+            }else{
+                $bill->paid -= $planInst->amount;
+            }
+        }else{
+            my_json_encode(5, '请输入正确的参数action');
+        }
+
+        $planInst->save();
+        $bill->save();
+        $data = [
+            'repaid' => $bill->repaid,
+            'paid' => $bill->paid
+        ];
+        my_json_encode(0,'',$data);
+
+        
     }
 }
