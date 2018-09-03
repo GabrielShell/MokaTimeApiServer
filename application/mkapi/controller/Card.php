@@ -524,8 +524,26 @@ class Card extends Common
         foreach($planResult as $billMonth => $cardsPlan){
             $cardsPlanData = [];
             foreach($cardsPlan as $cardId => $planList){
+                $cardInst = Credit_cards::get($cardId);
+                $billInst = Bills::where('credit_card_id',$cardId)
+                ->where('bill_type','DONE')
+                ->order('bill_month desc')
+                ->select();
+
+                //获取本期账单金额
+                $newBalance = $cardInst->credit_limit;
+                if($billInst){
+                    $newBalance = $billInst[0]->new_balance;
+                }
+
+
                 $cardsPlanData[] = [
                     'credit_card_id' => $cardId,
+                    'bank_name' => $cardInst->bank_name,
+                    'name_on_card' => $cardInst->name_on_card,
+                    'card_no_last4' => $cardInst->card_no_last4,
+                    'credit_limit' =>  $cardInst->credit_limit,
+                    'new_balance' => $newBalance,
                     'plan' => $planList
                 ];
             }
