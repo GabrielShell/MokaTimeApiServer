@@ -403,7 +403,7 @@ class Callback extends Controller{
                         if($withdrawResult['status'] == '10000'){
                             $orderSave['is_withdraw'] = 'y';
                             $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1 - $orderInfo['pay_rate'] / 100)-3, 2);
-                            $orderSave['other_fee'] = 2;
+                            $orderSave['other_fee'] = 3;
                             $orderSave['withdraw_time'] = time();
                             $orderSave['arrive_type'] = 'D0';
 
