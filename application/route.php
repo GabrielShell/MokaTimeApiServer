@@ -132,6 +132,28 @@ Route::post('api/v1/card/getRepayPlan','mkapi/Card/getRepayPlan');
 Route::post('api/v1/card/getNewRepayPlan','mkapi/Card/getNewRepayPlan');
 
 
+/**
+ * 获取信用卡可用计划日期接口
+ * @param int card_id 信用卡ID
+ */
+Route::post('api/v1/card/availablePlanDate','mkapi/Card/availablePlanDate');
+
+
+/**
+ * 还款计划列表接口
+ * @param string type 类型 "today" 今日计划; "future" 未来计划; "past" 过去计划
+ * @param string series 用户series
+ */
+Route::post('api/v1/card/repayPlanList','mkapi/Card/repayPlanList');
+
+
+/**
+ * 标记计划项执行接口
+ * @param int plan_id 计划ID
+ * @param string action 执行动作 "mark"标记已完成;"unmark"取消标记
+ */
+Route::post('api/v1/card/markPlanExec','mkapi/Card/markPlanExec');
+
 // +----------------------------------------------------------------------
 // | 客户端版本管理接口
 // +----------------------------------------------------------------------
@@ -150,3 +172,4 @@ Route::post('api/v1/version/getLatestVersion','mkapi/Version/getLatestVersion');
  * @param series 用户series
  */
 Route::post('api/v1/stat/home','mkapi/StatData/homePageStatData');
+
