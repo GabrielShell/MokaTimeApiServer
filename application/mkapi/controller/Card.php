@@ -314,6 +314,7 @@ class Card extends Common
         $planData = [];
         foreach ($repayPlanDbInstArr as $repayPlanDbInst) {
             $planData[$repayPlanDbInst->action_date][] = [
+                'id' => $repayPlanDbInst->id,
                 'type' => $repayPlanDbInst->action,
                 'amount' => $repayPlanDbInst->amount
             ];
@@ -477,7 +478,6 @@ class Card extends Common
     /**
      * 还款计划列表接口
      * @param string type 类型 "today" 今日计划; "future" 未来计划; "past" 过去计划
-     * @param string series 用户series
      */
     public function repayPlanList(Request $request)
     {
@@ -513,6 +513,7 @@ class Card extends Common
         $planResult = [];
         foreach($plans as $plan){
             $planResult[$plan->bill_month][$plan->credit_card_id][] = [
+                'id' => $plan->id,
                 'type'=>$plan->action,
                 'amount'=>$plan->amount,
             ];
@@ -536,4 +537,9 @@ class Card extends Common
 
         my_json_encode(0,'',$planData);
     }
+
+    /**
+     * 标记计划项已执行接口
+     * @param int plan_id planID
+     */
 }
