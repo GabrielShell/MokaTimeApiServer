@@ -7,6 +7,7 @@ use app\mkapi\model\Credit_cards;
 use app\mkapi\model\Repay_plans;
 use app\mkapi\model\Shopping_records;
 use app\mkapi\model\Users;
+use app\mkapi\model\Card_operate_status as CardStatus;
 use think\Request;
 
 /**
@@ -565,7 +566,7 @@ class Card extends Common
     }
 
     /**
-     * 标记计划项已执行接口
+     * 标记计划项执行接口
      * @param int plan_id 计划ID
      * @param string action 执行动作 "mark"标记已完成;"unmark"取消标记
      */
@@ -574,9 +575,9 @@ class Card extends Common
         if(!$action){
             my_json_encode(1,'请输入正确的参数action');
         }
-        $planId = $request->post('planId');
-        if(!$planId || !is_integer($planId)){
-            my_json_encode(2,'请输入正确的参数planId');
+        $planId = $request->post('plan_id');
+        if(!$planId || !is_numeric($planId)){
+            my_json_encode(2,'请输入正确的参数plan_id');
         }
 
         $userSeries = $request->post('series');
@@ -586,37 +587,54 @@ class Card extends Common
 
         $userId = Users::where(['series' => $userSeries])->value('id');
         $planInst = Repay_plans::get($planId);
-        if($planId->user_id != $userId){
+        if($planInst->user_id != $userId){
             my_json_encode(4, '该计划不属于该用户');
         }
 
-        $bill = Bills::where('credit_card_id',$planInst->credit_card_id)
+        $status = CardStatus::where('credit_card_id',$planInst->credit_card_id)
         ->where('bill_month',$planInst->bill_month)
         ->select();
+        if(!$status){
+            //如果没有状态，则创建状态
+            $status = new CardStatus;
+            $status->user_id = $userId;
+            $status->credit_card_id = $planInst->credit_card_id;
+            $status->bill_month = $planInst->bill_month;
+            $status->repaid = 0;
+            $status->paid = 0;
+        }else{
+            $status = $status[0];
+        }
 
         if($action == 'mark'){
+            if($planInst->finish_time){
+                my_json_encode(6,'该计划已标记执行，不能重复标记');
+            }
             $planInst->finish_time = time();
             if($planInst->action == "repay"){
-                $bill->repaid += $planInst->amount;
+                $status->repaid += $planInst->amount;
             }else{
-                $bill->paid += $planInst->amount;
+                $status->paid += $planInst->amount;
             }
         }else if($action == 'unmark'){
+            if(!$planInst->finish_time){
+                my_json_encode(7,'该计划已取消标记，不能重复操作');
+            }
             $planInst->finish_time = null;
             if($planInst->action == "repay"){
-                $bill->repaid -= $planInst->amount;
+                $status->repaid -= $planInst->amount;
             }else{
-                $bill->paid -= $planInst->amount;
+                $status->paid -= $planInst->amount;
             }
         }else{
             my_json_encode(5, '请输入正确的参数action');
         }
 
         $planInst->save();
-        $bill->save();
+        $status->save();
         $data = [
-            'repaid' => $bill->repaid,
-            'paid' => $bill->paid
+            'repaid' => $status->repaid,
+            'paid' => $status->paid
         ];
         my_json_encode(0,'',$data);
 

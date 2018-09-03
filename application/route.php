@@ -146,6 +146,14 @@ Route::post('api/v1/card/availablePlanDate','mkapi/Card/availablePlanDate');
  */
 Route::post('api/v1/card/repayPlanList','mkapi/Card/repayPlanList');
 
+
+/**
+ * 标记计划项执行接口
+ * @param int plan_id 计划ID
+ * @param string action 执行动作 "mark"标记已完成;"unmark"取消标记
+ */
+Route::post('api/v1/card/markPlanExec','mkapi/Card/markPlanExec');
+
 // +----------------------------------------------------------------------
 // | 客户端版本管理接口
 // +----------------------------------------------------------------------
