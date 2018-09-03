@@ -79,4 +79,18 @@ class Credit_cards extends Model{
         }
         return [$bill_date,$due_date];
     }
+
+    /**
+     * 获取最新账单实例
+     */
+    public function getNewestBill(){
+                $billInst = Bills::where('credit_card_id',$this->id)
+                ->where('bill_type','DONE')
+                ->order('bill_month desc')
+                ->select();
+                if(!$billInst){
+                    return false;
+                }
+                return $billInst[0];
+    }
 }

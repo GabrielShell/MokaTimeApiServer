@@ -307,8 +307,9 @@ class Card extends Common
         if (!$card) {
             my_json_encode(3, '该用户没有指定ID的信用卡');
         }
+        $card = $card[0];
 
-        $billDueRes = $card[0]->getThisBillDateAndDueDate();
+        $billDueRes = $card->getThisBillDateAndDueDate();
         $billMonth = date('Ym', strtotime($billDueRes[0]));
         $repayPlanDbInstArr = Repay_plans::where('credit_card_id', $cardId)
         ->where('bill_month', $billMonth)
@@ -334,7 +335,25 @@ class Card extends Common
             ];
         }
 
-        $data = ['plan' => $planResult];
+        $newBalance = $card->credit_limit;
+        $billInst = $card->getNewestBill();
+        if($billInst){
+            $newBalance = $billInst->new_balance;
+        }
+        $billDueDateRes = $card->getThisBillDateAndDueDate();
+        $status = CardStatus::getInst($userId,$cardId,$billMonth);
+
+        $data = [
+            'bank_name' => $card->bank_name,
+            'name_on_card' => $card->name_on_card,
+            'card_no_last4' => $card->card_no_last4,
+            'bill_date' => $billDueDateRes[0],
+            'due_date' => $billDueDateRes[1],
+            'new_balance' => $newBalance,
+            'repaid' => $status->repaid,
+            'paid' => $status->paid,
+            'plan' => $planResult
+        ];
         my_json_encode(0, '', $data);
 
     }
@@ -554,18 +573,15 @@ class Card extends Common
                     ];
                 }
                 $cardInst = Credit_cards::get($cardId);
-                $billInst = Bills::where('credit_card_id',$cardId)
-                ->where('bill_type','DONE')
-                ->order('bill_month desc')
-                ->select();
 
+                $billInst = $cardInst->getNewestBill();
                 //获取本期账单金额
                 $newBalance = $cardInst->credit_limit;
                 if($billInst){
-                    $newBalance = $billInst[0]->new_balance;
+                    $newBalance = $billInst->new_balance;
                 }
 
-               $status = CardStatus::getInst($userId,$cardId,$billMonth); 
+                $status = CardStatus::getInst($userId,$cardId,$billMonth); 
 
                 $cardsPlanData[] = [
                     'credit_card_id' => $cardId,
