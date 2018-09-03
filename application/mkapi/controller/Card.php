@@ -343,6 +343,11 @@ class Card extends Common
         $billDueDateRes = $card->getThisBillDateAndDueDate();
         $status = CardStatus::getInst($userId,$cardId,$billMonth);
 
+        //是否该卡在这个账单月份已完成还款
+        $finish = 0;
+        if($status->repaid >= $billInst->new_balance){
+            $finish = 1;
+        }
         $data = [
             'bank_name' => $card->bank_name,
             'name_on_card' => $card->name_on_card,
@@ -352,6 +357,7 @@ class Card extends Common
             'new_balance' => $newBalance,
             'repaid' => $status->repaid,
             'paid' => $status->paid,
+            'finish' => $finish,
             'plan' => $planResult
         ];
         my_json_encode(0, '', $data);
@@ -382,6 +388,7 @@ class Card extends Common
         if (!$card) {
             my_json_encode(3, '该用户没有指定ID的信用卡');
         }
+        $card = $card[0];
 
         $dayListStr = $request->post('dayList');
         if (empty($dayListStr)) {
@@ -413,6 +420,8 @@ class Card extends Common
             my_json_encode(10, 'planType格式错误');
         }
 
+        
+
         // //得到本期账单
         // $bill = Bills::where('credit_card_id', $cardId)->where('bill_type', 'DONE')->order('bill_month', 'desc')->limit(1)->select();
         // if (!$bill) {
@@ -429,8 +438,15 @@ class Card extends Common
         //     //如果不是本期账单
         //     my_json_encode(4, '未找到本期账单，请更新账单或重新导入账单');
         // }
-        $billDueRes = $card[0]->getThisBillDateAndDueDate();
+        $billDueRes = $card->getThisBillDateAndDueDate();
         $billMonth = date('Ym', strtotime($billDueRes[0]));
+
+        //验证是否该卡在这个账单月份已完成还款
+        $status = CardStatus::getInst($userId,$cardId,$billMonth);
+        $billInst = $card->getNewestBill();
+        if($status->repaid >= $billInst->new_balance){
+            my_json_encode(12,'该卡已完成还款，不需要生成计划');
+        }
 
         //根据计划天数得到计划日期列表
         $dayCount = count($dayList);
