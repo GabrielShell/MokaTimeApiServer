@@ -12,6 +12,8 @@ use app\mkapi\model\Credit_cards;
 use app\mkapi\model\Bills;
 use app\mkapi\model\Shopping_records;
 use app\mkapi\model\Xinyan_banks;
+use app\mkapi\model\Card_operate_status as CardStatus;
+
 
 /**
  * 新颜账单查询API接口
@@ -222,7 +224,14 @@ class XinyanBillsApi extends Common{
                                         $card_id = $searched[$unique_string];
                                 }
 
-				$billMonth = (int)date('Ym',strtotime($bill['bill_date']));
+                                //删除对应账单月份的数据状态记录
+                                $billMonth = (int)date('Ym',strtotime($bill['bill_date']));
+                                $status = CardStatus::where('credit_card_id',$card_id)
+                                ->where('bill_month',$billMonth)
+                                ->select();
+                                if($status){
+                                        $status->delete();
+                                }
                                 //如果该账单在数据库中不存在，则将账单插入数据库
                                 if(!Bills::get(['user_id'=>$userId,'bill_month'=>$billMonth])){
                                         $bill_record  = new Bills;

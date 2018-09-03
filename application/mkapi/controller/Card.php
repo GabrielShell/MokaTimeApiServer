@@ -455,14 +455,17 @@ class Card extends Common
         //得到计划
         $plan = $repayPlan->getPlan($dayCount, $repayAmount, $planType);
 
-        //删除数据库中已存在的计划
+        //删除数据库中已存在的计划(只删除今天和未来的计划)
         // $bill_month = $bill[0]->bill_month;
-        Repay_plans::where('credit_card_id', $cardId)->where('bill_month', $billMonth)->delete();
+        Repay_plans::where('credit_card_id', $cardId)
+        ->where('action_date','>=',date('Y-m-d'))
+        ->where('bill_month', $billMonth)
+        ->delete();
         //将计划与卡片还款日期关联,同时储存到数据库
-        $resultPlan = [];
+        // $resultPlan = [];
         $sort = 0;
         foreach ($plan as $key => $dailyPlan) {
-            foreach ($dailyPlan as &$action) {
+            foreach ($dailyPlan as $action) {
                 $repayPlanDbInst = new Repay_plans;
                 $repayPlanDbInst->user_id = $userId;
                 $repayPlanDbInst->credit_card_id = $cardId;
@@ -473,16 +476,67 @@ class Card extends Common
                 $repayPlanDbInst->action_date = $dayList[$key];
                 $repayPlanDbInst->save();
                 $sort++;
-                $action['id'] = $repayPlanDbInst->id;
-                $action['finish_time'] = null;
+                // $action['id'] = $repayPlanDbInst->id;
+                // $action['finish_time'] = null;
             }
-            $resultPlan[$key] = [
-                'date' => $dayList[$key],
-                'plan' => $dailyPlan,
+            // $resultPlan[$key] = [
+            //     'date' => $dayList[$key],
+            //     'plan' => $dailyPlan,
+            // ];
+        }
+
+
+        $repayPlanDbInstArr = Repay_plans::where('credit_card_id', $cardId)
+        ->where('bill_month', $billMonth)
+        ->order('sort asc')
+        ->select();
+
+        $planData = [];
+        foreach ($repayPlanDbInstArr as $repayPlanDbInst) {
+            $planData[$repayPlanDbInst->action_date][] = [
+                'id' => $repayPlanDbInst->id,
+                'type' => $repayPlanDbInst->action,
+                'amount' => $repayPlanDbInst->amount,
+                'finish_time' => $repayPlanDbInst->finish_time
+            ];
+
+        }
+
+        $planResult = [];
+        foreach($planData as $actionDate => $planList){
+            $planResult[] = [
+                'date' => $actionDate,
+                'plan' => $planList
             ];
         }
 
-        $data = ['plan' => $resultPlan];
+        $newBalance = $card->credit_limit;
+        $billInst = $card->getNewestBill();
+        if($billInst !== false){
+            $newBalance = $billInst->new_balance;
+        }
+        $billDueDateRes = $card->getThisBillDateAndDueDate();
+        $status = CardStatus::getInst($userId,$cardId,$billMonth);
+
+        //是否该卡在这个账单月份已完成还款
+        $finish = 0;
+        if($status->repaid >= $newBalance){
+            $finish = 1;
+        }
+        $data = [
+            'bank_name' => $card->bank_name,
+            'name_on_card' => $card->name_on_card,
+            'card_no_last4' => $card->card_no_last4,
+            'bill_date' => $billDueDateRes[0],
+            'due_date' => $billDueDateRes[1],
+            'new_balance' => $newBalance,
+            'repaid' => $status->repaid,
+            'paid' => $status->paid,
+            'finish' => $finish,
+            'plan' => $planResult
+        ];
+
+        // $data = ['plan' => $resultPlan];
         my_json_encode(0, '', $data);
     }
 
@@ -496,7 +550,7 @@ class Card extends Common
 
         $card = Credit_cards::get($cardId);
         $billDueRes = $card->getThisBillDateAndDueDate();
-        // $billDate = $billDueRes[0];
+        $billDate = $billDueRes[0];
         $dueDate = $billDueRes[1];
 
         if (date('H') <= 16) {
@@ -504,6 +558,7 @@ class Card extends Common
         } else {
             $nowDateTime = new \DateTime(date('Y-m-d 00:00:00', strtotime('+1 day')));
         }
+        $billDateTime = new \DateTime($billDate . ' 23:59:59');
         $dueDateTime = new \DateTime($dueDate . ' 00:00:00');
         $interval = $nowDateTime->diff($dueDateTime);
         $dayCount = $interval->format('%R%a');
@@ -512,7 +567,14 @@ class Card extends Common
         }
 
         $dayList = [];
-        $doDate = $nowDateTime;
+
+        $billDateTimestamp = $billDateTime->getTimestamp();
+        $nowDateTimestamp = $nowDateTime->getTimestamp();
+        if($nowDateTimestamp > $billDateTimestamp){
+            $doDate = $nowDateTime;
+        }else{
+            $doDate = $billDateTime;
+        }
         do {
             $dayList[] = $doDate->format('Y-m-d');
             $doDate->add(new \DateInterval('P1D'));
