@@ -337,7 +337,7 @@ class Card extends Common
 
         $newBalance = $card->credit_limit;
         $billInst = $card->getNewestBill();
-        if($billInst){
+        if($billInst !== false){
             $newBalance = $billInst->new_balance;
         }
         $billDueDateRes = $card->getThisBillDateAndDueDate();
@@ -345,7 +345,7 @@ class Card extends Common
 
         //是否该卡在这个账单月份已完成还款
         $finish = 0;
-        if($status->repaid >= $billInst->new_balance){
+        if($status->repaid >= $newBalance){
             $finish = 1;
         }
         $data = [
