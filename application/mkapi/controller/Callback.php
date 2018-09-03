@@ -402,7 +402,7 @@ class Callback extends Controller{
                         //提款成功
                         if($withdrawResult['status'] == '10000'){
                             $orderSave['is_withdraw'] = 'y';
-                            $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1 - $orderInfo['pay_rate'] / 100)-2, 2);
+                            $orderSave['arrive_money'] = round($orderInfo['order_money'] * (1 - $orderInfo['pay_rate'] / 100)-3, 2);
                             $orderSave['other_fee'] = 2;
                             $orderSave['withdraw_time'] = time();
                             $orderSave['arrive_type'] = 'D0';
@@ -468,7 +468,7 @@ class Callback extends Controller{
             $merchant = Db::name("merchants")->field('merchant_no')->where("series",$withdraw['series'])->find();
             $withdraw['merchant_no'] = $merchant['merchant_no'];
             $withdraw['create_time'] = time();
-            $amount = number_format(($withdraw['withdraw_money']-2), 3, ".", "");
+            $amount = number_format(($withdraw['withdraw_money']-3), 3, ".", "");
 
         }else{
             //储存提款记录信息
@@ -478,7 +478,7 @@ class Callback extends Controller{
             $withdraw['merchant_no'] = $orderInfo['merchant_no'];
             $withdraw['create_time'] = time();
             $withdraw['withdraw_money'] = $orderInfo['order_money'];
-            $amount = number_format(($withdraw['withdraw_money'] * 0.994 -2), 3, ".", "");
+            $amount = number_format(($withdraw['withdraw_money'] * 0.994 -3), 3, ".", "");
         }
 
         //请求参数
@@ -555,7 +555,7 @@ class Callback extends Controller{
         $data['compOrgCode'] = $this->_LklCompOrgCode;
         $data['reqLogNo'] = $withdraw['withdraw_no'];
         $data['shopNo'] = $withdraw['merchant_no'];
-        $amount = number_format(($withdraw['withdraw_money'] * 0.994 -2), 3, ".", "");
+        $amount = number_format(($withdraw['withdraw_money'] * 0.994 -3), 3, ".", "");
         $data['amount'] = substr($amount, 0, -1);
         $data['retUrl'] = 'http://wk.xmjishiduo.com/wxApi.php?m=Callback&a=getResultLkl';
         $queryString = $data['compOrgCode'] . $data['reqLogNo'] . $data['shopNo'] . $data['amount'] . $this->_LklHashKey;
