@@ -372,6 +372,9 @@ class Card extends Common
         if (empty($repayAmount)) {
             my_json_encode(6, 'repayAmount不能为空');
         }
+        if($repayAmount < 1000){
+            my_json_encode(11, '还款金额大于1000才能提供计划');
+        }
         if (!is_numeric($repayAmount)) {
             my_json_encode(8, 'repayAmount格式不正确');
         } else if (strpos($repayAmount, '.')) {
