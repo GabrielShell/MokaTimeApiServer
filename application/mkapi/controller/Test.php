@@ -9,6 +9,7 @@ use think\Db;
 use crypt\AesCbc;
 use think\Log;
 use app\mkapi\common\UMeng\Umeng;
+use app\mkapi\common\Qiniu\Auth;
 class Test extends Common{
 	//拉卡拉交易D0提款参数
     // 机构号： 425510
@@ -289,5 +290,19 @@ class Test extends Common{
        $UMengdata['content'] = "老司机的爱情故事好看";
        $push = new Push();
        $push->pushSystem($UMengdata);
+    }
+
+    //下载七牛云图片
+    public function download(){
+
+        $accessKey ="J0xi4pzpMCwBol2t5GiyCTOuE2zucp8y04_8Dcbh";
+        $secretKey = "ltPzCfeDFPLTfgbJPPTEWBrpYryNQLclHgrNCPIy";
+        $domain = "mkdownload.xmjishiduo.com";
+        // 构建Auth对象
+        $auth = new Auth($accessKey, $secretKey);
+        // 私有空间中的外链 http://<domain>/<file_key>
+        $baseUrl = 'http://'.$domain.'/avatar/img_1.jpg';
+        $downloadUrl = $auth->privateDownloadUrl($baseUrl);
+        echo $downloadUrl;
     }
 }
