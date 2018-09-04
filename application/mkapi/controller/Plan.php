@@ -176,7 +176,7 @@ class Plan extends Common
         //验证是否该卡在这个账单月份已完成还款
         $status = CardStatus::getInst($userId,$cardId,$billMonth);
         $billInst = $card->getNewestBill();
-        if($status->repaid >= $billInst->new_balance){
+        if($billInst && $status->repaid >= $billInst->new_balance){
             my_json_encode(12,'该卡已完成还款，不需要生成计划');
         }
 
