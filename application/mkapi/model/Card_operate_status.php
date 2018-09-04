@@ -17,6 +17,9 @@ class Card_operate_status extends Model{
             $status->bill_month = $billMonth;
             $status->repaid = 0;
             $status->paid = 0;
+            $status->plan_day_list = "";
+            $status->plan_repay_amount = 0;
+            $status->plan_type = 1;
         }else{
             $status = $status[0];
         }
