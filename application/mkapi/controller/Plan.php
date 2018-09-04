@@ -87,6 +87,9 @@ class Plan extends Common
             'repaid' => $status->repaid,
             'paid' => $status->paid,
             'finish' => $finish,
+            'arg_daylist' => $status->plan_day_list,
+            'arg_repay_amount' => $status->plan_repay_amount,
+            'arg_type' => $status->plan_type,
             'plan' => $planResult
         ];
         my_json_encode(0, '', $data);
@@ -214,6 +217,12 @@ class Plan extends Common
             // ];
         }
 
+        //储存还款计划生成信息
+        $status = CardStatus::getInst($userId,$cardId,$billMonth);
+        $status->plan_day_list = $dayListStr;
+        $status->plan_repay_amount = $repayAmount;
+        $status->plan_type = $planType;
+        $status->save();
 
         $repayPlanDbInstArr = Repay_plans::where('credit_card_id', $cardId)
         ->where('bill_month', $billMonth)
@@ -245,7 +254,6 @@ class Plan extends Common
             $newBalance = $billInst->new_balance;
         }
         $billDueDateRes = $card->getThisBillDateAndDueDate();
-        $status = CardStatus::getInst($userId,$cardId,$billMonth);
 
         //是否该卡在这个账单月份已完成还款
         $finish = 0;
@@ -470,6 +478,92 @@ class Plan extends Common
             'paid' => $status->paid
         ];
         my_json_encode(0,'',$data);
+
+        
+    }
+
+    /**
+     * 手动修改计划金额接口
+     * @param int plan_id 计划ID
+     * @param int amount 修改后的金额
+     */
+    public function modifyPlanAmount(Request $request){
+        $userSeries = $request->post('series');
+        if (empty($userSeries)) {
+            my_json_encode(1, 'series不能为空');
+        }
+
+        $userId = Users::where(['series' => $userSeries])->value('id');
+
+        $planId = $request->post('plan_id');
+        if (empty($planId)) {
+            my_json_encode(2, 'plan_id不能为空');
+        }
+
+        $amount = $request->post('amount');
+        if (empty($amount)) {
+            my_json_encode(3, 'amount不能为空');
+        }
+
+
+        $planInst = Repay_plans::get($planId);
+        $planActionDate = $planInst->action_date;
+        $timeAt = '';
+
+        if(strtotime($planActionDate) == strtotime(date('Y-m-d'))){
+            //修改的是今天的金额
+            $timeAt = 'today';
+        }else if(strtotime($planActionDate) < strtotime(date('Y-m-d'))){
+            //修改的是过去的金额
+            my_json_encode(4,'不能修改已经过去的计划的金额');
+        }else{
+            //修改的是未来的金额
+            $timeAt = 'future';
+        }
+
+        //获取整个周期的计划，得知所修改的计划在整个周期计划的位置
+        $periodPlan = Repay_plans::where('credit_card_id',$planInst->credit_card_id)
+        ->where('bill_month',$planInst->bill_month)
+        ->order('action_date asc')
+        ->select();
+
+        if($timeAt == 'future' && $planActionDate != $periodPlan[0]->action_date){
+            my_json_encode(5,'只能修改第一天或当天的计划');
+        }
+        $planItemCount = count($periodPlan);
+        if($timeAt == 'today' && $planActionDate == $periodPlan[$planItemCount - 1]->action_date){
+            my_json_encode(6,'最后一天不能修改计划');
+        }
+
+        //统计从修改的那一天直到周期计划结束的还款总额、刷卡总额
+        $repayTotal = 0;
+        $payTotal = 0;
+        if($timeAt == 'today'){
+            $startDate = date('Y-m-d 00:00:00');
+            foreach($periodPlan as $planItem){
+                if(strtotime($planItem->action_date.' 00:00:00') >= strtotime($startDate)){
+                    if($planItem->action == 'repay'){
+                        $repayTotal += $planItem->amount;
+                    }else{
+                        $payTotal += $planItem->amount;
+                    }
+                }
+            }
+        }else{
+            foreach($periodPlan as $planItem){
+                if($planItem->action == 'repay'){
+                    $repayTotal += $planItem->amount;
+                }else{
+                    $payTotal += $planItem->amount;
+                }
+            }
+        }
+
+        $amountDiff = $amount - $planInst->amount;
+
+
+        //重新生成计划
+        
 
         
     }
