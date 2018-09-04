@@ -87,7 +87,7 @@ class Plan extends Common
             'repaid' => $status->repaid,
             'paid' => $status->paid,
             'finish' => $finish,
-            'arg_daylist' => $status->plan_day_list,
+            'arg_daylist' => explode(',',$status->plan_day_list),
             'arg_repay_amount' => $status->plan_repay_amount,
             'arg_type' => $status->plan_type,
             'plan' => $planResult
