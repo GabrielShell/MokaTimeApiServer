@@ -1,7 +1,7 @@
 <?php
 namespace app\mkapi\common\Qiniu\Processing;
 
-use app\mkapi\common\Qiniu\Config;
+use app\mkapi\common\Qiniu\Conf;
 use app\mkapi\common\Qiniu\Http\Client;
 use app\mkapi\common\Qiniu\Http\Error;
 use app\mkapi\commonapp\mkapi\common\Qiniu\Processing\Operation;
@@ -28,7 +28,7 @@ final class PersistentFop
     {
         $this->auth = $auth;
         if ($config == null) {
-            $this->config = new Config();
+            $this->config = new Conf();
         } else {
             $this->config = $config;
         }
@@ -65,7 +65,7 @@ final class PersistentFop
         if ($this->config->useHTTPS === true) {
             $scheme = "https://";
         }
-        $url = $scheme . Config::API_HOST . '/pfop/';
+        $url = $scheme . Conf::API_HOST . '/pfop/';
         $headers = $this->auth->authorization($url, $data, 'application/x-www-form-urlencoded');
         $headers['Content-Type'] = 'application/x-www-form-urlencoded';
         $response = Client::post($url, $data, $headers);
@@ -84,7 +84,7 @@ final class PersistentFop
         if ($this->config->useHTTPS === true) {
             $scheme = "https://";
         }
-        $url = $scheme . Config::API_HOST . "/status/get/prefop?id=$id";
+        $url = $scheme . Conf::API_HOST . "/status/get/prefop?id=$id";
         $response = Client::get($url);
         if (!$response->ok()) {
             return array(null, new Error($url, $response));

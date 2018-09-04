@@ -117,7 +117,7 @@ final class Zone
     public static function queryZone($ak, $bucket)
     {
         $zone = new Zone();
-        $url = Config::UC_HOST . '/v2/query' . "?ak=$ak&bucket=$bucket";
+        $url = Conf::UC_HOST . '/v2/query' . "?ak=$ak&bucket=$bucket";
         $ret = Client::Get($url);
         if (!$ret->ok()) {
             return array(null, new Error($url, $ret));

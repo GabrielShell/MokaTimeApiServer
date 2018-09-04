@@ -1,7 +1,7 @@
 <?php
 namespace app\mkapi\common\Qiniu\Http;
 
-use app\mkapi\common\Qiniu\Config;
+use app\mkapi\common\Qiniu\Conf;
 use app\mkapi\common\Qiniu\Http\Request;
 use app\mkapi\common\Qiniu\Http\Response;
 
@@ -64,7 +64,7 @@ final class Client
 
     private static function userAgent()
     {
-        $sdkInfo = "QiniuPHP/" . Config::SDK_VER;
+        $sdkInfo = "QiniuPHP/" . Conf::SDK_VER;
 
         $systemInfo = php_uname("s");
         $machineInfo = php_uname("m");

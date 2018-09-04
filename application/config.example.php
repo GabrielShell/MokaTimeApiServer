@@ -31,7 +31,11 @@ return [
     // 扩展配置文件
     'extra_config_list'      => ['database', 'validate'],
     // 扩展函数文件
-    'extra_file_list'        => [THINK_PATH . 'helper' . EXT],
+    'extra_file_list'        => [
+
+        THINK_PATH . 'helper' . EXT,
+        APP_PATH. 'mkapi/common/Qiniu/functions.php'
+    ],
     // 默认输出类型
     'default_return_type'    => 'html',
     // 默认AJAX 数据返回格式,可选json xml ...

@@ -2,7 +2,7 @@
 
 namespace app\mkapi\common\Qiniu;
 
-use app\mkapi\common\Qiniu\Config;
+use app\mkapi\common\Qiniu\Conf;
 
 final class Etag
 {
@@ -13,7 +13,7 @@ final class Etag
 
     private static function blockCount($fsize)
     {
-        return intval(($fsize + (Config::BLOCK_SIZE - 1)) / Config::BLOCK_SIZE);
+        return intval(($fsize + (Conf::BLOCK_SIZE - 1)) / Conf::BLOCK_SIZE);
     }
 
     private static function calcSha1($data)
@@ -47,7 +47,7 @@ final class Etag
 
         if ($blockCnt <= 1) {
             array_push($sha1Buf, 0x16);
-            $fdata = fread($fhandler, Config::BLOCK_SIZE);
+            $fdata = fread($fhandler, Conf::BLOCK_SIZE);
             if ($err !== null) {
                 fclose($fhandler);
                 return array(null, $err);
@@ -58,7 +58,7 @@ final class Etag
             array_push($sha1Buf, 0x96);
             $sha1BlockBuf = array();
             for ($i = 0; $i < $blockCnt; $i++) {
-                $fdata = fread($fhandler, Config::BLOCK_SIZE);
+                $fdata = fread($fhandler, Conf::BLOCK_SIZE);
                 list($sha1Code, $err) = self::calcSha1($fdata);
                 if ($err !== null) {
                     fclose($fhandler);

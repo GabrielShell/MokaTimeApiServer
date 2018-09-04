@@ -3,7 +3,7 @@ namespace app\mkapi\common\Qiniu\Rtc;
 
 use app\mkapi\common\Qiniu\Http\Client;
 use app\mkapi\common\Qiniu\Http\Error;
-use app\mkapi\common\Qiniu\Config;
+use app\mkapi\common\Qiniu\Conf;
 use app\mkapi\common\Qiniu\Auth;
 
 class AppClient
@@ -15,7 +15,7 @@ class AppClient
     {
         $this->auth = $auth;
 
-        $this->baseURL = sprintf("%s/%s/apps", Config::RTCAPI_HOST, Config::RTCAPI_VERSION);
+        $this->baseURL = sprintf("%s/%s/apps", Conf::RTCAPI_HOST, Conf::RTCAPI_VERSION);
     }
 
     /*
