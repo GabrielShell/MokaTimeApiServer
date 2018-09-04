@@ -8,36 +8,32 @@ use think\Request;
 use think\Db;
 use think\Session;
 use think\Log;
+use app\mkapi\common\Qiniu\Auth;
 class Goods extends Common{
+	private $accessKey ="J0xi4pzpMCwBol2t5GiyCTOuE2zucp8y04_8Dcbh";
+    private $secretKey = "ltPzCfeDFPLTfgbJPPTEWBrpYryNQLclHgrNCPIy";
+    private $domain = "mkdownload.xmjishiduo.com";
 	//获取商品列表
 	public function goodsList(){
-		$goodsList = Db::name('goods')->field('id as goods_id,goods_name,goods_money,is_limit,limit_money,goods_desc')->select();
+		$goodsList = Db::name('goods')->field('id as goods_id,goods_name,goods_money,goods_thumb,is_limit,limit_money,goods_desc')->select();
+		$auth = new Auth($this->accessKey, $this->secretKey);
+		foreach ($goodsList as $key => $value) {
+			$baseUrl = 'http://'.$this->domain.'/goods/'.$value['goods_thumb'];
+			$goodsList[$key]['goods_thumb'] = $auth->privateDownloadUrl($baseUrl);
+			
+		}
 		my_json_encode(10000,'success',$goodsList);
 	}
 
-	//获取商品图片列表
-	public function goodsImgList(){
-		$goodsImgList = Db::name('goods')->field('id as goods_id,goods_thumb')->select();
-		foreach ($goodsImgList as $key => $value) {
-			$handle = fopen($value['goods_thumb'],'r');
-			$imgData = fread($handle,filesize($value['goods_thumb']));
-			$goodsImgList[$key]['goods_thumb'] = base64_encode($imgData);
-			fclose($handle);
-		}
-		my_json_encode(10000,'success',$goodsImgList);
-	}
-
-	//获取商品属性
+	//获取商品详情
 	public function getDetail(){
 		$goodsId = $_POST['goods_id'];
-		//获取商品属性
+		//================================获取商品属性===========================//
 		$goodsAttribute = Db::name('goods_attribute')->field('id as attribute_id,attribute_name,attribute_value,attribute_img')->where('goods_id',$goodsId)->select();
-
+		$auth = new Auth($this->accessKey, $this->secretKey);
 		foreach($goodsAttribute as $key => $value){
-			$handle = fopen($value['attribute_img'],'r');
-			$imgData = fread($handle,filesize($value['attribute_img']));
-			$goodsAttribute[$key]['attribute_img'] = base64_encode($imgData);
-			fclose($handle);
+			$baseUrl = 'http://'.$this->domain.'/goods/attribute/'.$value['attribute_img'];
+			$goodsAttribute[$key]['attribute_img'] = $auth->privateDownloadUrl($baseUrl);
 		}
 
 		//==============================重组商品属性=============================//
@@ -62,16 +58,22 @@ class Goods extends Common{
 
 		//=====================商品详情（轮播图片，图文详情）======================//
 
-		$goodsDetailList = Db::name('commodity_album')->field('img_url')->where('goods_id',$goodsId)->order('is_font desc')->select();
-		foreach($goodsDetailList as $key => $value){
-			$handle = fopen($value['img_url'],'r');
-			$imgData = fread($handle,filesize($value['img_url']));
-			$imgUrl[] = base64_encode($imgData);
-			fclose($handle);
+		$goodsAlbum = Db::name('commodity_album')->field('img_url')->where('goods_id',$goodsId)->order('is_font desc')->select();
+		foreach($goodsAlbum as $key => $value){
+			$baseUrl = 'http://'.$this->domain.'/goods/album/'.$value['img_url'];
+			$imgUrl[] = $auth->privateDownloadUrl($baseUrl);
 		}
+
+		//获取去商品详情图片
+		$goodsDetail = Db::name('goods')->field('goods_detail')->where('id',$goodsId)->find();
+		$detailUrllist = explode(',', $goodsDetail['goods_detail']);
+		foreach ($detailUrllist as $key => $value) {
+			$baseUrl = 'http://'.$this->domain.'/goods/detail/'.$value;
+			$detailUrllist[$key] = $auth->privateDownloadUrl($baseUrl);
+ 		}
 		
 		$returnInfo['goods_details']['runbo'] = $imgUrl;
-		$returnInfo['goods_details']['detail_img'] = '';
+		$returnInfo['goods_details']['detail_img'] = $detailUrllist;
 		$returnInfo['goods_attribute'] = $attributeList;
 		
 		my_json_encode(10000,'success',$returnInfo);

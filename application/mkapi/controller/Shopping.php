@@ -8,6 +8,7 @@ use think\Request;
 use think\Db;
 use think\Session;
 use think\Log;
+use app\mkapi\common\Qiniu\Auth;
 class Shopping extends Common{
 	//生成商品订单
 	public function createOrder(){
@@ -107,6 +108,12 @@ class Shopping extends Common{
 
 	//我的订单
 	public function userOrder(){
+		$accessKey ="J0xi4pzpMCwBol2t5GiyCTOuE2zucp8y04_8Dcbh";
+        $secretKey = "ltPzCfeDFPLTfgbJPPTEWBrpYryNQLclHgrNCPIy";
+        $domain = "mkdownload.xmjishiduo.com";
+        // 构建Auth对象
+        $auth = new Auth($accessKey, $secretKey);
+
 		$series = $_POST['series'];
 		$order_status = isset($_POST['order_status']) ? $_POST['order_status'] : null;
 		//获取全部订单
@@ -136,10 +143,9 @@ class Shopping extends Common{
 			$orderList[$key1]['goods_attribute'] = $attributeArray;
 			//=============================属性信息重组=========================//
 
-			$handle = fopen($value1['goods_thumb'],'r');
-			$imgData = fread($handle,filesize($value1['goods_thumb']));
-			$orderList[$key1]['goods_thumb'] = base64_encode($imgData);
-			fclose($handle);
+			// 私有空间中的外链 http://<domain>/<file_key>
+	        $baseUrl = 'http://'.$domain.'/goods/'.$value1['goods_thumb'];
+			$orderList[$key1]['goods_thumb'] = $auth->privateDownloadUrl($baseUrl);
 		}
 
 		my_json_encode(10000,'success',$orderList);
