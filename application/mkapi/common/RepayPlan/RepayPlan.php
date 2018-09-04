@@ -9,7 +9,7 @@ use app\mkapi\model\Repay_plans;
 
 //TODO 正式环境将继承类改成Common
 class RepayPlan extends Controller{
-    public function getPlan($dayCount,$repayAmount,$planType){
+    public function getPlan($dayCount,$repayAmount,$planType,$firstDayPlan){
         if($planType == 2){
             //资金过夜：当日还，次日刷
             $dayCount = $dayCount - 1;
@@ -59,6 +59,70 @@ class RepayPlan extends Controller{
             
 
             
+        }
+
+        //如果需要替换第一天计划，统计提供的第一天计划的还刷总额和现在生成的还刷总额的差额
+        if($firstDayPlan != null){
+            $_repayTotal = 0; //替换计划还款总额
+            $_payTotal = 0;
+            $repayTotal = 0;  //现在生产计划还款总额
+            $payTotal = 0;
+            foreach($firstDayPlan as $planItem){
+                if($planItem['type'] == 'repay'){
+                    $_repayTotal += $planItem['amount'];
+                }else{
+                    $_payTotal += $planItem['amount'];
+                }
+            }
+            foreach($planSequence[0] as $planItem){
+                if($planItem['type'] == 'repay'){
+                    $repayTotal += $planItem['amount'];
+                }else{
+                    $payTotal += $planItem['amount'];
+                }
+            }
+
+
+            $repayDiff = $_repayTotal - $repayTotal;
+            $payDiff = $_payTotal - $payTotal;
+
+            //第二天的计划的还款和刷卡加上差
+            $repayCount = 0;
+            $payCount = 0;
+            
+            //统计第二天还款、刷卡笔数
+            foreach($planSequence[1] as $planItem){
+                if($planItem['type'] == 'repay'){
+                    $repayCount++;
+                }else{
+                    $payCount++;
+                }
+            }
+
+            if(($repayDiff != 0 && $repayCount == 0) || ($payDiff != 0 && $payCount == 0)){
+                my_json_encode(1011,'修改计划失败');
+            }
+
+            if($repayDiff != 0){ //将还款差额应用到第二天的还款计划中
+                foreach($planSequence[1] as &$planItem){
+                    if($planItem['type'] == 'repay'){
+                        $planItem['amount'] = $planItem['amount'] - $repayDiff;
+                        break;
+                    }
+                }
+            }
+            if($payDiff != 0){
+                foreach($planSequence[1] as &$planItem){
+                    if($planItem['type'] == 'pay'){
+                        $planItem['amount'] = $planItem['amount'] - $payDiff;
+                        break;
+                    }
+                }
+            }
+
+            $planSequence[0] = $firstDayPlan;
+
+
         }
 
         //TODO 差额补上
