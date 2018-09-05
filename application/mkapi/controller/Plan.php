@@ -213,6 +213,15 @@ class Plan extends Common
         //得到计划
         $plan = $repayPlan->getPlan($dayCount, $repayAmount, $planType,$firstDayPlan);
 
+        //检查生成的计划是否正常
+        foreach($plan as $key => $dailyPlan){
+            foreach($dailyPlan as $action){
+                if($action['amount'] < 0){
+                    my_json_encode(21,'修改计划错误');
+                }
+            }
+        }
+
         //删除数据库中已存在的计划(只删除今天和未来的计划)
         // $bill_month = $bill[0]->bill_month;
         Repay_plans::where('credit_card_id', $cardId)

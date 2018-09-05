@@ -1,13 +1,12 @@
 <?php
 namespace app\mkapi\controller;
 
-use app\mkapi\common\RepayPlan\RepayPlan;
 use app\mkapi\model\Bills;
+use app\mkapi\model\Card_operate_status as CardStatus;
 use app\mkapi\model\Credit_cards;
 use app\mkapi\model\Repay_plans;
 use app\mkapi\model\Shopping_records;
 use app\mkapi\model\Users;
-use app\mkapi\model\Card_operate_status as CardStatus;
 use think\Request;
 
 /**
@@ -50,7 +49,7 @@ class Card extends Common
             $billsDbResult = Bills::all(['credit_card_id' => $card->id]);
             $billsResult = [];
             foreach ($billsDbResult as $billDbResult) {
-	        $status = CardStatus::getInst($userId,$billDbResult->credit_card_id,$billDbResult->bill_month);
+                $status = CardStatus::getInst($userId, $billDbResult->credit_card_id, $billDbResult->bill_month);
                 $repaid = $status->repaid >= $billDbResult->new_balance ? 1 : 0;
                 $billsResult[] = [
                     'bill_id' => $billDbResult->id,
@@ -115,7 +114,7 @@ class Card extends Common
             return ['status' => 1, 'msg' => '该用户没有指定ID的账单'];
         }
 
-        $status = CardStatus::getInst($userId,$bill->credit_card_id,$bill->bill_month);
+        $status = CardStatus::getInst($userId, $bill->credit_card_id, $bill->bill_month);
         $status->repaid = $bill->new_balance;
         $status->save();
 
