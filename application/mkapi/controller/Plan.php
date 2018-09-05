@@ -374,14 +374,14 @@ class Plan extends Common
             //未来计划
             $plans = Repay_plans::where('user_id',$userId)
                 ->where('action_date', '>', date('Y-m-d', $nowTime))
-                ->order('credit_card_id desc,sort asc')
+                ->order('action_date asc,credit_card_id desc,sort asc')
                 ->select();
 
         } else if ($type == 'past') {
             //过去计划
             $plans = Repay_plans::where('user_id',$userId)
                 ->where('action_date', '<', date('Y-m-d', $nowTime))
-                ->order('credit_card_id desc,sort asc')
+                ->order('action_date desc,credit_card_id desc,sort asc')
                 ->select();
 
         } else {
