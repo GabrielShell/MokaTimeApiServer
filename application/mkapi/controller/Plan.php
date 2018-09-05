@@ -360,7 +360,7 @@ class Plan extends Common
         }
 
         $userId = Users::where(['series' => $userSeries])->value('id');
-        $nowTime = strtotime('2018-09-01');
+        $nowTime = time();
         if ($type == 'future') {
             //未来计划
             $plans = Repay_plans::where('user_id',$userId)
