@@ -384,37 +384,29 @@ class Plan extends Common
         }
         $planResult = [];
         foreach($plans as $plan){
-            $planResult[$plan->bill_month][$plan->credit_card_id][] = [
+            $planResult[$plan->action_date][$plan->credit_card_id][] = [
                 'id' => $plan->id,
                 'type'=>$plan->action,
                 'amount'=>$plan->amount,
                 'action_date'=>$plan->action_date,
-                'finish_time'=>$plan->finish_time
+                'finish_time'=>$plan->finish_time,
+                'bill_month'=>$plan->bill_month
             ];
+            // $planResult[$plan->bill_month][$plan->credit_card_id][] = [
+            //     'id' => $plan->id,
+            //     'type'=>$plan->action,
+            //     'amount'=>$plan->amount,
+            //     'action_date'=>$plan->action_date,
+            //     'finish_time'=>$plan->finish_time
+            // ];
         }
 
         //改变响应格式
         $planData = [];
-        foreach($planResult as $billMonth => $cardsPlan){
+        foreach($planResult as $actionDate => $cardPlan){
             $cardsPlanData = [];
-            foreach($cardsPlan as $cardId => $planList){
-                $planDateList = [];
-                foreach($planList as $planItem){
-                    $planDateList[$planItem['action_date']] = [
-                        'id' => $planItem['id'],
-                        'type'=>$planItem['type'],
-                        'amount'=>$planItem['amount'],
-                        'finish_time'=>$planItem['finish_time']
-                    ];
-                }
+            foreach($cardPlan as $cardId => $planList){
 
-                $planResDateList = [];
-                foreach($planDateList as $actionDate => $planItemList){
-                    $planResDateList[]= [
-                        'date' => $actionDate,
-                        'plan' => $planItemList
-                    ];
-                }
                 $cardInst = Credit_cards::get($cardId);
 
                 $billInst = $cardInst->getNewestBill();
@@ -424,7 +416,7 @@ class Plan extends Common
                     $newBalance = $billInst->new_balance;
                 }
 
-                $status = CardStatus::getInst($userId,$cardId,$billMonth); 
+                // $status = CardStatus::getInst($userId,$cardId,$planList['bill_month']); 
 
                 $cardsPlanData[] = [
                     'credit_card_id' => $cardId,
@@ -433,16 +425,64 @@ class Plan extends Common
                     'card_no_last4' => $cardInst->card_no_last4,
                     'credit_limit' =>  $cardInst->credit_limit,
                     'new_balance' => $newBalance,
-                    'repaid' => $status->repaid,
-                    'paid' => $status->paid,
-                    'data' => $planResDateList
+                    'plan' => $planList
                 ];
             }
             $planData[] = [
-                'bill_month' => $billMonth,
+                'action_date' => $actionDate,
                 'data' => $cardsPlanData
             ];
         }
+        //改变响应格式
+        // $planData = [];
+        // foreach($planResult as $billMonth => $cardsPlan){
+        //     $cardsPlanData = [];
+        //     foreach($cardsPlan as $cardId => $planList){
+        //         $planDateList = [];
+        //         foreach($planList as $planItem){
+        //             $planDateList[$planItem['action_date']] = [
+        //                 'id' => $planItem['id'],
+        //                 'type'=>$planItem['type'],
+        //                 'amount'=>$planItem['amount'],
+        //                 'finish_time'=>$planItem['finish_time']
+        //             ];
+        //         }
+
+        //         $planResDateList = [];
+        //         foreach($planDateList as $actionDate => $planItemList){
+        //             $planResDateList[]= [
+        //                 'date' => $actionDate,
+        //                 'plan' => $planItemList
+        //             ];
+        //         }
+        //         $cardInst = Credit_cards::get($cardId);
+
+        //         $billInst = $cardInst->getNewestBill();
+        //         //获取本期账单金额
+        //         $newBalance = $cardInst->credit_limit;
+        //         if($billInst){
+        //             $newBalance = $billInst->new_balance;
+        //         }
+
+        //         $status = CardStatus::getInst($userId,$cardId,$billMonth); 
+
+        //         $cardsPlanData[] = [
+        //             'credit_card_id' => $cardId,
+        //             'bank_name' => $cardInst->bank_name,
+        //             'name_on_card' => $cardInst->name_on_card,
+        //             'card_no_last4' => $cardInst->card_no_last4,
+        //             'credit_limit' =>  $cardInst->credit_limit,
+        //             'new_balance' => $newBalance,
+        //             'repaid' => $status->repaid,
+        //             'paid' => $status->paid,
+        //             'data' => $planResDateList
+        //         ];
+        //     }
+        //     $planData[] = [
+        //         'bill_month' => $billMonth,
+        //         'data' => $cardsPlanData
+        //     ];
+        // }
 
         my_json_encode(0,'',$planData);
     }
