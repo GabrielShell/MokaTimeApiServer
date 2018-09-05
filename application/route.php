@@ -159,6 +159,17 @@ Route::post('api/v1/card/repayPlanList','mkapi/Plan/repayPlanList');
  */
 Route::post('api/v1/card/markPlanExec','mkapi/Plan/markPlanExec');
 
+
+/**
+ * 手动修改计划金额接口
+ * @param int plan_id 计划ID
+ * @param int modify_amount 修改后的金额
+ * @param string day_list 日期列表,英文逗号分隔，如"2018-07-03,2018-03-04"
+ * @param int repay_amount 还款金额，只接受整数
+ * @param int plan_type 规划模式 1=资金不过夜：当日还，当日刷; 2=资金过夜：当日还，次日刷
+ */
+Route::post('api/v1/plan/modifyPlanAmount','mkapi/Plan/modifyPlanAmount');
+
 // +----------------------------------------------------------------------
 // | 客户端版本管理接口
 // +----------------------------------------------------------------------

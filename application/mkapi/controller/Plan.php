@@ -110,25 +110,15 @@ class Plan extends Common
             my_json_encode(2, 'series不能为空');
         }
 
-        $userId = Users::where(['series' => $userSeries])->value('id');
         $cardId = $request->post('card_id');
         if (empty($cardId)) {
             my_json_encode(2, 'card_id不能为空');
         }
 
-        $card = Credit_cards::where('id', $cardId)->where('user_id', $userId)->select();
-        if (!$card) {
-            my_json_encode(3, '该用户没有指定ID的信用卡');
-        }
-        $card = $card[0];
 
         $dayListStr = $request->post('dayList');
         if (empty($dayListStr)) {
             my_json_encode(4, 'dayList不能为空');
-        }
-        $dayList = explode(',', $dayListStr);
-        if (!is_array($dayList) || count($dayList) < 1) {
-            my_json_encode(5, 'dayList格式不正确');
         }
 
         $repayAmount = $request->post('repayAmount');
@@ -152,8 +142,28 @@ class Plan extends Common
             my_json_encode(10, 'planType格式错误');
         }
 
+        self::genNewPlan($userSeries,$cardId,$dayListStr,$repayAmount,$planType);
         
+    }
 
+    /**
+     * 生成新还款计划方法(单独分离方便重用)
+     */
+    public static function genNewPlan($userSeries,$cardId,$dayListStr,$repayAmount,$planType,$remainDate = null){
+
+        $userId = Users::where(['series' => $userSeries])->value('id');
+
+        $card = Credit_cards::where('id', $cardId)->where('user_id', $userId)->select();
+        if (!$card) {
+            my_json_encode(3, '该用户没有指定ID的信用卡');
+        }
+        $card = $card[0];
+
+
+        $dayList = explode(',', $dayListStr);
+        if (!is_array($dayList) || count($dayList) < 1) {
+            my_json_encode(5, 'dayList格式不正确');
+        }
         // //得到本期账单
         // $bill = Bills::where('credit_card_id', $cardId)->where('bill_type', 'DONE')->order('bill_month', 'desc')->limit(1)->select();
         // if (!$bill) {
@@ -184,20 +194,37 @@ class Plan extends Common
         $dayCount = count($dayList);
 
         $repayPlan = new RepayPlan;
+
+        //如果是保留第一天的计划
+        $firstDayPlan = null;
+        if($remainDate != null){
+            $plans = Repay_plans::where('credit_card_id',$cardId)
+            ->where('action_date',$remainDate)
+            ->order('sort asc')
+            ->select();
+            foreach($plans as $planItem){
+                $firstDayPlan[] = [
+                    'type' => $planItem->action,
+                    'amount' => $planItem->amount
+                ];
+            }
+        }
+
         //得到计划
-        $plan = $repayPlan->getPlan($dayCount, $repayAmount, $planType);
+        $plan = $repayPlan->getPlan($dayCount, $repayAmount, $planType,$firstDayPlan);
 
         //删除数据库中已存在的计划(只删除今天和未来的计划)
         // $bill_month = $bill[0]->bill_month;
         Repay_plans::where('credit_card_id', $cardId)
-        ->where('action_date','>=',date('Y-m-d'))
+        // ->where('action_date','>=',date('Y-m-d'))
         ->where('bill_month', $billMonth)
+        // ->where('action_date','<>',$remainDate)
         ->delete();
         //将计划与卡片还款日期关联,同时储存到数据库
-        // $resultPlan = [];
+        $resultPlan = [];
         $sort = 0;
         foreach ($plan as $key => $dailyPlan) {
-            foreach ($dailyPlan as $action) {
+            foreach ($dailyPlan as &$action) {
                 $repayPlanDbInst = new Repay_plans;
                 $repayPlanDbInst->user_id = $userId;
                 $repayPlanDbInst->credit_card_id = $cardId;
@@ -208,13 +235,13 @@ class Plan extends Common
                 $repayPlanDbInst->action_date = $dayList[$key];
                 $repayPlanDbInst->save();
                 $sort++;
-                // $action['id'] = $repayPlanDbInst->id;
-                // $action['finish_time'] = null;
+                $action['id'] = $repayPlanDbInst->id;
+                $action['finish_time'] = null;
             }
-            // $resultPlan[$key] = [
-            //     'date' => $dayList[$key],
-            //     'plan' => $dailyPlan,
-            // ];
+            $resultPlan[$key] = [
+                'date' => $dayList[$key],
+                'plan' => $dailyPlan,
+            ];
         }
 
         //储存还款计划生成信息
@@ -224,29 +251,29 @@ class Plan extends Common
         $status->plan_type = $planType;
         $status->save();
 
-        $repayPlanDbInstArr = Repay_plans::where('credit_card_id', $cardId)
-        ->where('bill_month', $billMonth)
-        ->order('sort asc')
-        ->select();
+        // $repayPlanDbInstArr = Repay_plans::where('credit_card_id', $cardId)
+        // ->where('bill_month', $billMonth)
+        // ->order('sort asc')
+        // ->select();
 
-        $planData = [];
-        foreach ($repayPlanDbInstArr as $repayPlanDbInst) {
-            $planData[$repayPlanDbInst->action_date][] = [
-                'id' => $repayPlanDbInst->id,
-                'type' => $repayPlanDbInst->action,
-                'amount' => $repayPlanDbInst->amount,
-                'finish_time' => $repayPlanDbInst->finish_time
-            ];
+        // $planData = [];
+        // foreach ($repayPlanDbInstArr as $repayPlanDbInst) {
+        //     $planData[$repayPlanDbInst->action_date][] = [
+        //         'id' => $repayPlanDbInst->id,
+        //         'type' => $repayPlanDbInst->action,
+        //         'amount' => $repayPlanDbInst->amount,
+        //         'finish_time' => $repayPlanDbInst->finish_time
+        //     ];
 
-        }
+        // }
 
-        $planResult = [];
-        foreach($planData as $actionDate => $planList){
-            $planResult[] = [
-                'date' => $actionDate,
-                'plan' => $planList
-            ];
-        }
+        // $planResult = [];
+        // foreach($planData as $actionDate => $planList){
+        //     $planResult[] = [
+        //         'date' => $actionDate,
+        //         'plan' => $planList
+        //     ];
+        // }
 
         $newBalance = $card->credit_limit;
         $billInst = $card->getNewestBill();
@@ -270,7 +297,8 @@ class Plan extends Common
             'repaid' => $status->repaid,
             'paid' => $status->paid,
             'finish' => $finish,
-            'plan' => $planResult
+            // 'plan' => $planResult
+            'plan' => $resultPlan
         ];
 
         // $data = ['plan' => $resultPlan];
@@ -332,7 +360,7 @@ class Plan extends Common
         }
 
         $userId = Users::where(['series' => $userSeries])->value('id');
-        $nowTime = strtotime('2018-09-01');
+        $nowTime = time();
         if ($type == 'future') {
             //未来计划
             $plans = Repay_plans::where('user_id',$userId)
@@ -356,37 +384,29 @@ class Plan extends Common
         }
         $planResult = [];
         foreach($plans as $plan){
-            $planResult[$plan->bill_month][$plan->credit_card_id][] = [
+            $planResult[$plan->action_date][$plan->credit_card_id][] = [
                 'id' => $plan->id,
                 'type'=>$plan->action,
                 'amount'=>$plan->amount,
                 'action_date'=>$plan->action_date,
-                'finish_time'=>$plan->finish_time
+                'finish_time'=>$plan->finish_time,
+                'bill_month'=>$plan->bill_month
             ];
+            // $planResult[$plan->bill_month][$plan->credit_card_id][] = [
+            //     'id' => $plan->id,
+            //     'type'=>$plan->action,
+            //     'amount'=>$plan->amount,
+            //     'action_date'=>$plan->action_date,
+            //     'finish_time'=>$plan->finish_time
+            // ];
         }
 
         //改变响应格式
         $planData = [];
-        foreach($planResult as $billMonth => $cardsPlan){
+        foreach($planResult as $actionDate => $cardPlan){
             $cardsPlanData = [];
-            foreach($cardsPlan as $cardId => $planList){
-                $planDateList = [];
-                foreach($planList as $planItem){
-                    $planDateList[$planItem['action_date']] = [
-                        'id' => $planItem['id'],
-                        'type'=>$planItem['type'],
-                        'amount'=>$planItem['amount'],
-                        'finish_time'=>$planItem['finish_time']
-                    ];
-                }
+            foreach($cardPlan as $cardId => $planList){
 
-                $planResDateList = [];
-                foreach($planDateList as $actionDate => $planItemList){
-                    $planResDateList[]= [
-                        'date' => $actionDate,
-                        'plan' => $planItemList
-                    ];
-                }
                 $cardInst = Credit_cards::get($cardId);
 
                 $billInst = $cardInst->getNewestBill();
@@ -396,7 +416,7 @@ class Plan extends Common
                     $newBalance = $billInst->new_balance;
                 }
 
-                $status = CardStatus::getInst($userId,$cardId,$billMonth); 
+                // $status = CardStatus::getInst($userId,$cardId,$planList['bill_month']); 
 
                 $cardsPlanData[] = [
                     'credit_card_id' => $cardId,
@@ -405,16 +425,64 @@ class Plan extends Common
                     'card_no_last4' => $cardInst->card_no_last4,
                     'credit_limit' =>  $cardInst->credit_limit,
                     'new_balance' => $newBalance,
-                    'repaid' => $status->repaid,
-                    'paid' => $status->paid,
-                    'data' => $planResDateList
+                    'plan' => $planList
                 ];
             }
             $planData[] = [
-                'bill_month' => $billMonth,
+                'action_date' => $actionDate,
                 'data' => $cardsPlanData
             ];
         }
+        //改变响应格式
+        // $planData = [];
+        // foreach($planResult as $billMonth => $cardsPlan){
+        //     $cardsPlanData = [];
+        //     foreach($cardsPlan as $cardId => $planList){
+        //         $planDateList = [];
+        //         foreach($planList as $planItem){
+        //             $planDateList[$planItem['action_date']] = [
+        //                 'id' => $planItem['id'],
+        //                 'type'=>$planItem['type'],
+        //                 'amount'=>$planItem['amount'],
+        //                 'finish_time'=>$planItem['finish_time']
+        //             ];
+        //         }
+
+        //         $planResDateList = [];
+        //         foreach($planDateList as $actionDate => $planItemList){
+        //             $planResDateList[]= [
+        //                 'date' => $actionDate,
+        //                 'plan' => $planItemList
+        //             ];
+        //         }
+        //         $cardInst = Credit_cards::get($cardId);
+
+        //         $billInst = $cardInst->getNewestBill();
+        //         //获取本期账单金额
+        //         $newBalance = $cardInst->credit_limit;
+        //         if($billInst){
+        //             $newBalance = $billInst->new_balance;
+        //         }
+
+        //         $status = CardStatus::getInst($userId,$cardId,$billMonth); 
+
+        //         $cardsPlanData[] = [
+        //             'credit_card_id' => $cardId,
+        //             'bank_name' => $cardInst->bank_name,
+        //             'name_on_card' => $cardInst->name_on_card,
+        //             'card_no_last4' => $cardInst->card_no_last4,
+        //             'credit_limit' =>  $cardInst->credit_limit,
+        //             'new_balance' => $newBalance,
+        //             'repaid' => $status->repaid,
+        //             'paid' => $status->paid,
+        //             'data' => $planResDateList
+        //         ];
+        //     }
+        //     $planData[] = [
+        //         'bill_month' => $billMonth,
+        //         'data' => $cardsPlanData
+        //     ];
+        // }
 
         my_json_encode(0,'',$planData);
     }
@@ -485,7 +553,10 @@ class Plan extends Common
     /**
      * 手动修改计划金额接口
      * @param int plan_id 计划ID
-     * @param int amount 修改后的金额
+     * @param int modifyAmount 修改后的金额
+     * @param string dayList 日期列表,英文逗号分隔，如"2018-07-03,2018-03-04"
+     * @param int repayAmount 还款金额，只接受整数
+     * @param int planType 规划模式 1=资金不过夜：当日还，当日刷; 2=资金过夜：当日还，次日刷
      */
     public function modifyPlanAmount(Request $request){
         $userSeries = $request->post('series');
@@ -500,9 +571,36 @@ class Plan extends Common
             my_json_encode(2, 'plan_id不能为空');
         }
 
-        $amount = $request->post('amount');
-        if (empty($amount)) {
-            my_json_encode(3, 'amount不能为空');
+        $modifyAmount = $request->post('modify_amount');
+        if (empty($modifyAmount)) {
+            my_json_encode(3, 'modify_amount不能为空');
+        }
+
+
+        $dayListStr = $request->post('day_list');
+        if (empty($dayListStr)) {
+            my_json_encode(4, 'day_list不能为空');
+        }
+
+        $repayAmount = $request->post('repay_amount');
+        if (empty($repayAmount)) {
+            my_json_encode(6, 'repay_amount不能为空');
+        }
+        if($repayAmount < 1000){
+            my_json_encode(11, '还款金额大于1000才能提供计划');
+        }
+        if (!is_numeric($repayAmount)) {
+            my_json_encode(8, 'repay_amount格式不正确');
+        } else if (strpos($repayAmount, '.')) {
+            my_json_encode(9, 'repay_amount只接受整数');
+        }
+
+        $planType = $request->post('plan_type');
+        if (empty($planType)) {
+            my_json_encode(7, 'plan_type不能为空');
+        }
+        if ($planType != 1 && $planType != 2) {
+            my_json_encode(10, 'plan_type格式错误');
         }
 
 
@@ -527,42 +625,82 @@ class Plan extends Common
         ->order('action_date asc')
         ->select();
 
-        if($timeAt == 'future' && $planActionDate != $periodPlan[0]->action_date){
-            my_json_encode(5,'只能修改第一天或当天的计划');
-        }
+        // TODO future限制
+        // if($timeAt == 'future' && $planActionDate != $periodPlan[0]->action_date){
+        //     my_json_encode(5,'只能修改第一天或当天的计划');
+        // }
         $planItemCount = count($periodPlan);
         if($timeAt == 'today' && $planActionDate == $periodPlan[$planItemCount - 1]->action_date){
             my_json_encode(6,'最后一天不能修改计划');
         }
 
-        //统计从修改的那一天直到周期计划结束的还款总额、刷卡总额
-        $repayTotal = 0;
-        $payTotal = 0;
-        if($timeAt == 'today'){
-            $startDate = date('Y-m-d 00:00:00');
-            foreach($periodPlan as $planItem){
-                if(strtotime($planItem->action_date.' 00:00:00') >= strtotime($startDate)){
-                    if($planItem->action == 'repay'){
-                        $repayTotal += $planItem->amount;
-                    }else{
-                        $payTotal += $planItem->amount;
-                    }
-                }
-            }
-        }else{
-            foreach($periodPlan as $planItem){
-                if($planItem->action == 'repay'){
-                    $repayTotal += $planItem->amount;
-                }else{
-                    $payTotal += $planItem->amount;
-                }
-            }
-        }
+        $planInst->amount = $modifyAmount;
+        $planInst->save();
 
-        $amountDiff = $amount - $planInst->amount;
+        //统计从修改的那一天直到周期计划结束的还款总额、刷卡总额,以及修改当天的还款总额、刷卡总额
+        // $repayTotal = 0;
+        // $payTotal = 0;
+        // $_dayRepay = 0; //所修改的当天的还款总额
+        // $_dayPay = 0; //所修改的当天的刷卡总额
+        // if($timeAt == 'today'){
+        //     $startDate = date('Y-m-d 00:00:00');
+        //     foreach($periodPlan as $planItem){
+        //         if(strtotime($planItem->action_date.' 00:00:00') >= strtotime($startDate)){
+        //             if($planItem->action == 'repay'){
+        //                 $repayTotal += $planItem->amount;
+        //             }else{
+        //                 $payTotal += $planItem->amount;
+        //             }
+        //         }
+        //         if(strtotime($planItem->action_date.' 00:00:00') == strtotime($startDate)){
+        //             if($planItem->action == 'repay'){
+        //                 $_dayRepay += $planItem->amount;
+        //             }else{
+        //                 $_dayPay += $planItem->amount;
+        //             }
+        //         }
+        //     }
+        // }else{
+        //     $startDate = $periodPlan[0]->action_date.' 00:00:00';
+        //     foreach($periodPlan as $planItem){
+        //         if($planItem->action == 'repay'){
+        //             $repayTotal += $planItem->amount;
+        //         }else{
+        //             $payTotal += $planItem->amount;
+        //         }
+        //         if(strtotime($planItem->action_date.' 00:00:00') == strtotime($startDate)){
+        //             if($planItem->action == 'repay'){
+        //                 $_dayRepay += $planItem->amount;
+        //             }else{
+        //                 $_dayPay += $planItem->amount;
+        //             }
+        //         }
+        //     }
+        // }
 
+        // //修改的差额
+        // $amountDiff = $amount - $planInst->amount;
+
+        // //所修改的那一天之后的还款总额（修改前）（不包含所修改的那一天）
+        // $_afterDayRepayTotal = $repayTotal - $_dayRepay;
+        // //所修改的那一天之后的刷卡总额（修改前）（不包含所修改的那一天）
+        // $_afterDayPayTotal = $PayTotal - $_dayPay;
+
+        // $afterDayRepayTotal = $_afterDayRepayTotal;
+        // $afterDayPayTotal = $_afterDayPayTotal;
+        // if($planInst->action == 'repay'){
+        //     //所修改的那一天之后的还款总额（修改后）（不包含所修改的那一天）
+        //     $afterDayRepayTotal = $_afterDayRepayTotal - $amountDiff;
+        // }else{
+        //     //所修改的那一天之后的刷卡总额（修改后）（不包含所修改的那一天）
+        //     $afterDayPayTotal = $_afterDayPayTotal - $amountDiff;
+        // }
+
+        // //获取还款计划参数记录
+        // $status = CardStatus::getInst($userId,$planInst->credit_card_id,$planInst->bill_month);
 
         //重新生成计划
+        self::genNewPlan($userSeries,$planInst->credit_card_id,$dayListStr,$repayAmount,$planType,$planInst->action_date);
         
 
         
