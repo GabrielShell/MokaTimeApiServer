@@ -19,7 +19,7 @@ class Goods extends Common{
 		$auth = new Auth($this->accessKey, $this->secretKey);
 		foreach ($goodsList as $key => $value) {
 			$name = substr($value['goods_thumb'],0, strpos($value['goods_thumb'], '.'));
-			$baseUrl = 'http://'.$this->domain.'/goods/'.$value['goods_thumb'].'?imageMogr2/interlace/1/quality/100/format/webp&attname='.$name.'.webp';
+			$baseUrl = 'http://'.$this->domain.'/goods/'.$value['goods_thumb'].'?imageMogr2/interlace/1/quality/100/format/webp|imageInfo&attname='.$name.'.webp';
 			// $goodsList[$key]['goods_thumb'] = $auth->privateDownloadUrl($baseUrl);
 			$goodsList[$key]['goods_thumb'] = $baseUrl;
 			
