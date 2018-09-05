@@ -50,7 +50,8 @@ class Card extends Common
             $billsDbResult = Bills::all(['credit_card_id' => $card->id]);
             $billsResult = [];
             foreach ($billsDbResult as $billDbResult) {
-                $repaid = $billDbResult->repaid >= $billDbResult->new_balance ? 1 : 0;
+	        $status = CardStatus::getInst($userId,$billDbResult->credit_card_id,$billDbResult->bill_month);
+                $repaid = $status->repaid >= $billDbResult->new_balance ? 1 : 0;
                 $billsResult[] = [
                     'bill_id' => $billDbResult->id,
                     'origin_type' => $billDbResult->origin_type,
