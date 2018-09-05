@@ -19,7 +19,8 @@ class Orderinformation extends Common{
 		$orderList = Db::name('order_information')->field('a.id,a.content,a.order_id,b.delivery_no,c.goods_name,c.goods_thumb,a.update_time')->alias('a')->join('order b','a.order_id = b.id')->join('goods c','b.goods_id = c.id')->where('a.series',$series)->order('a.update_time desc')->select();
 		foreach ($orderList as $key => $value) {
 			 // 私有空间中的外链 http://<domain>/<file_key>
-	        $baseUrl = 'http://'.$domain.'/goods/'.$value['goods_thumb'];
+			$name = substr($value1['goods_thumb'], 0,strpos($value1['goods_thumb'], '.'));
+	        $baseUrl = 'http://'.$domain.'/goods/'.$value['goods_thumb'].'?imageMogr2/interlace/1/format/webp&attname='.$name.'.webp';
 			$orderList[$key]['goods_thumb'] = $auth->privateDownloadUrl($baseUrl);
 		}
 		my_json_encode(10000,'success',$orderList);

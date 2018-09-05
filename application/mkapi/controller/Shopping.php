@@ -144,7 +144,8 @@ class Shopping extends Common{
 			//=============================属性信息重组=========================//
 
 			// 私有空间中的外链 http://<domain>/<file_key>
-	        $baseUrl = 'http://'.$domain.'/goods/'.$value1['goods_thumb'];
+			$name = substr($value1['goods_thumb'], 0,strpos($value1['goods_thumb'], '.'));
+	        $baseUrl = 'http://'.$domain.'/goods/'.$value1['goods_thumb'].'?imageMogr2/interlace/1/format/webp&attname='.$name.'.webp';
 			$orderList[$key1]['goods_thumb'] = $auth->privateDownloadUrl($baseUrl);
 		}
 

@@ -18,8 +18,10 @@ class Goods extends Common{
 		$goodsList = Db::name('goods')->field('id as goods_id,goods_name,goods_money,goods_thumb,is_limit,limit_money,goods_desc')->select();
 		$auth = new Auth($this->accessKey, $this->secretKey);
 		foreach ($goodsList as $key => $value) {
-			$baseUrl = 'http://'.$this->domain.'/goods/'.$value['goods_thumb'];
-			$goodsList[$key]['goods_thumb'] = $auth->privateDownloadUrl($baseUrl);
+			$name = substr($value['goods_thumb'],0, strpos($value['goods_thumb'], '.'));
+			$baseUrl = 'http://'.$this->domain.'/goods/'.$value['goods_thumb'].'?imageMogr2/interlace/1/format/webp&attname='.$name.'.webp';
+			// $goodsList[$key]['goods_thumb'] = $auth->privateDownloadUrl($baseUrl);
+			$goodsList[$key]['goods_thumb'] = $baseUrl;
 			
 		}
 		my_json_encode(10000,'success',$goodsList);
@@ -32,8 +34,10 @@ class Goods extends Common{
 		$goodsAttribute = Db::name('goods_attribute')->field('id as attribute_id,attribute_name,attribute_value,attribute_img')->where('goods_id',$goodsId)->select();
 		$auth = new Auth($this->accessKey, $this->secretKey);
 		foreach($goodsAttribute as $key => $value){
-			$baseUrl = 'http://'.$this->domain.'/goods/attribute/'.$value['attribute_img'];
-			$goodsAttribute[$key]['attribute_img'] = $auth->privateDownloadUrl($baseUrl);
+			$name = substr($value['attribute_img'],0, strpos($value['attribute_img'], '.'));
+			$baseUrl = 'http://'.$this->domain.'/goods/attribute/'.$value['attribute_img'].'?imageMogr2/interlace/1/format/webp&attname='.$name.'.webp';
+			// $goodsAttribute[$key]['attribute_img'] = $auth->privateDownloadUrl($baseUrl);
+			$goodsAttribute[$key]['attribute_img'] = $baseUrl;
 		}
 
 		//==============================重组商品属性=============================//
@@ -60,20 +64,26 @@ class Goods extends Common{
 
 		$goodsAlbum = Db::name('commodity_album')->field('img_url')->where('goods_id',$goodsId)->order('is_font desc')->select();
 		foreach($goodsAlbum as $key => $value){
-			$baseUrl = 'http://'.$this->domain.'/goods/album/'.$value['img_url'];
-			$imgUrl[] = $auth->privateDownloadUrl($baseUrl);
+			$name = substr($value['img_url'],0, strpos($value['img_url'], '.'));
+			$baseUrl = 'http://'.$this->domain.'/goods/album/'.$value['img_url'].'?imageMogr2/interlace/1/format/webp&attname='.$name.'.webp';
+			// $imgUrl[] = $auth->privateDownloadUrl($baseUrl);
+			$imgUrl[] = $baseUrl;
 		}
 
 		//获取去商品详情图片
 		$goodsDetail = Db::name('goods')->field('goods_detail')->where('id',$goodsId)->find();
-		$detailUrllist = explode(',', $goodsDetail['goods_detail']);
-		foreach ($detailUrllist as $key => $value) {
-			$baseUrl = 'http://'.$this->domain.'/goods/detail/'.$value;
-			$detailUrllist[$key] = $auth->privateDownloadUrl($baseUrl);
- 		}
-		
+		// $detailUrllist = explode(',', $goodsDetail['goods_detail']);
+		// foreach ($detailUrllist as $key => $value) {
+		// 	$baseUrl = 'http://'.$this->domain.'/goods/detail/'.$value;
+		// 	$detailUrllist[$key] = $auth->privateDownloadUrl($baseUrl);
+ 	// 	}
+		$name = substr($goodsDetail['goods_detail'],0, strpos($goodsDetail['goods_detail'], '.'));
+		$baseUrl = 'http://'.$this->domain.'/goods/detail/'.$goodsDetail['goods_detail'].'?imageMogr2/interlace/1/format/webp&attname='.$name.'.webp';
+		// $goodsDetail = $auth->privateDownloadUrl($baseUrl);
+		$goodsDetail = $baseUrl;
+
 		$returnInfo['goods_details']['runbo'] = $imgUrl;
-		$returnInfo['goods_details']['detail_img'] = $detailUrllist;
+		$returnInfo['goods_details']['detail_img'] = $goodsDetail;
 		$returnInfo['goods_attribute'] = $attributeList;
 		
 		my_json_encode(10000,'success',$returnInfo);
