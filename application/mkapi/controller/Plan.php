@@ -225,7 +225,7 @@ class Plan extends Common
         //删除数据库中已存在的计划(只删除今天和未来的计划)
         // $bill_month = $bill[0]->bill_month;
         Repay_plans::where('credit_card_id', $cardId)
-        // ->where('action_date','>=',date('Y-m-d'))
+        ->where('action_date','>=',date('Y-m-d'))
         ->where('bill_month', $billMonth)
         // ->where('action_date','<>',$remainDate)
         ->delete();

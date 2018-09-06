@@ -171,7 +171,13 @@ class XinyanBillsApi extends Common{
 
                         //查找数据库是否已有该信用卡，没有则插入信用卡，有则更新信用卡数据
                         $searched = []; //已经在数据库找到的记录 key=unique_string value=card_id
-                        foreach($data['data']['bills'] as $bill){
+                        foreach($data['data']['bills'] as &$bill){
+                                if($bill['name_on_card'] == 'noname' || $bill['card_number'] == '****'){
+                                        continue;
+                                }
+                                if(strpos($bill['card_number'],',')){
+                                        $bill['card_number'] = substr($bill['card_number'],-4,4);
+                                }
                                 $unique_string = $banks[$bill['bank_id']] .'-'. $bill['name_on_card'] .'-'. $bill['card_number'];
                                 $card_id = 0;
                                 if(!isset($searched[$unique_string])){
@@ -235,6 +241,7 @@ class XinyanBillsApi extends Common{
                                 //如果该账单在数据库中不存在，则将账单插入数据库
                                 if(!Bills::get(['user_id'=>$userId,'bill_month'=>$billMonth])){
                                         $bill_record  = new Bills;
+                                        $bill_record->orderNo = $orderNo;
                                         $bill_record->series = $bill['bill_id'];
                                         $bill_record->user_id = $userId;
                                         $bill_record->credit_card_id = $card_id;
@@ -283,17 +290,67 @@ class XinyanBillsApi extends Common{
                 return $result;
         }
 
+
         /**
          * 邮箱查询账单消费记录
          */
-        public function emailQueryShoppingRecords($orderNo,$billId){
+        public function emailQueryShoppingRecords(Request $request){
+                $userSeries = $request->post('series');
+                if (empty($userSeries)) {
+                        my_json_encode(2, 'series不能为空');
+                }
+
+                $userId = Users::where(['series' => $userSeries])->value('id');
                 $page = 1;
                 $size = 1000;
+                $billId = $request->post('bill_id');
+
+                //检查该账单是否有消费记录，如果有，则不需要往下查询
+                $records = Shopping_records::where('bill_id',$billId)->select();
+                if($records){
+                        my_json_encode(0,'');
+                }
+
+
+
+                $bill = Bills::get($billId);
+                if($bill->user_id != $userId){
+                        my_json_encode(3, '该用户下找不到对应ID的账单');
+                }
                 $shoppingUrl="https://api.xinyan.com/data/email/v2/bills/shopping/";
-                $requestUrl = $shoppingUrl.$orderNo."?billId=".$billId."&page=".$page."&size=".$size;
+                $requestUrl = $shoppingUrl.$bill->orderNo."?billId=".$bill->series."&page=".$page."&size=".$size;
 
                 $result = CurlRequest::get($requestUrl,$this->headers);
-                return json_decode($result,true);
+                $shoppingRecordResult = json_decode($result,true);
+
+                $shoppingRecord = [];
+                if($shoppingRecordResult['success'] == 'true' && $shoppingRecordResult['data'] != null)
+                        $shoppingRecord = $shoppingRecordResult['data']['shopping_sheets'];
+
+                //查询支持银行
+                $supportBanks = Xinyan_banks::all();
+                
+                $banks = [];
+                foreach($supportBanks as $supportBank){
+                        $banks[$supportBank->id] = $supportBank->bank_name;
+                }
+                foreach($shoppingRecord as $shopping_record){
+                        $db_shopping_record = new Shopping_records;
+                        $db_shopping_record->credit_card_id = $bill->credit_card_id;
+                        $db_shopping_record->user_id = $userId;
+                        $db_shopping_record->bill_id = $bill->id;
+                        $db_shopping_record->amount_money = $shopping_record['amount_money'];
+                        $db_shopping_record->trans_addr = $shopping_record['trans_addr'];
+                        $db_shopping_record->trans_date = $shopping_record['trans_date'];
+                        $db_shopping_record->trans_type = $shopping_record['trans_type'];
+                        $db_shopping_record->bank_name = $banks[$shopping_record['bank_id']];
+                        $db_shopping_record->card_no_last4 = $shopping_record['card_no'];
+                        $db_shopping_record->currency_type = $shopping_record['currency_type'];
+                        $db_shopping_record->description = $shopping_record['description'];
+                        $db_shopping_record->post_date = $shopping_record['post_date'];
+                        $db_shopping_record->save();
+                }
+                my_json_encode(0,'');
         }
 
         /**
@@ -626,6 +683,7 @@ class XinyanBillsApi extends Common{
 					Shopping_records::where('user_id',$userId)->where('credit_card_id',$cardId)->delete(); //删除卡片已有交易记录
                                         foreach($card['bills'] as $bill){
 						$billDbInstance = new Bills();
+						$billDbInstance->orderNo = $tradeNo;
 						$billDbInstance->series = $bill['bill_id'];
 						$billDbInstance->user_id = $userId;
 						$billDbInstance->credit_card_id = $cardId;
