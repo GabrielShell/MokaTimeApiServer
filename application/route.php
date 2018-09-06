@@ -32,6 +32,13 @@ Route::post('api/v1/bills/bank/order-no','mkapi/XinyanBillsApi/getBankOrderNo');
 */
 Route::post('api/v1/bills/email/query-bills','mkapi/XinyanBillsApi/emailQueryBills');
 
+
+/**
+ * 邮箱查询账单消费记录接口[POST]
+* @param billId 账单ID
+*/
+Route::post('api/v1/bills/email/shopping-records','mkapi/XinyanBillsApi/emailQueryShoppingRecords');
+
 /**
  * 查询支持银行列表 [POST]
  */
