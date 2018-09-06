@@ -304,6 +304,15 @@ class XinyanBillsApi extends Common{
                 $page = 1;
                 $size = 1000;
                 $billId = $request->post('bill_id');
+
+                //检查该账单是否有消费记录，如果有，则不需要往下查询
+                $records = Shopping_records::where('bill_id',$billId)->select();
+                if($records){
+                        my_json_encode(0,'');
+                }
+
+
+
                 $bill = Bills::get($billId);
                 if($bill->user_id != $userId){
                         my_json_encode(3, '该用户下找不到对应ID的账单');
@@ -674,6 +683,7 @@ class XinyanBillsApi extends Common{
 					Shopping_records::where('user_id',$userId)->where('credit_card_id',$cardId)->delete(); //删除卡片已有交易记录
                                         foreach($card['bills'] as $bill){
 						$billDbInstance = new Bills();
+						$billDbInstance->orderNo = $tradeNo;
 						$billDbInstance->series = $bill['bill_id'];
 						$billDbInstance->user_id = $userId;
 						$billDbInstance->credit_card_id = $cardId;
