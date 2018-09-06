@@ -303,19 +303,19 @@ class XinyanBillsApi extends Common{
                 $userId = Users::where(['series' => $userSeries])->value('id');
                 $page = 1;
                 $size = 1000;
-                $billId = $request->post('billId');
+                $billId = $request->post('bill_id');
                 $bill = Bills::get($billId);
                 if($bill->user_id != $userId){
                         my_json_encode(3, '该用户下找不到对应ID的账单');
                 }
                 $shoppingUrl="https://api.xinyan.com/data/email/v2/bills/shopping/";
-                $requestUrl = $shoppingUrl.$bill->orderNo."?billId=".$billId."&page=".$page."&size=".$size;
+                $requestUrl = $shoppingUrl.$bill->orderNo."?billId=".$bill->series."&page=".$page."&size=".$size;
 
                 $result = CurlRequest::get($requestUrl,$this->headers);
                 $shoppingRecordResult = json_decode($result,true);
 
                 $shoppingRecord = [];
-                if($shoppingRecordResult['success'] == 'true')
+                if($shoppingRecordResult['success'] == 'true' && $shoppingRecordResult['data'] != null)
                         $shoppingRecord = $shoppingRecordResult['data']['shopping_sheets'];
 
                 //查询支持银行
