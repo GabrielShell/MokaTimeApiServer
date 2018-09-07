@@ -304,6 +304,10 @@ class XinyanBillsApi extends Common{
                 $page = 1;
                 $size = 1000;
                 $cardId = $request->post('card_id');
+                $status = CardStatus::where('credit_card_id',$cardId)->where('is_get_shopping_records',0)->select();
+                if(!$status){
+                        my_json_encode(0,'');
+                }
                 $bills = Bills::where('credit_card_id',$cardId)->select();
                 foreach($bills as $bill){
                         $billId = $bill->id;
@@ -355,6 +359,7 @@ class XinyanBillsApi extends Common{
                         }
                 }
 
+                $status = CardStatus::where('credit_card_id',$cardId)->where('is_get_shopping_records',0)->update(['is_get_shopping_records',1]);
                 my_json_encode(0,'');
         }
 
