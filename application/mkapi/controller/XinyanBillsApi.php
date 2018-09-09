@@ -303,53 +303,63 @@ class XinyanBillsApi extends Common{
                 $userId = Users::where(['series' => $userSeries])->value('id');
                 $page = 1;
                 $size = 1000;
-                $billId = $request->post('bill_id');
-
-                //检查该账单是否有消费记录，如果有，则不需要往下查询
-                $records = Shopping_records::where('bill_id',$billId)->select();
-                if($records){
+                $cardId = $request->post('card_id');
+                $status = CardStatus::where('credit_card_id',$cardId)->where('is_get_shopping_records',0)->select();
+                if(!$status){
                         my_json_encode(0,'');
                 }
+                $bills = Bills::where('credit_card_id',$cardId)->select();
+                foreach($bills as $bill){
+                        $billId = $bill->id;
+
+                        //检查该账单是否有消费记录，如果有，则不需要往下查询
+                        $records = Shopping_records::where('bill_id',$billId)->select();
+                        if($records){
+                                my_json_encode(0,'');
+                        }
 
 
 
-                $bill = Bills::get($billId);
-                if($bill->user_id != $userId){
-                        my_json_encode(3, '该用户下找不到对应ID的账单');
+                        $bill = Bills::get($billId);
+                        if($bill->user_id != $userId){
+                                my_json_encode(3, '该用户下找不到对应ID的账单');
+                        }
+                        $shoppingUrl="https://api.xinyan.com/data/email/v2/bills/shopping/";
+                        $requestUrl = $shoppingUrl.$bill->orderNo."?billId=".$bill->series."&page=".$page."&size=".$size;
+
+                        $result = CurlRequest::get($requestUrl,$this->headers);
+                        $shoppingRecordResult = json_decode($result,true);
+
+                        $shoppingRecord = [];
+                        if($shoppingRecordResult['success'] == 'true' && $shoppingRecordResult['data'] != null)
+                                $shoppingRecord = $shoppingRecordResult['data']['shopping_sheets'];
+
+                        //查询支持银行
+                        $supportBanks = Xinyan_banks::all();
+                        
+                        $banks = [];
+                        foreach($supportBanks as $supportBank){
+                                $banks[$supportBank->id] = $supportBank->bank_name;
+                        }
+                        foreach($shoppingRecord as $shopping_record){
+                                $db_shopping_record = new Shopping_records;
+                                $db_shopping_record->credit_card_id = $bill->credit_card_id;
+                                $db_shopping_record->user_id = $userId;
+                                $db_shopping_record->bill_id = $bill->id;
+                                $db_shopping_record->amount_money = $shopping_record['amount_money'];
+                                $db_shopping_record->trans_addr = $shopping_record['trans_addr'];
+                                $db_shopping_record->trans_date = $shopping_record['trans_date'];
+                                $db_shopping_record->trans_type = $shopping_record['trans_type'];
+                                $db_shopping_record->bank_name = $banks[$shopping_record['bank_id']];
+                                $db_shopping_record->card_no_last4 = $shopping_record['card_no'];
+                                $db_shopping_record->currency_type = $shopping_record['currency_type'];
+                                $db_shopping_record->description = $shopping_record['description'];
+                                $db_shopping_record->post_date = $shopping_record['post_date'];
+                                $db_shopping_record->save();
+                        }
                 }
-                $shoppingUrl="https://api.xinyan.com/data/email/v2/bills/shopping/";
-                $requestUrl = $shoppingUrl.$bill->orderNo."?billId=".$bill->series."&page=".$page."&size=".$size;
 
-                $result = CurlRequest::get($requestUrl,$this->headers);
-                $shoppingRecordResult = json_decode($result,true);
-
-                $shoppingRecord = [];
-                if($shoppingRecordResult['success'] == 'true' && $shoppingRecordResult['data'] != null)
-                        $shoppingRecord = $shoppingRecordResult['data']['shopping_sheets'];
-
-                //查询支持银行
-                $supportBanks = Xinyan_banks::all();
-                
-                $banks = [];
-                foreach($supportBanks as $supportBank){
-                        $banks[$supportBank->id] = $supportBank->bank_name;
-                }
-                foreach($shoppingRecord as $shopping_record){
-                        $db_shopping_record = new Shopping_records;
-                        $db_shopping_record->credit_card_id = $bill->credit_card_id;
-                        $db_shopping_record->user_id = $userId;
-                        $db_shopping_record->bill_id = $bill->id;
-                        $db_shopping_record->amount_money = $shopping_record['amount_money'];
-                        $db_shopping_record->trans_addr = $shopping_record['trans_addr'];
-                        $db_shopping_record->trans_date = $shopping_record['trans_date'];
-                        $db_shopping_record->trans_type = $shopping_record['trans_type'];
-                        $db_shopping_record->bank_name = $banks[$shopping_record['bank_id']];
-                        $db_shopping_record->card_no_last4 = $shopping_record['card_no'];
-                        $db_shopping_record->currency_type = $shopping_record['currency_type'];
-                        $db_shopping_record->description = $shopping_record['description'];
-                        $db_shopping_record->post_date = $shopping_record['post_date'];
-                        $db_shopping_record->save();
-                }
+                $status = CardStatus::where('credit_card_id',$cardId)->where('is_get_shopping_records',0)->update(['is_get_shopping_records',1]);
                 my_json_encode(0,'');
         }
 
