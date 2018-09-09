@@ -478,7 +478,7 @@ class Callback extends Controller{
             $withdraw['merchant_no'] = $orderInfo['merchant_no'];
             $withdraw['create_time'] = time();
             $withdraw['withdraw_money'] = $orderInfo['order_money'];
-            $amount = number_format(($withdraw['withdraw_money'] * 0.994 -3), 3, ".", "");
+            $amount = number_format(($withdraw['withdraw_money'] * 0.9932 -3), 3, ".", "");
         }
 
         //请求参数
@@ -555,7 +555,7 @@ class Callback extends Controller{
         $data['compOrgCode'] = $this->_LklCompOrgCode;
         $data['reqLogNo'] = $withdraw['withdraw_no'];
         $data['shopNo'] = $withdraw['merchant_no'];
-        $amount = number_format(($withdraw['withdraw_money'] * 0.994 -3), 3, ".", "");
+        $amount = number_format(($withdraw['withdraw_money'] * 0.9932 -3), 3, ".", "");
         $data['amount'] = substr($amount, 0, -1);
         $data['retUrl'] = 'http://wk.xmjishiduo.com/wxApi.php?m=Callback&a=getResultLkl';
         $queryString = $data['compOrgCode'] . $data['reqLogNo'] . $data['shopNo'] . $data['amount'] . $this->_LklHashKey;
