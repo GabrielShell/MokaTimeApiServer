@@ -196,3 +196,9 @@ Route::post('api/v1/version/getLatestVersion','mkapi/Version/getLatestVersion');
  */
 Route::post('api/v1/stat/home','mkapi/StatData/homePageStatData');
 
+
+
+// +----------------------------------------------------------------------
+// | 畅捷数据接口
+// +----------------------------------------------------------------------
+Route::post('api/v1/cj/tradenotice','mkapi/CjTradeNotice/index');
