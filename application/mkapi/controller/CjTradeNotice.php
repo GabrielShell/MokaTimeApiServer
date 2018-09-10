@@ -29,7 +29,7 @@ class CjTradeNotice extends Controller{
 
         $sign = self::sign($returnArr);
         $returnArr['sign'] = $sign;
-        return json_encode($returnArr,JSON_UNESCAPED_UNICODE);
+        echo json_encode($returnArr,JSON_UNESCAPED_UNICODE);
     }
 
     public static function sign($array){
