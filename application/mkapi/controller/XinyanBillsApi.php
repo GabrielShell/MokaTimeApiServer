@@ -172,7 +172,7 @@ class XinyanBillsApi extends Common{
                         //查找数据库是否已有该信用卡，没有则插入信用卡，有则更新信用卡数据
                         $searched = []; //已经在数据库找到的记录 key=unique_string value=card_id
                         foreach($data['data']['bills'] as &$bill){
-                                if($bill['name_on_card'] == 'noname' || $bill['card_number'] == '****'){
+                                if($bill['name_on_card'] == 'noname' || $bill['card_number'] == '****' || $bill['credit_limit'] == 0){
                                         continue;
                                 }
                                 if(strpos($bill['card_number'],',')){
