@@ -123,7 +123,7 @@ class Plan extends Common
 
         $repayAmount = $request->post('repayAmount');
         if (empty($repayAmount)) {
-            my_json_encode(6, 'repayAmount不能为空');
+            my_json_encode(6, '还款金额不能为0');
         }
         if($repayAmount < 1000){
             my_json_encode(11, '还款金额大于1000才能提供计划');
