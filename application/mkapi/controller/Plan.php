@@ -193,6 +193,10 @@ class Plan extends Common
         //根据计划天数得到计划日期列表
         $dayCount = count($dayList);
 
+	if($planType == 2 && $dayCount < 2){
+            my_json_encode(13,'资金过夜模式，计划日期需要多余2天');
+	}
+
         $repayPlan = new RepayPlan;
 
         //如果是保留第一天的计划
