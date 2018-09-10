@@ -234,10 +234,7 @@ class XinyanBillsApi extends Common{
                                 $billMonth = (int)date('Ym',strtotime($bill['bill_date']));
                                 $status = CardStatus::where('credit_card_id',$card_id)
                                 ->where('bill_month',$billMonth)
-                                ->select();
-                                if($status){
-                                        $status->delete();
-                                }
+                                ->delete();
                                 //如果该账单在数据库中不存在，则将账单插入数据库
                                 if(!Bills::get(['user_id'=>$userId,'bill_month'=>$billMonth])){
                                         $bill_record  = new Bills;
@@ -359,7 +356,7 @@ class XinyanBillsApi extends Common{
                         }
                 }
 
-                $status = CardStatus::where('credit_card_id',$cardId)->where('is_get_shopping_records',0)->update(['is_get_shopping_records',1]);
+                $status = CardStatus::where('credit_card_id',$cardId)->where('is_get_shopping_records',0)->update(['is_get_shopping_records'=>1]);
                 my_json_encode(0,'');
         }
 
