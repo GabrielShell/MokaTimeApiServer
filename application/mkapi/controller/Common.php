@@ -57,14 +57,14 @@ class Common extends Controller{
             $result = Db::query("select * from mk_token_messages where series = '$series' and re_start_time > unix_timestamp()-2592000");
         	//var_dump($result);
             if(empty($result)){//token过期
-            	my_json_encode(7, 'token过期，请重新登录');
+            	my_json_encode(1007, 'token过期，请重新登录');
             }else{
             	if($access_token !== $result[0]['access_token'] || $result[0]['ac_start_time'] < time() - 3600){
             		$data['access_token'] = getkey(32);
             		$data['ac_start_time'] = time();
                   	$tokenMessage = model('tokenMessages');
             		$tokenMessage->save($data,['series' => $series]);
-            		my_json_encode(6,$data['access_token'],array('msg'=>'access_token已过期，请刷新token','access_token'=>$data['access_token']));
+            		my_json_encode(1006,$data['access_token'],array('msg'=>'access_token已过期，请刷新token','access_token'=>$data['access_token']));
             	}
             }
 		}
