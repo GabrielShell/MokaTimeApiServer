@@ -287,4 +287,28 @@ class Card extends Common
         my_json_encode(0, '', $cardDetailResult);
     }
 
+    /**
+     * 删除信用卡接口
+     * @param int card_id 卡片ID
+     */
+    public function delete(Request $request){
+        $userSeries = $request->post('series');
+        if (empty($userSeries)) {
+            my_json_encode(2, 'series不能为空');
+        }
+
+        $userId = Users::where(['series' => $userSeries])->value('id');
+        $cardId = $request->post('card_id');
+        if (empty($cardId)) {
+            my_json_encode(2, 'card_id不能为空');
+        }
+
+        $cardDbInstance = Credit_cards::get($cardId);
+        if (!$cardDbInstance) {
+            my_json_encode(3, '该用户下找不到对应的信用卡');
+        }
+
+        $
+    }
+
 }
