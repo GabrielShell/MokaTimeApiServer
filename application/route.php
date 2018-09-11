@@ -123,6 +123,11 @@ Route::post('api/v1/card/markRepaid','mkapi/Card/markRepaid');
  */
 Route::post('api/v1/card/cardDetail','mkapi/Card/cardDetail');
 
+/**
+ * 删除信用卡接口
+ * @param int card_id 卡片ID
+ */
+Route::post('api/v1/card/delete','mkapi/Card/delete');
 
 
 // +----------------------------------------------------------------------

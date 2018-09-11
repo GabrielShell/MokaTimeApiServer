@@ -307,7 +307,14 @@ class Card extends Common
         if (!$cardDbInstance) {
             my_json_encode(3, '该用户下找不到对应的信用卡');
         }
+        Shopping_records::where('credit_card_id',$cardId)->delete();
+        CardStatus::where('credit_card_id',$cardId)->delete();
+        Repay_plans::where('credit_card_id',$cardId)->delete();
+        Bills::where('credit_card_id',$cardId)->delete();
+        $cardDbInstance->delete();
+        my_json_encode(0,'删除成功');
 
+        
         
     }
 
