@@ -9,6 +9,7 @@ use app\mkapi\model\Shopping_records;
 use app\mkapi\model\Users;
 use app\mkapi\model\Card_operate_status as CardStatus;
 use think\Request;
+use think\Log;
 
 /**
  * 还款计划API
@@ -528,8 +529,6 @@ class Plan extends Common
 
 
         $status = CardStatus::getInst($userId,$planInst->credit_card_id,$planInst->bill_month);
-        Log::record('repaid 修改前:'.$status->repaid);
-        Log::record('修改：'.($action ==  'mark' ? '+' : '-').$planInst->amount);
         if($action == 'mark'){
             if($planInst->finish_time){
                 my_json_encode(6,'该计划已标记执行，不能重复标记');
@@ -553,7 +552,6 @@ class Plan extends Common
         }else{
             my_json_encode(5, '请输入正确的参数action');
         }
-        Log::record('repaid 修改后:'.$status->repaid);
 
         $planInst->save();
         $status->save();

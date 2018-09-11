@@ -308,7 +308,7 @@ class Card extends Common
             my_json_encode(3, '该用户下找不到对应的信用卡');
         }
 
-        $
+        
     }
 
 }
