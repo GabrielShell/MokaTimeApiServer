@@ -84,7 +84,23 @@ class Shopping extends Common{
 		    	echo '地址信息插入失败';
 		    	exit();
 		    }
-			$data['shipping_id'] = Db::name('shipping')->getLastInsID();
+			
+			//将订单的收货地址另存
+			unset($addrData['series']);
+			unset($addrData['is_default']);
+			unset($addrData['create_time']);
+			$addrResult = Db::name('order_shipping')->insert($addrData);
+			if(!$addrResult){
+		    	echo '地址信息插入失败';
+		    	exit();
+		    }
+			$data['shipping_id'] = Db::name('order_shipping')->getLastInsID();
+		}else{
+			//提取地址信息
+			$addrInfo = Db::name('shipping')->field('province,city,district,street,consignee,phone')->where('id',$data['shipping_id'])->find();
+			//将订单的收货地址另存
+			Db::name('order_shipping')->insert($addrInfo);
+			$data['shipping_id'] = Db::name('order_shipping')->getLastInsID();
 		}
 
 		//创建订单
